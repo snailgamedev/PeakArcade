@@ -683,7 +683,36 @@ const WORD=[
   {t:'Cast all your care upon him; for he careth for you.',r:'1 Peter 5:7'},
   {t:'This is the day which the LORD hath made; we will rejoice and be glad in it.',r:'Psalm 118:24'},
   {t:'For I know the thoughts that I think toward you... thoughts of peace, and an expected end.',r:'Jeremiah 29:11'},
-  {t:'Let your light so shine before men, that they may see your good works.',r:'Matthew 5:16'}];
+  {t:'Let your light so shine before men, that they may see your good works.',r:'Matthew 5:16'},
+  {t:'Fear thou not; for I am with thee... I will strengthen thee; yea, I will help thee.',r:'Isaiah 41:10'},
+  {t:'For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind.',r:'2 Timothy 1:7'},
+  {t:'The LORD is my light and my salvation; whom shall I fear?',r:'Psalm 27:1'},
+  {t:'God is our refuge and strength, a very present help in trouble.',r:'Psalm 46:1'},
+  {t:'Peace I leave with you, my peace I give unto you: not as the world giveth.',r:'John 14:27'},
+  {t:'And the peace of God, which passeth all understanding, shall keep your hearts.',r:'Philippians 4:7'},
+  {t:'Thou wilt keep him in perfect peace, whose mind is stayed on thee.',r:'Isaiah 26:3'},
+  {t:'And we know that all things work together for good to them that love God.',r:'Romans 8:28'},
+  {t:'It is of the LORD’s mercies that we are not consumed... they are new every morning.',r:'Lamentations 3:22-23'},
+  {t:'Now faith is the substance of things hoped for, the evidence of things not seen.',r:'Hebrews 11:1'},
+  {t:'For we walk by faith, not by sight.',r:'2 Corinthians 5:7'},
+  {t:'We love him, because he first loved us.',r:'1 John 4:19'},
+  {t:'But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us.',r:'Romans 5:8'},
+  {t:'If we confess our sins, he is faithful and just to forgive us our sins.',r:'1 John 1:9'},
+  {t:'As far as the east is from the west, so far hath he removed our transgressions from us.',r:'Psalm 103:12'},
+  {t:'For we are his workmanship, created in Christ Jesus unto good works.',r:'Ephesians 2:10'},
+  {t:'If any man be in Christ, he is a new creature: old things are passed away.',r:'2 Corinthians 5:17'},
+  {t:'I will praise thee; for I am fearfully and wonderfully made.',r:'Psalm 139:14'},
+  {t:'If any of you lack wisdom, let him ask of God, that giveth to all men liberally.',r:'James 1:5'},
+  {t:'Thy word is a lamp unto my feet, and a light unto my path.',r:'Psalm 119:105'},
+  {t:'But seek ye first the kingdom of God, and his righteousness.',r:'Matthew 6:33'},
+  {t:'For where your treasure is, there will your heart be also.',r:'Matthew 6:21'},
+  {t:'But the fruit of the Spirit is love, joy, peace, longsuffering, gentleness, goodness, faith.',r:'Galatians 5:22'},
+  {t:'He which hath begun a good work in you will perform it until the day of Jesus Christ.',r:'Philippians 1:6'},
+  {t:'Jesus Christ the same yesterday, and to day, and for ever.',r:'Hebrews 13:8'},
+  {t:'O taste and see that the LORD is good: blessed is the man that trusteth in him.',r:'Psalm 34:8'},
+  {t:'The name of the LORD is a strong tower: the righteous runneth into it, and is safe.',r:'Proverbs 18:10'},
+  {t:'Delight thyself also in the LORD; and he shall give thee the desires of thine heart.',r:'Psalm 37:4'},
+  {t:'My grace is sufficient for thee: for my strength is made perfect in weakness.',r:'2 Corinthians 12:9'}];
 let widx=Math.floor(Date.now()/864e5)%WORD.length;
 function showWord(i){widx=(i+WORD.length)%WORD.length;const w=WORD[widx];$('#wordVerse').textContent='“'+w.t+'”';$('#wordRef').textContent='— '+w.r;}
 showWord(widx);
@@ -698,7 +727,23 @@ window._tilt=function(){if(matchMedia('(hover:none)').matches||matchMedia('(pref
   $$('.card').forEach(c=>{if(c._t)return;c._t=1;
     c.addEventListener('pointermove',e=>{const r=c.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform=`translateY(-6px) rotateX(${-y*6}deg) rotateY(${x*6}deg)`;});
     c.addEventListener('pointerleave',()=>c.style.transform='');});};
-if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+/* ===== AUTO-UPDATE: hub refreshes itself when a new version ships ===== */
+if('serviceWorker'in navigator){
+  window.addEventListener('load',()=>{
+    const hadController = !!navigator.serviceWorker.controller;   // false on first-ever install (don't reload then)
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      reg.update();                                     // check for a new SW right away
+      setInterval(()=>reg.update(), 30*60*1000);        // ...and every 30 min while open
+    }).catch(()=>{});
+    // when a fresh SW takes control (a new deploy), reload ONCE to show it — only if we already had a version
+    let refreshing=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(refreshing || !hadController) return; refreshing=true; location.reload();
+    });
+  });
+  // also re-check for updates when the user returns to the tab
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden && navigator.serviceWorker.controller){ navigator.serviceWorker.ready.then(r=>r.update()).catch(()=>{}); } });
+}
 let dp;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#installBtn').style.display='block';});
 $('#installBtn').onclick=async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;$('#installBtn').style.display='none';};
 
