@@ -241,9 +241,15 @@
   .word-ref{display:inline-block;margin-top:16px;font-size:.82rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);position:relative}
   .hero-faith{margin-top:24px;font-size:.92rem;font-weight:700;color:var(--gold)}
   .hero-faith span{background:linear-gradient(90deg,var(--neon2),var(--hot));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .word-cta{margin-top:22px;position:relative}
+  .word-cta{margin-top:22px;position:relative;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
   .word-cta button{padding:11px 24px;border-radius:12px;border:1px solid var(--gold);background:rgba(255,209,102,.1);color:var(--gold);font-weight:800;font-size:.9rem;transition:.15s}
   .word-cta button:hover{background:var(--gold);color:#1a1a2e}
+  .word-shuf{border-color:var(--neon)!important;color:var(--neon)!important;background:rgba(124,92,255,.1)!important}
+  .word-shuf:hover{background:var(--neon)!important;color:#fff!important}
+  .sortsel{background:var(--bg2);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:11px 14px;font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer;outline:none;transition:border-color .15s}
+  .sortsel:hover,.sortsel:focus{border-color:var(--neon)}
+  .soonbtn{cursor:pointer}
+  .soonbtn.noti{background:rgba(55,214,122,.16)!important;color:var(--green)!important}
   .gmodal{position:fixed;inset:0;z-index:400;background:rgba(4,4,10,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
   .gmodal.open{opacity:1;visibility:visible}
   .gcard{position:relative;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;background:linear-gradient(165deg,#15152e,#0c0c1a);border:1px solid var(--line);border-radius:24px;padding:38px 32px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.7)}
@@ -313,7 +319,7 @@
       <div class="word-ic">✝️</div>
       <p class="word-verse" id="wordVerse"></p>
       <span class="word-ref" id="wordRef"></span>
-      <div class="word-cta"><button id="gospelOpen2">✨ The Good News</button></div>
+      <div class="word-cta"><button id="wordShuffle" class="word-shuf">🔀 Another verse</button><button id="gospelOpen2">✨ The Good News</button></div>
     </div>
   </section>
 
@@ -325,6 +331,11 @@
   <section id="games">
     <div class="controls reveal">
       <div class="search">🔎 <input id="searchInput" type="search" placeholder="Search games…" aria-label="Search games"></div>
+      <select id="sortSel" class="sortsel" aria-label="Sort games">
+        <option value="featured">↕️ Featured</option>
+        <option value="az">🔤 A–Z</option>
+        <option value="new">✦ Newest</option>
+      </select>
       <div class="chips" id="chips"></div>
     </div>
     <div class="sec-head reveal"><h2>🔥 All games</h2><span id="allCount"></span></div>
@@ -412,6 +423,7 @@ const GAMES=[
 const LS={get(k,d){try{const v=localStorage.getItem('pa_'+k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem('pa_'+k,JSON.stringify(v))}catch{}}};
 let favs=LS.get('favs',[]);
 let recent=LS.get('recent',[]);
+let notify=LS.get('notify',[]);
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
 
@@ -432,7 +444,7 @@ async function shareThing(title,url){
 
 /* ===== card ===== */
 function cardHTML(g){
-  const fav=favs.includes(g.id);
+  const fav=favs.includes(g.id), noti=notify.includes(g.id);
   const corner=g.live
     ? (g.badge==='HOT'?'<span class="corner hot">🔥 HOT</span>':g.badge==='NEW'?'<span class="corner new">✦ NEW</span>':'<span class="corner live"><span class="dot"></span>LIVE</span>')
     : '<div class="ribbon">SOON</div>';
@@ -443,24 +455,34 @@ function cardHTML(g){
     <div class="body">
       <h3>${g.title}</h3><p>${g.blurb}</p>
       <div class="meta"><span class="tags">${g.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</span></div>
-      ${g.live?`<a class="play" href="${g.url}" data-go="${g.id}">▶ Play</a>`:`<span class="play">🔒 In the lab</span>`}
+      ${g.live?`<a class="play" href="${g.url}" data-go="${g.id}">▶ Play</a>`:`<button class="play soonbtn ${noti?'noti':''}" data-notify="${g.id}">${noti?'🔔 On the list ✓':'🔔 Notify me'}</button>`}
     </div>
   </div>`;
 }
 
-let activeCat='All', query='';
+let activeCat='All', query='', sortMode='featured';
 function render(){
-  const list=GAMES.filter(g=>{
+  let list=GAMES.filter(g=>{
     const cat=activeCat==='All'||g.cat===activeCat||(activeCat==='Coming soon'&&!g.live)||(activeCat==='❤️ Faves'&&g.live&&favs.includes(g.id));
     const q=!query||(g.title+' '+g.tags.join(' ')+' '+g.cat).toLowerCase().includes(query);
     return cat&&q;
   });
+  if(sortMode==='az')list=[...list].sort((a,b)=>a.title.localeCompare(b.title));
+  else if(sortMode==='new')list=[...list].sort((a,b)=>(b.badge==='NEW')-(a.badge==='NEW')||(b.live-a.live));
+  else list=[...list].sort((a,b)=>(b.featured?1:0)-(a.featured?1:0)||(b.live-a.live)); // featured first, live before soon
   $('#gameGrid').innerHTML=list.map(cardHTML).join('');
   $('#emptyState').classList.toggle('hide',list.length>0);
   $('#allCount').textContent=list.length+' game'+(list.length===1?'':'s');
   $$('.fav').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();toggleFav(b.dataset.fav);});
   $$('#gameGrid [data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();playGame(a.dataset.go);});
+  $$('#gameGrid [data-notify]').forEach(b=>b.onclick=()=>toggleNotify(b.dataset.notify));
   if(window._tilt)window._tilt();
+}
+function toggleNotify(id){
+  const g=GAMES.find(x=>x.id===id);
+  if(notify.includes(id)){notify=notify.filter(x=>x!==id);toast('🔕 Off the list');}
+  else{notify.unshift(id);toast('🔔 You\'re on the list — '+g.title+' droppin\' soon!');}
+  LS.set('notify',notify);render();
 }
 function toggleFav(id){
   if(favs.includes(id)){favs=favs.filter(x=>x!==id);toast('Removed from favorites');}
@@ -522,21 +544,34 @@ $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.flo
 $('#yr').textContent=new Date().getFullYear();
 $('#liveCount').textContent=GAMES.filter(g=>g.live).length;
 $('#searchInput').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();render();});
-(function(){const WORD=[
+$('#sortSel').addEventListener('change',e=>{sortMode=e.target.value;render();});
+const WORD=[
   {t:'Whatsoever thy hand findeth to do, do it with thy might.',r:'Ecclesiastes 9:10'},
   {t:'And whatsoever ye do, do it heartily, as to the Lord.',r:'Colossians 3:23'},
   {t:'I can do all things through Christ which strengtheneth me.',r:'Philippians 4:13'},
   {t:'Rejoice in the Lord alway: and again I say, Rejoice.',r:'Philippians 4:4'},
   {t:'The joy of the LORD is your strength.',r:'Nehemiah 8:10'},
   {t:'A merry heart doeth good like a medicine.',r:'Proverbs 17:22'},
-  {t:'Be strong and of a good courage; be not afraid.',r:'Joshua 1:9'},
+  {t:'Be strong and of a good courage; be not afraid, neither be thou dismayed.',r:'Joshua 1:9'},
   {t:'Commit thy works unto the LORD, and thy thoughts shall be established.',r:'Proverbs 16:3'},
   {t:'They that wait upon the LORD shall renew their strength.',r:'Isaiah 40:31'},
   {t:'In thy presence is fulness of joy.',r:'Psalm 16:11'},
-  {t:'Let us not be weary in well doing.',r:'Galatians 6:9'},
-  {t:'He giveth power to the faint.',r:'Isaiah 40:29'}];
-  const w=WORD[Math.floor(Date.now()/864e5)%WORD.length];
-  $('#wordVerse').textContent='“'+w.t+'”';$('#wordRef').textContent='— '+w.r;})();
+  {t:'Let us not be weary in well doing: for in due season we shall reap.',r:'Galatians 6:9'},
+  {t:'He giveth power to the faint.',r:'Isaiah 40:29'},
+  {t:'For God so loved the world, that he gave his only begotten Son.',r:'John 3:16'},
+  {t:'Come unto me, all ye that labour and are heavy laden, and I will give you rest.',r:'Matthew 11:28'},
+  {t:'The LORD is my shepherd; I shall not want.',r:'Psalm 23:1'},
+  {t:'Trust in the LORD with all thine heart; and lean not unto thine own understanding.',r:'Proverbs 3:5'},
+  {t:'I am the way, the truth, and the life.',r:'John 14:6'},
+  {t:'If God be for us, who can be against us?',r:'Romans 8:31'},
+  {t:'Cast all your care upon him; for he careth for you.',r:'1 Peter 5:7'},
+  {t:'This is the day which the LORD hath made; we will rejoice and be glad in it.',r:'Psalm 118:24'},
+  {t:'For I know the thoughts that I think toward you... thoughts of peace, and an expected end.',r:'Jeremiah 29:11'},
+  {t:'Let your light so shine before men, that they may see your good works.',r:'Matthew 5:16'}];
+let widx=Math.floor(Date.now()/864e5)%WORD.length;
+function showWord(i){widx=(i+WORD.length)%WORD.length;const w=WORD[widx];$('#wordVerse').textContent='“'+w.t+'”';$('#wordRef').textContent='— '+w.r;}
+showWord(widx);
+$('#wordShuffle').onclick=()=>{let n;do{n=Math.floor(Math.random()*WORD.length);}while(WORD.length>1&&n===widx);showWord(n);};
 (function(){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});$$('.reveal').forEach(el=>io.observe(el));})();
 function animCounters(){const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   $$('.stat b[data-count]').forEach(el=>{const end=+el.dataset.count;
