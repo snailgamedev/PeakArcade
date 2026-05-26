@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a14">
+<title>The Word ✝ — Peak Arcade</title>
+<meta name="description" content="The Word — a mini-Bible: verse of the day, scripture by theme, a verse from every book, and the Gospel. The real peak isn't a high score.">
+<style>
+  :root{
+    --bg-0:#07060f; --bg-1:#0d0b18; --bg-2:#161329; --bg-3:#2a2444;
+    --gold:#f5c542; --gold-2:#ffe8a3; --cream:#fdf6e3; --soft:#cdd0e6; --muted:#8a86a8;
+    --ac:#b98cff; --green:#6fe0a0;
+    --font:"Iowan Old Style","Palatino Linotype",Georgia,"Times New Roman",serif;
+    --ui:"Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%}
+  body{font-family:var(--ui);color:var(--cream);
+    background:radial-gradient(1100px 700px at 50% -8%,#1c1740 0%,var(--bg-1) 50%,var(--bg-0) 100%);
+    -webkit-font-smoothing:antialiased;padding-bottom:80px}
+  .wrap{max-width:680px;margin:0 auto;padding:22px 16px}
+  header{text-align:center;padding:18px 0 10px}
+  .cross{font-size:40px;filter:drop-shadow(0 2px 12px rgba(245,197,66,.5))}
+  h1{font-family:var(--ui);font-size:clamp(26px,8vw,42px);letter-spacing:3px;margin:6px 0 2px;font-weight:900;
+    background:linear-gradient(180deg,var(--gold-2),var(--gold) 60%,#b8862b);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);letter-spacing:2px;font-size:12px}
+  /* verse of the day */
+  .votd{margin:18px 0;padding:22px 20px;border-radius:18px;border:1px solid var(--bg-3);
+    background:linear-gradient(180deg,#191430,#100d20);box-shadow:0 16px 40px rgba(0,0,0,.4)}
+  .votd .lbl{font-family:var(--ui);font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:800}
+  .votd .vt{font-family:var(--font);font-size:clamp(18px,5vw,24px);line-height:1.5;margin:10px 0 8px}
+  .votd .vr{color:var(--gold);font-weight:800;letter-spacing:1px;font-size:13px}
+  /* tabs */
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 12px;-ms-overflow-style:none;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:10px 14px;border-radius:12px;border:1px solid var(--bg-3);background:var(--bg-2);
+    color:var(--soft);font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}
+  .tab.on{background:linear-gradient(180deg,#3a3112,#241d08);border-color:#b8862b;color:var(--gold-2)}
+  .panel{display:none}.panel.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+  /* chips (themes / books) */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .chip{padding:9px 13px;border-radius:11px;border:1px solid var(--bg-3);background:var(--bg-2);color:var(--soft);
+    font-weight:700;font-size:13px;cursor:pointer}
+  .chip.on{background:linear-gradient(180deg,#241b3e,#15102a);border-color:var(--ac);color:#e0caff}
+  /* verse cards */
+  .verse{padding:15px 16px;border-radius:14px;border:1px solid var(--bg-3);background:linear-gradient(180deg,#15122a,#0e0b1c);margin-bottom:10px}
+  .verse .t{font-family:var(--font);font-size:17px;line-height:1.55}
+  .verse .r{color:var(--gold);font-weight:800;font-size:12px;letter-spacing:.5px;margin-top:8px}
+  .secnote{color:var(--muted);font-size:12.5px;line-height:1.6;margin:2px 2px 14px;font-style:italic}
+  /* gospel */
+  .gospel p{font-family:var(--font);font-size:17px;line-height:1.7;margin:0 0 14px}
+  .gospel .big{font-size:clamp(20px,5.5vw,26px);text-align:center;color:var(--gold-2);font-weight:700}
+  .gospel .ref{color:var(--gold);font-weight:800;font-size:13px}
+  .pray-box{margin:16px 0;padding:18px;border-radius:16px;border:1px solid var(--ac);background:linear-gradient(180deg,#1b1638,#110d24)}
+  .pray-box .t{font-family:var(--font);font-size:16px;line-height:1.7;font-style:italic;color:var(--cream)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:14px;border:none;
+    font-family:var(--ui);font-weight:800;font-size:15px;letter-spacing:.5px;color:#1a1405;cursor:pointer;margin-top:6px;
+    background:linear-gradient(180deg,var(--gold-2),var(--gold) 60%,#b8862b);box-shadow:0 5px 0 #7a5a18}
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #7a5a18}
+  .humble{text-align:center;color:var(--muted);font-size:13px;line-height:1.7;margin:22px 6px;font-style:italic}
+  .humble b{color:var(--soft)}
+  footer{text-align:center;margin-top:10px}
+  .toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(20px);opacity:0;transition:.3s;z-index:50;
+    background:rgba(10,9,20,.96);border:1px solid var(--gold);color:var(--gold-2);padding:11px 18px;border-radius:999px;font-weight:800;font-size:13px;max-width:90vw;text-align:center}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* back to arcade — only when standalone */
+  #pa-hub{position:fixed;left:12px;bottom:12px;z-index:60;background:rgba(7,7,15,.88);color:#fff;font:700 12px/1 var(--ui);
+    padding:9px 14px;border-radius:99px;border:1px solid #7c5cff;text-decoration:none;backdrop-filter:blur(6px);display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="cross">✝</div>
+    <h1>THE WORD</h1>
+    <div class="sub">A MINI-BIBLE · THE REAL PEAK</div>
+  </header>
+
+  <div class="votd">
+    <div class="lbl">📖 VERSE OF THE DAY</div>
+    <div class="vt" id="votdText"></div>
+    <div class="vr" id="votdRef"></div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab on" data-p="theme">📖 By Theme</div>
+    <div class="tab" data-p="books">📚 The Books</div>
+    <div class="tab" data-p="gospel">✝ The Gospel</div>
+    <div class="tab" data-p="pray">🙏 Pray</div>
+  </div>
+
+  <div class="panel on" id="p-theme">
+    <div class="chips" id="themeChips"></div>
+    <div id="themeVerses"></div>
+  </div>
+
+  <div class="panel" id="p-books">
+    <div class="secnote">A signature verse from across the Book — Genesis to Revelation. Tap one and let it sit with you.</div>
+    <div class="chips" id="bookChips"></div>
+    <div id="bookVerse"></div>
+  </div>
+
+  <div class="panel gospel" id="p-gospel"></div>
+
+  <div class="panel" id="p-pray"></div>
+
+  <footer>
+    <div class="humble">This is just a little doorway — the real thing is the actual Word and the actual God behind it. <b>Go read a Bible. Find people who follow Him. Talk to Him for yourself.</b> 🙏</div>
+  </footer>
+</div>
+
+<a href="https://snailgamedev.github.io/PeakArcade/" id="pa-hub">🎮 Peak Arcade</a>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ========= THE WORD — a mini-Bible. Curated, real verses (KJV/common renderings).
+   Verse of the day + by-theme + a verse per book + the Gospel + prayer. ========= */
+
+const THEMES = {
+  "Strength": [
+    ["I can do all things through Christ which strengtheneth me.","Philippians 4:13"],
+    ["But they that wait upon the Lord shall renew their strength; they shall mount up with wings as eagles.","Isaiah 40:31"],
+    ["My grace is sufficient for thee: for my strength is made perfect in weakness.","2 Corinthians 12:9"],
+    ["Be strong and of a good courage; be not afraid... for the Lord thy God is with thee whithersoever thou goest.","Joshua 1:9"],
+    ["God is our refuge and strength, a very present help in trouble.","Psalm 46:1"]
+  ],
+  "Peace": [
+    ["Peace I leave with you, my peace I give unto you: not as the world giveth, give I unto you.","John 14:27"],
+    ["Be careful for nothing; but in every thing by prayer... and the peace of God, which passeth all understanding, shall keep your hearts.","Philippians 4:6-7"],
+    ["Thou wilt keep him in perfect peace, whose mind is stayed on thee.","Isaiah 26:3"],
+    ["Come unto me, all ye that labour and are heavy laden, and I will give you rest.","Matthew 11:28"]
+  ],
+  "Hope": [
+    ["For I know the thoughts that I think toward you... thoughts of peace, and not of evil, to give you an expected end.","Jeremiah 29:11"],
+    ["And we know that all things work together for good to them that love God.","Romans 8:28"],
+    ["It is of the Lord's mercies that we are not consumed... they are new every morning.","Lamentations 3:22-23"],
+    ["Now the God of hope fill you with all joy and peace in believing.","Romans 15:13"]
+  ],
+  "Faith": [
+    ["Now faith is the substance of things hoped for, the evidence of things not seen.","Hebrews 11:1"],
+    ["For we walk by faith, not by sight.","2 Corinthians 5:7"],
+    ["If ye have faith as a grain of mustard seed... nothing shall be impossible unto you.","Matthew 17:20"],
+    ["So then faith cometh by hearing, and hearing by the word of God.","Romans 10:17"]
+  ],
+  "Courage": [
+    ["Fear thou not; for I am with thee... I will strengthen thee; yea, I will help thee.","Isaiah 41:10"],
+    ["For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind.","2 Timothy 1:7"],
+    ["The Lord is my light and my salvation; whom shall I fear?","Psalm 27:1"],
+    ["What time I am afraid, I will trust in thee.","Psalm 56:3"]
+  ],
+  "Love": [
+    ["Charity suffereth long, and is kind... beareth all things, believeth all things, hopeth all things, endureth all things.","1 Corinthians 13:4-7"],
+    ["A new commandment I give unto you, That ye love one another; as I have loved you.","John 13:34"],
+    ["We love him, because he first loved us.","1 John 4:19"],
+    ["But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us.","Romans 5:8"]
+  ],
+  "Forgiveness": [
+    ["If we confess our sins, he is faithful and just to forgive us our sins, and to cleanse us from all unrighteousness.","1 John 1:9"],
+    ["And be ye kind one to another, tenderhearted, forgiving one another, even as God for Christ's sake hath forgiven you.","Ephesians 4:32"],
+    ["As far as the east is from the west, so far hath he removed our transgressions from us.","Psalm 103:12"]
+  ],
+  "Identity": [
+    ["For we are his workmanship, created in Christ Jesus unto good works.","Ephesians 2:10"],
+    ["Therefore if any man be in Christ, he is a new creature: old things are passed away; behold, all things are become new.","2 Corinthians 5:17"],
+    ["But ye are a chosen generation, a royal priesthood, an holy nation, a peculiar people.","1 Peter 2:9"],
+    ["I will praise thee; for I am fearfully and wonderfully made.","Psalm 139:14"]
+  ],
+  "Wisdom": [
+    ["Trust in the Lord with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths.","Proverbs 3:5-6"],
+    ["If any of you lack wisdom, let him ask of God, that giveth to all men liberally.","James 1:5"],
+    ["The fear of the Lord is the beginning of wisdom.","Proverbs 9:10"],
+    ["Thy word is a lamp unto my feet, and a light unto my path.","Psalm 119:105"]
+  ],
+  "Joy": [
+    ["The joy of the Lord is your strength.","Nehemiah 8:10"],
+    ["Thou wilt shew me the path of life: in thy presence is fulness of joy.","Psalm 16:11"],
+    ["Rejoicing in hope; patient in tribulation; continuing instant in prayer.","Romans 12:12"],
+    ["Weeping may endure for a night, but joy cometh in the morning.","Psalm 30:5"]
+  ],
+  "Perseverance": [
+    ["And let us not be weary in well doing: for in due season we shall reap, if we faint not.","Galatians 6:9"],
+    ["Blessed is the man that endureth temptation: for when he is tried, he shall receive the crown of life.","James 1:12"],
+    ["Let us run with patience the race that is set before us, looking unto Jesus.","Hebrews 12:1-2"],
+    ["Therefore, my beloved brethren, be ye stedfast, unmoveable, always abounding in the work of the Lord.","1 Corinthians 15:58"]
+  ],
+  "Treasure": [
+    ["For where your treasure is, there will your heart be also.","Matthew 6:21"],
+    ["But seek ye first the kingdom of God, and his righteousness; and all these things shall be added unto you.","Matthew 6:33"],
+    ["But my God shall supply all your need according to his riches in glory by Christ Jesus.","Philippians 4:19"],
+    ["Give, and it shall be given unto you; good measure, pressed down, and shaken together, and running over.","Luke 6:38"]
+  ]
+};
+
+const BOOKS = [
+  ["Genesis","In the beginning God created the heaven and the earth.","Genesis 1:1"],
+  ["Exodus","The Lord shall fight for you, and ye shall hold your peace.","Exodus 14:14"],
+  ["Deuteronomy","Be strong and of a good courage... for the Lord thy God, he it is that doth go with thee.","Deuteronomy 31:6"],
+  ["Joshua","Have not I commanded thee? Be strong and of a good courage... for the Lord thy God is with thee.","Joshua 1:9"],
+  ["1 Samuel","For the Lord seeth not as man seeth... the Lord looketh on the heart.","1 Samuel 16:7"],
+  ["Nehemiah","The joy of the Lord is your strength.","Nehemiah 8:10"],
+  ["Psalms","The Lord is my shepherd; I shall not want.","Psalm 23:1"],
+  ["Proverbs","Trust in the Lord with all thine heart; and lean not unto thine own understanding.","Proverbs 3:5"],
+  ["Ecclesiastes","To every thing there is a season, and a time to every purpose under the heaven.","Ecclesiastes 3:1"],
+  ["Isaiah","They that wait upon the Lord shall renew their strength.","Isaiah 40:31"],
+  ["Jeremiah","For I know the thoughts that I think toward you... thoughts of peace.","Jeremiah 29:11"],
+  ["Lamentations","His compassions fail not. They are new every morning.","Lamentations 3:22-23"],
+  ["Daniel","The people that do know their God shall be strong, and do exploits.","Daniel 11:32"],
+  ["Micah","To do justly, and to love mercy, and to walk humbly with thy God.","Micah 6:8"],
+  ["Matthew","But seek ye first the kingdom of God, and his righteousness.","Matthew 6:33"],
+  ["Mark","Thou shalt love the Lord thy God with all thy heart... and with all thy strength.","Mark 12:30"],
+  ["Luke","For the Son of man is come to seek and to save that which was lost.","Luke 19:10"],
+  ["John","For God so loved the world, that he gave his only begotten Son.","John 3:16"],
+  ["Acts","Believe on the Lord Jesus Christ, and thou shalt be saved.","Acts 16:31"],
+  ["Romans","And we know that all things work together for good to them that love God.","Romans 8:28"],
+  ["1 Corinthians","And now abideth faith, hope, charity, these three; but the greatest of these is charity.","1 Corinthians 13:13"],
+  ["2 Corinthians","Therefore if any man be in Christ, he is a new creature.","2 Corinthians 5:17"],
+  ["Galatians","I am crucified with Christ... the life which I now live... I live by the faith of the Son of God.","Galatians 2:20"],
+  ["Ephesians","For by grace are ye saved through faith; and that not of yourselves: it is the gift of God.","Ephesians 2:8"],
+  ["Philippians","I can do all things through Christ which strengtheneth me.","Philippians 4:13"],
+  ["Colossians","And whatsoever ye do, do it heartily, as to the Lord, and not unto men.","Colossians 3:23"],
+  ["2 Timothy","I have fought a good fight, I have finished my course, I have kept the faith.","2 Timothy 4:7"],
+  ["Hebrews","Now faith is the substance of things hoped for, the evidence of things not seen.","Hebrews 11:1"],
+  ["James","Count it all joy when ye fall into divers temptations.","James 1:2"],
+  ["1 Peter","Casting all your care upon him; for he careth for you.","1 Peter 5:7"],
+  ["1 John","We love him, because he first loved us.","1 John 4:19"],
+  ["Revelation","And God shall wipe away all tears from their eyes; and there shall be no more death.","Revelation 21:4"]
+];
+
+/* ---- verse of the day (rotates by date) ---- */
+const ALL = [].concat(...Object.values(THEMES));
+(function votd(){
+  const d=new Date(); const i=(d.getFullYear()*367 + d.getMonth()*31 + d.getDate()) % ALL.length;
+  const [t,r]=ALL[i];
+  document.getElementById('votdText').textContent='“'+t+'”';
+  document.getElementById('votdRef').textContent='— '+r;
+})();
+
+/* ---- tabs ---- */
+document.querySelectorAll('.tab').forEach(tab=>tab.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  tab.classList.add('on'); document.getElementById('p-'+tab.dataset.p).classList.add('on');
+});
+
+/* ---- themes ---- */
+const tc=document.getElementById('themeChips'), tv=document.getElementById('themeVerses');
+Object.keys(THEMES).forEach((name,idx)=>{
+  const c=document.createElement('div'); c.className='chip'+(idx===0?' on':''); c.textContent=name;
+  c.onclick=()=>{ document.querySelectorAll('#themeChips .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); showTheme(name); };
+  tc.appendChild(c);
+});
+function showTheme(name){
+  tv.innerHTML=THEMES[name].map(([t,r])=>`<div class="verse"><div class="t">“${t}”</div><div class="r">— ${r}</div></div>`).join('');
+}
+showTheme(Object.keys(THEMES)[0]);
+
+/* ---- books ---- */
+const bc=document.getElementById('bookChips'), bv=document.getElementById('bookVerse');
+BOOKS.forEach(([name,t,r],idx)=>{
+  const c=document.createElement('div'); c.className='chip'+(idx===0?' on':''); c.textContent=name;
+  c.onclick=()=>{ document.querySelectorAll('#bookChips .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); showBook(idx); };
+  bc.appendChild(c);
+});
+function showBook(idx){ const [name,t,r]=BOOKS[idx];
+  bv.innerHTML=`<div class="verse"><div class="t">“${t}”</div><div class="r">— ${r}</div></div>`;
+}
+showBook(0);
+
+/* ---- gospel ---- */
+document.getElementById('p-gospel').innerHTML=`
+  <p class="big">The real peak isn't a high score.<br>It's knowing Him. ✝</p>
+  <p>God made you, and He loves you — more than you know. <span class="ref">“For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.” (John 3:16)</span></p>
+  <p>But every one of us has fallen short and gone our own way. <span class="ref">“For all have sinned, and come short of the glory of God.” (Romans 3:23)</span></p>
+  <p>That sin separates us from God — but God didn't leave us there. <span class="ref">“For the wages of sin is death; but the gift of God is eternal life through Jesus Christ our Lord.” (Romans 6:23)</span></p>
+  <p>Jesus took our place — died for us and rose again. <span class="ref">“But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us.” (Romans 5:8)</span></p>
+  <p>It's a free gift. You receive it by faith. <span class="ref">“That if thou shalt confess with thy mouth the Lord Jesus, and shalt believe in thine heart that God hath raised him from the dead, thou shalt be saved.” (Romans 10:9)</span></p>
+  <p>Anyone. Anywhere. Right now. <span class="ref">“For whosoever shall call upon the name of the Lord shall be saved.” (Romans 10:13)</span></p>
+  <div class="pray-box"><div class="t">If you want to, you can talk to Him right now — something like:<br><br>“Jesus, I know I've fallen short. Thank You for dying for me and rising again. I turn from my own way and I trust You. Be my Lord. Thank You for the gift of life with You. Amen.”</div></div>
+  <button class="btn" onclick="toast('🙏 He hears you. This is the real W. Now go find a Bible + believers to walk with.')">🙏 I prayed this / I want to know more</button>
+`;
+
+/* ---- pray ---- */
+document.getElementById('p-pray').innerHTML=`
+  <div class="secnote">Prayer is just talking to God — honest, in your own words. He's not far. He's listening.</div>
+  <div class="verse"><div class="t">“Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God.”</div><div class="r">— Philippians 4:6</div></div>
+  <div class="verse"><div class="t">“Call unto me, and I will answer thee, and shew thee great and mighty things, which thou knowest not.”</div><div class="r">— Jeremiah 33:3</div></div>
+  <div class="verse"><div class="t">“Cast all your care upon him; for he careth for you.”</div><div class="r">— 1 Peter 5:7</div></div>
+  <button class="btn" onclick="toast('🙏 Said a prayer for you — that you would know how loved you are. Keep talking to Him.')">🙏 Say a quiet prayer</button>
+`;
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),3200); }
+
+/* back-to-arcade only when standalone (hidden inside the hub iframe) */
+try{ if(window.top===window.self){ document.getElementById('pa-hub').style.display='inline-block'; } }catch(e){}
+</script>
+</body>
+</html>
