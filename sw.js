@@ -1,6 +1,7 @@
-/* Peak Arcade service worker — caches the hub shell for offline + app-like launch */
-const CACHE = 'peak-arcade-v9';
-const SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
+/* Peak Arcade service worker — network-first for pages (so updates ALWAYS show),
+   cache-first for static assets. Versioned; old caches wiped on activate. */
+const CACHE = 'peak-arcade-v10';
+const SHELL = ['./', './index.html', './word.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(()=>{}));
@@ -12,6 +13,21 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  const isPage = e.request.mode === 'navigate' ||
+    (e.request.destination === 'document') ||
+    /\.html($|\?)/.test(e.request.url);
+  if (isPage) {
+    // NETWORK-FIRST: always try the live page so new versions show immediately; cache as fallback
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy)).catch(()=>{});
+        return res;
+      }).catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
+    );
+    return;
+  }
+  // CACHE-FIRST for everything else (icons, manifest, etc.)
   e.respondWith(
     caches.match(e.request).then(r => r || fetch(e.request).then(res => {
       const copy = res.clone();
