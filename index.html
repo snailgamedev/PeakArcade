@@ -204,7 +204,7 @@
   /* in-page game player */
   #player{position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
   #player.open{opacity:1;visibility:visible}
-  #player .ptop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top));background:var(--bg2);border-bottom:1px solid var(--line);flex-shrink:0}
+  #player .ptop{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top));background:var(--bg2);border-bottom:1px solid var(--line);flex-shrink:0}
   #player .ptitle{font-weight:800;display:flex;align-items:center;gap:8px;font-size:.95rem}
   #player .pbtns{display:flex;gap:8px}
   #player iframe{flex:1;width:100%;border:none;background:#000}
@@ -213,6 +213,25 @@
   .pclose{height:38px;padding:0 16px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--neon),var(--hot));color:#fff;font-weight:800;font-size:.85rem;display:flex;align-items:center;gap:6px}
   .pclose:hover{filter:brightness(1.12)}
   @media(max-width:560px){.pfull{display:none}.pclose{padding:0 12px}}
+  .pshare{height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--glass);font-weight:800;font-size:.85rem;display:flex;align-items:center;gap:6px}
+  .pshare:hover{border-color:var(--neon)}
+  @media(max-width:560px){.pshare{padding:0 11px}.pshare span{display:none}}
+  /* player loading screen */
+  .ploading{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg);text-align:center;padding:24px;transition:opacity .45s ease}
+  .ploading.gone{opacity:0;pointer-events:none}
+  .pspin{width:56px;height:56px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--neon);animation:spin .8s linear infinite}
+  .pload-txt{font-weight:800;letter-spacing:1px;color:var(--ink)}
+  .pload-verse{max-width:360px;font-style:italic;font-size:.88rem;line-height:1.5;color:#8a8ab5}
+  /* recently played */
+  .recent-row{display:flex;gap:12px;overflow-x:auto;padding:6px 2px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .recent-row::-webkit-scrollbar{height:6px}
+  .recent-row::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
+  .rtile{flex:0 0 auto;width:134px;border:1px solid var(--line);border-radius:16px;background:var(--card);backdrop-filter:blur(6px);overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s}
+  .rtile:hover{transform:translateY(-4px);border-color:var(--ac)}
+  .rtile .rthumb{height:72px;display:flex;align-items:center;justify-content:center;font-size:2.3rem;background:var(--tg);position:relative}
+  .rtile .rthumb::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.4))}
+  .rtile .rname{padding:9px 11px 2px;font-size:.82rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rtile .rplay{padding:0 11px 10px;font-size:.72rem;font-weight:800;color:var(--ac)}
   /* daily word */
   .word{margin-top:48px}
   .word-card{max-width:700px;margin-inline:auto;text-align:center;padding:36px 30px;border-radius:24px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(124,92,255,.14),rgba(34,211,238,.05));position:relative;overflow:hidden}
@@ -251,6 +270,7 @@
   <div class="wrap bar">
     <div class="logo"><span class="badge">🎮</span><span>PEAK <b>ARCADE</b></span></div>
     <div class="hdr-actions">
+      <button id="shareBtn" class="icon-btn" title="Share Peak Arcade" aria-label="Share">📤</button>
       <button id="gospelBtn" class="icon-btn" title="The Good News" aria-label="The Good News">✝️</button>
       <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Settings">⚙️</button>
     </div>
@@ -297,6 +317,11 @@
     </div>
   </section>
 
+  <section id="recentSec" class="reveal hide" style="margin-top:34px">
+    <div class="sec-head"><h2>🕹️ Jump back in</h2><span>your recent plays</span></div>
+    <div class="recent-row" id="recentRow"></div>
+  </section>
+
   <section id="games">
     <div class="controls reveal">
       <div class="search">🔎 <input id="searchInput" type="search" placeholder="Search games…" aria-label="Search games"></div>
@@ -327,9 +352,15 @@
   <div class="ptop">
     <span class="ptitle" id="pTitle">🎮 Playing</span>
     <div class="pbtns">
+      <button class="pshare" id="pShare">📤 <span>Share</span></button>
       <button class="pfull" id="pFull">⛶ Fullscreen</button>
       <button class="pclose" id="pClose">✕ Back to arcade</button>
     </div>
+  </div>
+  <div id="pLoad" class="ploading">
+    <div class="pspin"></div>
+    <div class="pload-txt">Loading the game…</div>
+    <div class="pload-verse" id="pVerse"></div>
   </div>
   <iframe id="pFrame" title="game player" allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope; clipboard-write" allowfullscreen></iframe>
 </div>
@@ -380,8 +411,24 @@ const GAMES=[
 /* ===== storage ===== */
 const LS={get(k,d){try{const v=localStorage.getItem('pa_'+k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem('pa_'+k,JSON.stringify(v))}catch{}}};
 let favs=LS.get('favs',[]);
+let recent=LS.get('recent',[]);
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+
+/* ===== recently played (real plays · no vanity counters) ===== */
+function renderRecent(){
+  const sec=$('#recentSec'),row=$('#recentRow');
+  const list=recent.map(id=>GAMES.find(g=>g.id===id&&g.live)).filter(Boolean);
+  sec.classList.toggle('hide',list.length===0);
+  row.innerHTML=list.map(g=>`<div class="rtile" data-rgo="${g.id}" style="--ac:${g.ac};--tg:linear-gradient(135deg,${g.ac},${g.ac2})"><div class="rthumb">${g.emoji}</div><div class="rname">${g.title}</div><div class="rplay">▶ Play again</div></div>`).join('');
+  $$('#recentRow [data-rgo]').forEach(t=>t.onclick=()=>playGame(t.dataset.rgo));
+}
+
+/* ===== share (Web Share API → traffic → revenue) ===== */
+async function shareThing(title,url){
+  const data={title:'Peak Arcade 🎮',text:'Play '+title+' on Peak Arcade — free games, peak energy 🎮',url};
+  try{if(navigator.share){await navigator.share(data);}else{await navigator.clipboard.writeText(url);toast('🔗 Link copied — go share it!');}}catch(e){}
+}
 
 /* ===== card ===== */
 function cardHTML(g){
@@ -503,17 +550,35 @@ let dp;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e
 $('#installBtn').onclick=async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;$('#installBtn').style.display='none';};
 
 /* ===== in-page game player (games open ON the arcade · URL stays clean) ===== */
-const player=$('#player'),pFrame=$('#pFrame'),pTitle=$('#pTitle');
-function showGame(g){pFrame.src=g.url;pTitle.innerHTML=`${g.emoji} ${g.title}`;player.classList.add('open');document.body.style.overflow='hidden';}
-function hideGame(){player.classList.remove('open');pFrame.src='about:blank';document.body.style.overflow='';}
-function playGame(id){const g=GAMES.find(x=>x.id===id&&x.live);if(!g)return;showGame(g);try{history.pushState({paGame:id},'');}catch(e){}}
+const player=$('#player'),pFrame=$('#pFrame'),pTitle=$('#pTitle'),pLoad=$('#pLoad');
+let curGame=null;
+const PVERSES=['"He giveth power to the faint." — Isaiah 40:29','"The joy of the LORD is your strength." — Nehemiah 8:10','"I can do all things through Christ which strengtheneth me." — Philippians 4:13','"Be strong and of a good courage; be not afraid." — Joshua 1:9','"Whatsoever thy hand findeth to do, do it with thy might." — Ecclesiastes 9:10'];
+function showGame(g){
+  curGame=g;
+  pLoad.classList.remove('gone');
+  $('#pVerse').textContent=PVERSES[Math.floor(Math.random()*PVERSES.length)];
+  pFrame.onload=()=>pLoad.classList.add('gone');
+  clearTimeout(showGame._t);showGame._t=setTimeout(()=>pLoad.classList.add('gone'),9000);
+  pFrame.src=g.url;pTitle.innerHTML=`${g.emoji} ${g.title}`;player.classList.add('open');document.body.style.overflow='hidden';
+}
+function hideGame(){player.classList.remove('open');pFrame.src='about:blank';curGame=null;document.body.style.overflow='';}
+function playGame(id){const g=GAMES.find(x=>x.id===id&&x.live);if(!g)return;
+  recent=[id,...recent.filter(x=>x!==id)].slice(0,6);LS.set('recent',recent);renderRecent();
+  showGame(g);try{history.pushState({paGame:id},'');}catch(e){}}
 function closeGame(){if(history.state&&history.state.paGame){history.back();}else{hideGame();}}
 window.addEventListener('popstate',()=>{if(!(history.state&&history.state.paGame))hideGame();});
 $('#pClose').onclick=closeGame;
+$('#pShare').onclick=()=>{if(curGame)shareThing(curGame.title,curGame.url);};
 $('#pFull').onclick=()=>{const f=player.requestFullscreen||player.webkitRequestFullscreen;if(f)f.call(player);};
+$('#shareBtn').onclick=()=>shareThing('Peak Arcade','https://snailgamedev.github.io/PeakArcade/');
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&player.classList.contains('open')){closeGame();return;}
+  if(e.key==='/'&&!/^(input|textarea|select)$/i.test(document.activeElement.tagName)){e.preventDefault();$('#searchInput').focus();}
+});
 
 /* ===== boot ===== */
-buildChips();buildCarousel();render();animCounters();
+document.querySelector('.stat b[data-count]').dataset.count=GAMES.filter(g=>g.live).length;
+buildChips();buildCarousel();render();renderRecent();animCounters();
 setTimeout(()=>$('#intro').classList.add('gone'),1000);
 window.addEventListener('load',()=>$('#intro').classList.add('gone'));
 </script>
