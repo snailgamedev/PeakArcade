@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://snailgamedev.github.io/PeakArcade/sitemap.xml
