@@ -435,16 +435,15 @@ if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.ser
 let dp;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#installBtn').style.display='block';});
 $('#installBtn').onclick=async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;$('#installBtn').style.display='none';};
 
-/* ===== in-page game player (games open ON the arcade, not a new page) ===== */
+/* ===== in-page game player (games open ON the arcade · URL stays clean) ===== */
 const player=$('#player'),pFrame=$('#pFrame'),pTitle=$('#pTitle');
 function showGame(g){pFrame.src=g.url;pTitle.innerHTML=`${g.emoji} ${g.title}`;player.classList.add('open');document.body.style.overflow='hidden';}
 function hideGame(){player.classList.remove('open');pFrame.src='about:blank';document.body.style.overflow='';}
-function routePlayer(){const m=(location.hash||'').match(/^#play-(.+)/);if(m){const g=GAMES.find(x=>x.id===m[1]&&x.live);if(g){showGame(g);return;}}hideGame();}
-function playGame(id){if(location.hash==='#play-'+id)routePlayer();else location.hash='play-'+id;}
-window.addEventListener('hashchange',routePlayer);
-$('#pClose').onclick=()=>{location.hash.indexOf('#play-')===0?history.back():hideGame();};
+function playGame(id){const g=GAMES.find(x=>x.id===id&&x.live);if(!g)return;showGame(g);try{history.pushState({paGame:id},'');}catch(e){}}
+function closeGame(){if(history.state&&history.state.paGame){history.back();}else{hideGame();}}
+window.addEventListener('popstate',()=>{if(!(history.state&&history.state.paGame))hideGame();});
+$('#pClose').onclick=closeGame;
 $('#pFull').onclick=()=>{const f=player.requestFullscreen||player.webkitRequestFullscreen;if(f)f.call(player);};
-routePlayer();
 
 /* ===== boot ===== */
 buildChips();buildCarousel();render();animCounters();
