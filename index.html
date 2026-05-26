@@ -203,6 +203,13 @@
   .pclose{height:38px;padding:0 16px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--neon),var(--hot));color:#fff;font-weight:800;font-size:.85rem;display:flex;align-items:center;gap:6px}
   .pclose:hover{filter:brightness(1.12)}
   @media(max-width:560px){.pfull{display:none}.pclose{padding:0 12px}}
+  /* daily word */
+  .word{margin-top:48px}
+  .word-card{max-width:700px;margin-inline:auto;text-align:center;padding:36px 30px;border-radius:24px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(124,92,255,.14),rgba(34,211,238,.05));position:relative;overflow:hidden}
+  .word-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(255,209,102,.14),transparent 62%)}
+  .word-ic{font-size:1.7rem;margin-bottom:14px;position:relative;filter:drop-shadow(0 0 14px rgba(255,209,102,.4))}
+  .word-verse{font-size:clamp(1.15rem,2.7vw,1.55rem);font-weight:700;line-height:1.45;font-style:italic;position:relative}
+  .word-ref{display:inline-block;margin-top:16px;font-size:.82rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);position:relative}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.card{transform:none!important}}
 </style>
 </head>
@@ -262,9 +269,17 @@
 
   <div class="ad reveal">advertisement</div>
 
-  <section id="about" class="reveal" style="margin-top:50px;text-align:center;max-width:640px;margin-inline:auto">
+  <section class="word reveal">
+    <div class="word-card">
+      <div class="word-ic">✝️</div>
+      <p class="word-verse" id="wordVerse"></p>
+      <span class="word-ref" id="wordRef"></span>
+    </div>
+  </section>
+
+  <section id="about" class="reveal" style="margin-top:46px;text-align:center;max-width:640px;margin-inline:auto">
     <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:12px">Built different 🛠️</h2>
-    <p style="color:var(--muted)">Every game here is hand-built from scratch — no engines, no fluff, just clean games that run anywhere, instantly. Add Peak Arcade to your home screen, play offline, and keep comin' back. New games drop regularly. Peak don't stop. 📈</p>
+    <p style="color:var(--muted)">Every game here is hand-built from scratch — no engines, no fluff, just clean games that run anywhere, instantly. Made with care, built to last, and put out to bless your downtime. Add it to your home screen, play offline, keep comin' back. Peak don't stop. 📈</p>
   </section>
 </main>
 
@@ -273,8 +288,8 @@
     <a href="#games">Games</a><a href="#about">About</a>
     <a href="mailto:ej.hudson1004@gmail.com?subject=Peak%20Arcade%20idea">Request a game</a>
   </div>
-  <div><span class="brand">PEAK ARCADE</span> · © <span id="yr"></span> · made with 🔥</div>
-  <div class="verse" id="verse"></div>
+  <div><span class="brand">PEAK ARCADE</span> · © <span id="yr"></span> · built on the Rock 🪨</div>
+  <div class="verse">to God be the glory 🙏</div>
 </footer>
 <div id="player" role="dialog" aria-modal="true" aria-label="game player">
   <div class="ptop">
@@ -393,7 +408,21 @@ $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.flo
 $('#yr').textContent=new Date().getFullYear();
 $('#liveCount').textContent=GAMES.filter(g=>g.live).length;
 $('#searchInput').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();render();});
-(function(){const v=['"Whatsoever thy hand findeth to do, do it with thy might." — Eccl 9:10','"I can do all things through Christ which strengtheneth me." — Phil 4:13','"Commit thy works unto the LORD, and thy thoughts shall be established." — Prov 16:3','"Let us not be weary in well doing." — Gal 6:9'];$('#verse').textContent=v[Math.floor(Date.now()/864e5)%v.length];})();
+(function(){const WORD=[
+  {t:'Whatsoever thy hand findeth to do, do it with thy might.',r:'Ecclesiastes 9:10'},
+  {t:'And whatsoever ye do, do it heartily, as to the Lord.',r:'Colossians 3:23'},
+  {t:'I can do all things through Christ which strengtheneth me.',r:'Philippians 4:13'},
+  {t:'Rejoice in the Lord alway: and again I say, Rejoice.',r:'Philippians 4:4'},
+  {t:'The joy of the LORD is your strength.',r:'Nehemiah 8:10'},
+  {t:'A merry heart doeth good like a medicine.',r:'Proverbs 17:22'},
+  {t:'Be strong and of a good courage; be not afraid.',r:'Joshua 1:9'},
+  {t:'Commit thy works unto the LORD, and thy thoughts shall be established.',r:'Proverbs 16:3'},
+  {t:'They that wait upon the LORD shall renew their strength.',r:'Isaiah 40:31'},
+  {t:'In thy presence is fulness of joy.',r:'Psalm 16:11'},
+  {t:'Let us not be weary in well doing.',r:'Galatians 6:9'},
+  {t:'He giveth power to the faint.',r:'Isaiah 40:29'}];
+  const w=WORD[Math.floor(Date.now()/864e5)%WORD.length];
+  $('#wordVerse').textContent='“'+w.t+'”';$('#wordRef').textContent='— '+w.r;})();
 (function(){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});$$('.reveal').forEach(el=>io.observe(el));})();
 function animCounters(){const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   $$('.stat b[data-count]').forEach(el=>{const end=+el.dataset.count;
