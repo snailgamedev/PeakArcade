@@ -191,6 +191,18 @@
   .cprog{position:absolute;bottom:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--neon),var(--hot));z-index:6;border-radius:0 3px 3px 0}
   .cprog.run{animation:cfill 4.8s linear forwards}
   @keyframes cfill{from{width:0}to{width:100%}}
+  /* in-page game player */
+  #player{position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+  #player.open{opacity:1;visibility:visible}
+  #player .ptop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top));background:var(--bg2);border-bottom:1px solid var(--line);flex-shrink:0}
+  #player .ptitle{font-weight:800;display:flex;align-items:center;gap:8px;font-size:.95rem}
+  #player .pbtns{display:flex;gap:8px}
+  #player iframe{flex:1;width:100%;border:none;background:#000}
+  .pfull{height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--glass);font-weight:800;font-size:.85rem;display:flex;align-items:center;gap:6px}
+  .pfull:hover{border-color:var(--neon)}
+  .pclose{height:38px;padding:0 16px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--neon),var(--hot));color:#fff;font-weight:800;font-size:.85rem;display:flex;align-items:center;gap:6px}
+  .pclose:hover{filter:brightness(1.12)}
+  @media(max-width:560px){.pfull{display:none}.pclose{padding:0 12px}}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.card{transform:none!important}}
 </style>
 </head>
@@ -264,6 +276,16 @@
   <div><span class="brand">PEAK ARCADE</span> · © <span id="yr"></span> · made with 🔥</div>
   <div class="verse" id="verse"></div>
 </footer>
+<div id="player" role="dialog" aria-modal="true" aria-label="game player">
+  <div class="ptop">
+    <span class="ptitle" id="pTitle">🎮 Playing</span>
+    <div class="pbtns">
+      <button class="pfull" id="pFull">⛶ Fullscreen</button>
+      <button class="pclose" id="pClose">✕ Back to arcade</button>
+    </div>
+  </div>
+  <iframe id="pFrame" title="game player" allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope; clipboard-write" allowfullscreen></iframe>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -318,6 +340,7 @@ function render(){
   $('#emptyState').classList.toggle('hide',list.length>0);
   $('#allCount').textContent=list.length+' game'+(list.length===1?'':'s');
   $$('.fav').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();toggleFav(b.dataset.fav);});
+  $$('#gameGrid [data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();playGame(a.dataset.go);});
   if(window._tilt)window._tilt();
 }
 function toggleFav(id){
@@ -346,6 +369,7 @@ function buildCarousel(){
   const startProg=()=>{if(prog&&!reduce){prog.classList.remove('run');void prog.offsetWidth;prog.classList.add('run');}};
   const go=i=>{cur=(i+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle('on',k===cur));dots.forEach((d,k)=>d.classList.toggle('on',k===cur));startProg();};
   dots.forEach(d=>d.onclick=e=>{e.preventDefault();go(+d.dataset.i);reset();});
+  $$('#carousel [data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();playGame(a.dataset.go);});
   function reset(){clearInterval(timer);if(!reduce&&slides.length>1)timer=setInterval(()=>go(cur+1),4800);}
   reset();startProg();
 }
@@ -365,7 +389,7 @@ $('#rmToggle').onclick=()=>{rm=!rm;LS.set('rm',rm);applyRM();toast(rm?'Reduced m
 applyRM();
 
 /* ===== misc ===== */
-$('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);location.href=l[Math.floor(Math.random()*l.length)].url;};
+$('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
 $('#liveCount').textContent=GAMES.filter(g=>g.live).length;
 $('#searchInput').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();render();});
@@ -381,6 +405,17 @@ window._tilt=function(){if(matchMedia('(hover:none)').matches||matchMedia('(pref
 if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
 let dp;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#installBtn').style.display='block';});
 $('#installBtn').onclick=async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;$('#installBtn').style.display='none';};
+
+/* ===== in-page game player (games open ON the arcade, not a new page) ===== */
+const player=$('#player'),pFrame=$('#pFrame'),pTitle=$('#pTitle');
+function showGame(g){pFrame.src=g.url;pTitle.innerHTML=`${g.emoji} ${g.title}`;player.classList.add('open');document.body.style.overflow='hidden';}
+function hideGame(){player.classList.remove('open');pFrame.src='about:blank';document.body.style.overflow='';}
+function routePlayer(){const m=(location.hash||'').match(/^#play-(.+)/);if(m){const g=GAMES.find(x=>x.id===m[1]&&x.live);if(g){showGame(g);return;}}hideGame();}
+function playGame(id){if(location.hash==='#play-'+id)routePlayer();else location.hash='play-'+id;}
+window.addEventListener('hashchange',routePlayer);
+$('#pClose').onclick=()=>{location.hash.indexOf('#play-')===0?history.back():hideGame();};
+$('#pFull').onclick=()=>{const f=player.requestFullscreen||player.webkitRequestFullscreen;if(f)f.call(player);};
+routePlayer();
 
 /* ===== boot ===== */
 buildChips();buildCarousel();render();animCounters();
