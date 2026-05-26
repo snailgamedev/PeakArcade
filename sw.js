@@ -1,5 +1,5 @@
 /* Peak Arcade service worker — caches the hub shell for offline + app-like launch */
-const CACHE = 'peak-arcade-v8';
+const CACHE = 'peak-arcade-v9';
 const SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
