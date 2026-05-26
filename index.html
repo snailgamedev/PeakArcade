@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#06060e">
-<title>PEAK ARCADE 🎮 — free games, peak energy</title>
+<title>Peak Arcade — Free Online Games, No Download 🎮 Play Instantly</title>
 <meta name="description" content="Peak Arcade — play free browser games online, no download. Basketball, fighting, brain & snail games. Tap and play instantly on phone, tablet or computer.">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="author" content="Peak Arcade">
@@ -25,6 +25,8 @@
 <link rel="canonical" href="https://snailgamedev.github.io/PeakArcade/">
 <link rel="preconnect" href="https://snailgamedev.github.io" crossorigin>
 <link rel="dns-prefetch" href="https://snailgamedev.github.io">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Peak Arcade","url":"https://snailgamedev.github.io/PeakArcade/","logo":"https://snailgamedev.github.io/PeakArcade/og.png","description":"Maker of free, hand-built browser games playable on any device."}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://snailgamedev.github.io/PeakArcade/"},{"@type":"ListItem","position":2,"name":"Games","item":"https://snailgamedev.github.io/PeakArcade/#games"},{"@type":"ListItem","position":3,"name":"FAQ","item":"https://snailgamedev.github.io/PeakArcade/#faq"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Peak Arcade","alternateName":"PEAK ARCADE","url":"https://snailgamedev.github.io/PeakArcade/","description":"Free browser games — hoop, brawl, train your brain. No download, just play.","inLanguage":"en-US","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://snailgamedev.github.io/PeakArcade/?q={search_term_string}"},"query-input":"required name=search_term_string"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Peak Arcade Games","numberOfItems":5,"itemListElement":[
 {"@type":"ListItem","position":1,"item":{"@type":"VideoGame","name":"Would U Dunk","url":"https://snailgamedev.github.io/Would-U-Dunk/","description":"Auto-rolling basketball chaos — stack modifiers and climb the CPU tiers.","image":"https://snailgamedev.github.io/PeakArcade/og.png","applicationCategory":"GameApplication","operatingSystem":"Any","genre":"Sports","inLanguage":"en","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}},
@@ -171,6 +173,8 @@
 
   .body{padding:15px 16px 17px;flex:1;display:flex;flex-direction:column;gap:6px}
   .body h3{font-size:1.16rem;font-weight:800;display:flex;align-items:center;gap:8px}
+  .body h3 a.ttl-a{color:inherit}
+  .body h3 a.ttl-a:hover{color:var(--ac)}
   .body p{color:var(--muted);font-size:.88rem;flex:1}
   .meta{display:flex;justify-content:space-between;align-items:center;font-size:.74rem;color:var(--muted);margin-top:3px}
   .tags{display:flex;gap:6px;flex-wrap:wrap}
@@ -517,7 +521,7 @@ function cardHTML(g){
     ${g.live?`<button class="fav ${fav?'on':''}" data-fav="${g.id}" aria-label="favorite">${fav?'❤️':'🤍'}</button>`:''}
     <div class="thumb"><span class="ic ${g.live?g.anim:''}">${g.emoji}</span></div>
     <div class="body">
-      <h3>${g.title}</h3><p>${g.blurb}</p>
+      <h3>${g.live?`<a href="${g.url}" data-go="${g.id}" class="ttl-a">${g.title}</a>`:g.title}</h3><p>${g.blurb}</p>
       <div class="meta"><span class="tags">${g.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</span></div>
       ${g.live?`<a class="play" href="${g.url}" data-go="${g.id}">▶ Play</a>`:`<button class="play soonbtn ${noti?'noti':''}" data-notify="${g.id}">${noti?'🔔 On the list ✓':'🔔 Notify me'}</button>`}
     </div>
