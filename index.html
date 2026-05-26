@@ -22,6 +22,13 @@
 <link rel="preconnect" href="https://snailgamedev.github.io" crossorigin>
 <link rel="dns-prefetch" href="https://snailgamedev.github.io">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Peak Arcade","url":"https://snailgamedev.github.io/PeakArcade/","description":"Free browser games — hoop, brawl, train your brain. No download, just play."}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"Peak Arcade Games","itemListElement":[
+{"@type":"ListItem","position":1,"item":{"@type":"VideoGame","name":"Would U Dunk","url":"https://snailgamedev.github.io/Would-U-Dunk/","applicationCategory":"Game","operatingSystem":"Web","genre":"Sports","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}},
+{"@type":"ListItem","position":2,"item":{"@type":"VideoGame","name":"Slam City","url":"https://snailgamedev.github.io/SlamCity/","applicationCategory":"Game","operatingSystem":"Web","genre":"Fighting","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}},
+{"@type":"ListItem","position":3,"item":{"@type":"VideoGame","name":"BrainBoard","url":"https://snailgamedev.github.io/BrainBoard/","applicationCategory":"Game","operatingSystem":"Web","genre":"Puzzle","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}},
+{"@type":"ListItem","position":4,"item":{"@type":"VideoGame","name":"Catch the Snail 2","url":"https://snailgamedev.github.io/catch-the-snail-2/snail-game.html","applicationCategory":"Game","operatingSystem":"Web","genre":"Adventure","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}},
+{"@type":"ListItem","position":5,"item":{"@type":"VideoGame","name":"Catch the Snail","url":"https://snailgamedev.github.io/catch-the-snail/","applicationCategory":"Game","operatingSystem":"Web","genre":"Adventure","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}}
+]}</script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237c5cff'/><text x='50' y='52' font-size='58' text-anchor='middle' dominant-baseline='central'>🎮</text></svg>">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
@@ -538,6 +545,10 @@ function buildCarousel(){
   const go=i=>{cur=(i+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle('on',k===cur));dots.forEach((d,k)=>d.classList.toggle('on',k===cur));startProg();};
   dots.forEach(d=>d.onclick=e=>{e.preventDefault();go(+d.dataset.i);reset();});
   $$('#carousel [data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();playGame(a.dataset.go);});
+  let sx=null;const car=$('#carousel');
+  car.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
+  car.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)>40){go(cur+(dx<0?1:-1));reset();}},{passive:true});
+  window._carNav=d=>{go(cur+d);reset();};
   function reset(){clearInterval(timer);if(!reduce&&slides.length>1)timer=setInterval(()=>go(cur+1),4800);}
   reset();startProg();
 }
@@ -671,9 +682,21 @@ document.addEventListener('keydown',e=>{
 /* ===== scroll to top ===== */
 {const toTop=$('#toTop');addEventListener('scroll',()=>{toTop.classList.toggle('show',scrollY>600);},{passive:true});toTop.onclick=()=>scrollTo({top:0,behavior:'smooth'});}
 
+/* ===== arrow-key carousel nav (desktop) ===== */
+addEventListener('keydown',e=>{
+  if(player.classList.contains('open'))return;
+  if(/^(input|textarea|select)$/i.test(document.activeElement.tagName))return;
+  if(e.key==='ArrowLeft'&&window._carNav)window._carNav(-1);
+  else if(e.key==='ArrowRight'&&window._carNav)window._carNav(1);
+});
+
 /* ===== boot ===== */
 document.querySelector('.stat b[data-count]').dataset.count=GAMES.filter(g=>g.live).length;
 buildChips();buildCarousel();buildGOTD();render();renderRecent();animCounters();
+/* deep-link launch (app shortcuts / shared game links) — then clean the URL */
+(function(){try{const p=new URLSearchParams(location.search).get('play');
+  if(p&&GAMES.find(g=>g.id===p&&g.live)){playGame(p);history.replaceState(history.state,'',location.pathname);}
+}catch(e){}})();
 setTimeout(()=>$('#intro').classList.add('gone'),1000);
 window.addEventListener('load',()=>$('#intro').classList.add('gone'));
 </script>

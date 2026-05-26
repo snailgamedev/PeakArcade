@@ -11,5 +11,11 @@
   "categories": ["games", "entertainment"],
   "icons": [
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Would U Dunk", "short_name": "Dunk", "url": "./index.html?play=wud" },
+    { "name": "Slam City", "short_name": "Slam", "url": "./index.html?play=sc" },
+    { "name": "BrainBoard", "short_name": "Brain", "url": "./index.html?play=bb" },
+    { "name": "Catch the Snail 2", "short_name": "Snail 2", "url": "./index.html?play=cts2" }
   ]
 }
