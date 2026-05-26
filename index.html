@@ -220,6 +220,25 @@
   .word-ic{font-size:1.7rem;margin-bottom:14px;position:relative;filter:drop-shadow(0 0 14px rgba(255,209,102,.4))}
   .word-verse{font-size:clamp(1.15rem,2.7vw,1.55rem);font-weight:700;line-height:1.45;font-style:italic;position:relative}
   .word-ref{display:inline-block;margin-top:16px;font-size:.82rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);position:relative}
+  .hero-faith{margin-top:24px;font-size:.92rem;font-weight:700;color:var(--gold)}
+  .hero-faith span{background:linear-gradient(90deg,var(--neon2),var(--hot));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .word-cta{margin-top:22px;position:relative}
+  .word-cta button{padding:11px 24px;border-radius:12px;border:1px solid var(--gold);background:rgba(255,209,102,.1);color:var(--gold);font-weight:800;font-size:.9rem;transition:.15s}
+  .word-cta button:hover{background:var(--gold);color:#1a1a2e}
+  .gmodal{position:fixed;inset:0;z-index:400;background:rgba(4,4,10,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+  .gmodal.open{opacity:1;visibility:visible}
+  .gcard{position:relative;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;background:linear-gradient(165deg,#15152e,#0c0c1a);border:1px solid var(--line);border-radius:24px;padding:38px 32px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+  .gcard::before{content:"";position:absolute;inset:0;border-radius:24px;background:radial-gradient(circle at 50% 0%,rgba(255,209,102,.16),transparent 55%);pointer-events:none}
+  .gclose{position:absolute;top:14px;right:16px;font-size:1rem;color:var(--muted);width:34px;height:34px;border-radius:50%;border:1px solid var(--line)}
+  .gclose:hover{color:#fff;border-color:var(--neon)}
+  .gic{font-size:2.6rem;margin-bottom:10px;position:relative;filter:drop-shadow(0 0 18px rgba(255,209,102,.5))}
+  .gcard h2{font-size:1.7rem;font-weight:900;margin-bottom:16px;position:relative}
+  .gcard p{color:#c8c8ea;margin-bottom:16px;position:relative;line-height:1.55}
+  .gcard blockquote{position:relative;font-style:italic;font-size:1.08rem;font-weight:600;color:#fff;border-left:3px solid var(--gold);padding:6px 0 6px 16px;margin:0 0 16px;text-align:left}
+  .gcard blockquote span{display:block;margin-top:6px;font-size:.78rem;font-weight:800;letter-spacing:1px;color:var(--gold);font-style:normal;text-transform:uppercase}
+  .gbtn{display:inline-block;margin:6px 0 14px;padding:13px 26px;border-radius:13px;background:linear-gradient(90deg,var(--neon),var(--hot));color:#fff;font-weight:800;position:relative}
+  .gbtn:hover{filter:brightness(1.12)}
+  .gsmall{font-size:.85rem;color:var(--gold)!important;font-weight:700}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.card{transform:none!important}}
 </style>
 </head>
@@ -232,6 +251,7 @@
   <div class="wrap bar">
     <div class="logo"><span class="badge">🎮</span><span>PEAK <b>ARCADE</b></span></div>
     <div class="hdr-actions">
+      <button id="gospelBtn" class="icon-btn" title="The Good News" aria-label="The Good News">✝️</button>
       <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Settings">⚙️</button>
     </div>
   </div>
@@ -253,6 +273,7 @@
       <a href="#games" class="btn primary">▶ Start playing</a>
       <button class="btn ghost" id="randomBtn">🎲 Surprise me</button>
     </div>
+    <p class="hero-faith">✝️ free forever · built on the Rock · made to point you <span>higher</span></p>
     <div class="stats">
       <div class="stat"><b data-count="3">0</b><span>Games</span></div>
       <div class="stat"><b data-text="100%">100%</b><span>Free</span></div>
@@ -267,6 +288,15 @@
     <div class="carousel" id="carousel"></div>
   </section>
 
+  <section class="word reveal">
+    <div class="word-card">
+      <div class="word-ic">✝️</div>
+      <p class="word-verse" id="wordVerse"></p>
+      <span class="word-ref" id="wordRef"></span>
+      <div class="word-cta"><button id="gospelOpen2">✨ The Good News</button></div>
+    </div>
+  </section>
+
   <section id="games">
     <div class="controls reveal">
       <div class="search">🔎 <input id="searchInput" type="search" placeholder="Search games…" aria-label="Search games"></div>
@@ -278,14 +308,6 @@
   </section>
 
   <div class="ad reveal">advertisement</div>
-
-  <section class="word reveal">
-    <div class="word-card">
-      <div class="word-ic">✝️</div>
-      <p class="word-verse" id="wordVerse"></p>
-      <span class="word-ref" id="wordRef"></span>
-    </div>
-  </section>
 
   <section id="about" class="reveal" style="margin-top:46px;text-align:center;max-width:640px;margin-inline:auto">
     <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:12px">Built different 🛠️</h2>
@@ -311,6 +333,19 @@
   </div>
   <iframe id="pFrame" title="game player" allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope; clipboard-write" allowfullscreen></iframe>
 </div>
+<div id="gospel" class="gmodal" role="dialog" aria-modal="true" aria-label="The Good News">
+  <div class="gcard">
+    <button class="gclose" id="gClose" aria-label="close">✕</button>
+    <div class="gic">✝️</div>
+    <h2>The Good News</h2>
+    <p>Real talk — everything here is built on something way bigger than games. 🪨 And it's the best news there is:</p>
+    <blockquote>"For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life."<span>John 3:16</span></blockquote>
+    <p>Life gets heavy. Jesus said: <em>"Come unto me, all ye that labour and are heavy laden, and I will give you rest."</em> <strong>(Matthew 11:28)</strong></p>
+    <p>The real <em>peak</em> isn't a high score — it's knowing Him. No pressure, no guilt, no catch. Just an open door. 🚪</p>
+    <a class="gbtn" href="https://www.bible.com/" target="_blank" rel="noopener">📖 Read the Bible — free</a>
+    <p class="gsmall">However you got here — you're loved. 🙏</p>
+  </div>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -332,6 +367,14 @@ const GAMES=[
     blurb:"You're on the bench. Hear the case, weigh it, make the call. Wisdom on trial.", tags:['strategy']},
   {id:'golf', title:'Golf × Tennis', emoji:'🎾', cat:'Sports', url:'', live:false, anim:'a-arc', ac:'#a78bfa', ac2:'#22d3ee',
     blurb:"One hybrid sport, two games in one. Fresh — nobody's done it like this.", tags:['sports']},
+  {id:'fit', title:'Fitness Quest', emoji:'💪', cat:'Sports', url:'', live:false, anim:'a-pulse', ac:'#f59e0b', ac2:'#ef4444',
+    blurb:'Gamified workouts — move IRL, level up in-game. Sweat with purpose.', tags:['fitness']},
+  {id:'chess', title:'Chess', emoji:'♟️', cat:'Strategy', url:'', live:false, anim:'a-pulse', ac:'#94a3b8', ac2:'#475569',
+    blurb:'Timeless. Play a friend or battle the CPU. Brains over button-mashing.', tags:['strategy','classic']},
+  {id:'race', title:'Racing', emoji:'🏎️', cat:'Sports', url:'', live:false, anim:'a-arc', ac:'#ef4444', ac2:'#f59e0b',
+    blurb:'Pedal down, chaos up. Weave, boost, win — arcade racing with no brakes.', tags:['racing']},
+  {id:'td', title:'Tower Defense', emoji:'🏰', cat:'Strategy', url:'', live:false, anim:'a-swing', ac:'#10b981', ac2:'#0891b2',
+    blurb:'Stack towers, hold the line, survive the waves. Strategy meets mayhem.', tags:['strategy','defense']},
 ];
 
 /* ===== storage ===== */
@@ -416,6 +459,16 @@ let rm=LS.get('rm',false);
 function applyRM(){document.documentElement.classList.toggle('rm',rm);$('#rmToggle').classList.toggle('on',rm);}
 $('#rmToggle').onclick=()=>{rm=!rm;LS.set('rm',rm);applyRM();toast(rm?'Reduced motion on':'Reduced motion off');};
 applyRM();
+
+/* ===== The Good News (gospel modal) ===== */
+const gospel=$('#gospel');
+function openGospel(){gospel.classList.add('open');document.body.style.overflow='hidden';}
+function closeGospel(){gospel.classList.remove('open');document.body.style.overflow='';}
+$('#gospelBtn').onclick=openGospel;
+{const g2=$('#gospelOpen2');if(g2)g2.onclick=openGospel;}
+$('#gClose').onclick=closeGospel;
+gospel.addEventListener('click',e=>{if(e.target===gospel)closeGospel();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.contains('open'))closeGospel();});
 
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
