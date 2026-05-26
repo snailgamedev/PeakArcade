@@ -19,6 +19,8 @@
 <meta name="twitter:image" content="https://snailgamedev.github.io/PeakArcade/og.png">
 <meta name="keywords" content="free games, browser games, online arcade, basketball game, fighting game, brain games, play free, no download">
 <link rel="canonical" href="https://snailgamedev.github.io/PeakArcade/">
+<link rel="preconnect" href="https://snailgamedev.github.io" crossorigin>
+<link rel="dns-prefetch" href="https://snailgamedev.github.io">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Peak Arcade","url":"https://snailgamedev.github.io/PeakArcade/","description":"Free browser games — hoop, brawl, train your brain. No download, just play."}</script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237c5cff'/><text x='50' y='52' font-size='58' text-anchor='middle' dominant-baseline='central'>🎮</text></svg>">
@@ -222,6 +224,9 @@
   .pspin{width:56px;height:56px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--neon);animation:spin .8s linear infinite}
   .pload-txt{font-weight:800;letter-spacing:1px;color:var(--ink)}
   .pload-verse{max-width:360px;font-style:italic;font-size:.88rem;line-height:1.5;color:#8a8ab5}
+  .pload-link{margin-top:4px;font-size:.82rem;font-weight:800;color:var(--neon);border-bottom:1px solid var(--neon);padding-bottom:1px}
+  .clearbtn{margin-top:15px;padding:9px 18px;border-radius:11px;border:1px solid var(--neon);background:rgba(124,92,255,.1);color:var(--neon);font-weight:800;font-size:.85rem;transition:.15s}
+  .clearbtn:hover{background:var(--neon);color:#fff}
   /* recently played */
   .recent-row{display:flex;gap:12px;overflow-x:auto;padding:6px 2px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
   .recent-row::-webkit-scrollbar{height:6px}
@@ -359,7 +364,7 @@
     </div>
     <div class="sec-head reveal"><h2>🔥 All games</h2><span id="allCount"></span></div>
     <div class="grid" id="gameGrid"></div>
-    <div class="empty hide" id="emptyState">Nothin' here yet 🤷 — try another filter.</div>
+    <div class="empty hide" id="emptyState">Nothin' here yet 🤷 — try another filter.<br><button class="clearbtn" id="clearFilters">↺ Clear filters</button></div>
   </section>
 
   <div class="ad reveal">advertisement</div>
@@ -383,6 +388,7 @@
     <span class="ptitle" id="pTitle">🎮 Playing</span>
     <div class="pbtns">
       <button class="pshare" id="pShare">📤 <span>Share</span></button>
+      <button class="pshare" id="pPop">↗ <span>New tab</span></button>
       <button class="pfull" id="pFull">⛶ Fullscreen</button>
       <button class="pclose" id="pClose">✕ Back to arcade</button>
     </div>
@@ -391,6 +397,7 @@
     <div class="pspin"></div>
     <div class="pload-txt">Loading the game…</div>
     <div class="pload-verse" id="pVerse"></div>
+    <a class="pload-link" id="pSlow" target="_blank" rel="noopener" style="display:none">Taking a while? Open in a new tab ↗</a>
   </div>
   <iframe id="pFrame" title="game player" allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope; clipboard-write" allowfullscreen></iframe>
 </div>
@@ -558,7 +565,7 @@ function confetti(){const e=['🎉','✨','🔥','🙌','⭐','💯'];for(let i=
 })();
 
 /* ===== theme accent ===== */
-const THEMES=[{neon:'#7c5cff',neon2:'#22d3ee',hot:'#ff4d8d'},{neon:'#22d3ee',neon2:'#37d67a',hot:'#7c5cff'},{neon:'#ffd166',neon2:'#ff8a3d',hot:'#ff4d8d'},{neon:'#ff4d8d',neon2:'#7c5cff',hot:'#22d3ee'}];
+const THEMES=[{neon:'#7c5cff',neon2:'#22d3ee',hot:'#ff4d8d'},{neon:'#22d3ee',neon2:'#37d67a',hot:'#7c5cff'},{neon:'#ffd166',neon2:'#ff8a3d',hot:'#ff4d8d'},{neon:'#ff4d8d',neon2:'#7c5cff',hot:'#22d3ee'},{neon:'#37d67a',neon2:'#ffd166',hot:'#22d3ee'},{neon:'#ff8a3d',neon2:'#ff4d8d',hot:'#ffd166'}];
 let ti=LS.get('theme',0);
 function applyTheme(){const t=THEMES[ti];const r=document.documentElement.style;r.setProperty('--neon',t.neon);r.setProperty('--neon2',t.neon2);r.setProperty('--hot',t.hot);}
 function renderSwatches(){$('#swatches').innerHTML=THEMES.map((t,i)=>`<button class="sw ${i===ti?'on':''}" style="background:linear-gradient(135deg,${t.neon},${t.hot})" data-i="${i}" aria-label="accent ${i+1}"></button>`).join('');
@@ -587,6 +594,9 @@ $('#yr').textContent=new Date().getFullYear();
 $('#liveCount').textContent=GAMES.filter(g=>g.live).length;
 $('#searchInput').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();render();});
 $('#sortSel').addEventListener('change',e=>{sortMode=e.target.value;render();});
+$('#clearFilters').onclick=()=>{query='';activeCat='All';sortMode='featured';$('#searchInput').value='';$('#sortSel').value='featured';$$('.chip').forEach(x=>x.classList.toggle('on',x.dataset.cat==='All'));render();toast('↺ Filters cleared');};
+/* easter egg: type PEAK (not while in a field) → confetti + blessing */
+let _eg='';addEventListener('keydown',e=>{if(/^(input|textarea|select)$/i.test(document.activeElement.tagName))return;if(/^[a-zA-Z]$/.test(e.key)){_eg=(_eg+e.key.toUpperCase()).slice(-4);if(_eg==='PEAK'){confetti();toast('🔥 PEAK unlocked! "I can do all things through Christ" — Phil 4:13 💪');_eg='';}}});
 const WORD=[
   {t:'Whatsoever thy hand findeth to do, do it with thy might.',r:'Ecclesiastes 9:10'},
   {t:'And whatsoever ye do, do it heartily, as to the Lord.',r:'Colossians 3:23'},
@@ -634,10 +644,12 @@ let curGame=null;
 const PVERSES=['"He giveth power to the faint." — Isaiah 40:29','"The joy of the LORD is your strength." — Nehemiah 8:10','"I can do all things through Christ which strengtheneth me." — Philippians 4:13','"Be strong and of a good courage; be not afraid." — Joshua 1:9','"Whatsoever thy hand findeth to do, do it with thy might." — Ecclesiastes 9:10'];
 function showGame(g){
   curGame=g;
+  const slow=$('#pSlow');slow.style.display='none';slow.href=g.url;
   pLoad.classList.remove('gone');
   $('#pVerse').textContent=PVERSES[Math.floor(Math.random()*PVERSES.length)];
-  pFrame.onload=()=>pLoad.classList.add('gone');
+  pFrame.onload=()=>{pLoad.classList.add('gone');clearTimeout(showGame._s);};
   clearTimeout(showGame._t);showGame._t=setTimeout(()=>pLoad.classList.add('gone'),9000);
+  clearTimeout(showGame._s);showGame._s=setTimeout(()=>{if(!pLoad.classList.contains('gone'))slow.style.display='inline-block';},6000);
   pFrame.src=g.url;pTitle.innerHTML=`${g.emoji} ${g.title}`;player.classList.add('open');document.body.style.overflow='hidden';
 }
 function hideGame(){player.classList.remove('open');pFrame.src='about:blank';curGame=null;document.body.style.overflow='';}
@@ -648,6 +660,7 @@ function closeGame(){if(history.state&&history.state.paGame){history.back();}els
 window.addEventListener('popstate',()=>{if(!(history.state&&history.state.paGame))hideGame();});
 $('#pClose').onclick=closeGame;
 $('#pShare').onclick=()=>{if(curGame)shareThing(curGame.title,curGame.url);};
+$('#pPop').onclick=()=>{if(curGame)window.open(curGame.url,'_blank','noopener');};
 $('#pFull').onclick=()=>{const f=player.requestFullscreen||player.webkitRequestFullscreen;if(f)f.call(player);};
 $('#shareBtn').onclick=()=>shareThing('Peak Arcade','https://snailgamedev.github.io/PeakArcade/');
 document.addEventListener('keydown',e=>{
