@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#06060e">
 <meta name="google-site-verification" content="8Fu9dM5O0yaDOCWMji8PFKzJrza3dipQWGcRGk8DufY" />
+<meta name="google-adsense-account" content="ca-pub-5732662272059891">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5732662272059891" crossorigin="anonymous"></script>
 <title>Peak Arcade — Free Online Games, No Download 🎮 Play Instantly</title>
 <meta name="description" content="Peak Arcade — play free browser games online, no download. Basketball, fighting, brain & snail games. Tap and play instantly on phone, tablet or computer.">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
@@ -495,17 +497,16 @@
 <div id="toast" aria-live="polite" role="status"></div>
 
 <script>
-/* ===== 💰 ADSENSE — plug-and-play. Paste your publisher ID below once Google approves you,
-   redeploy, and ads go live (uses Auto Ads — also turn Auto ads ON in your AdSense dashboard).
-   Empty = no ad script loads (placeholders stay), so nothing breaks before approval. ===== */
-const ADSENSE_PUB = '';   // ← e.g. 'ca-pub-1234567890123456'  (yours from adsense.google.com)
+/* ===== 💰 ADSENSE — LIVE (pub ca-pub-5732662272059891, set 2026-05-27).
+   The loader <script> is STATIC in <head> (so Google's verification + Auto Ads find it without JS).
+   initAds() only fills the reserved .ad display slots — it does NOT re-inject the loader
+   (double-loading adsbygoogle.js is a policy/console error). ===== */
+const ADSENSE_PUB = 'ca-pub-5732662272059891';
 function initAds(){
-  if(!ADSENSE_PUB || !/^ca-pub-\d+$/.test(ADSENSE_PUB)) return;   // not set / not approved yet — leave the placeholders
-  const s=document.createElement('script'); s.async=true; s.crossOrigin='anonymous';
-  s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+ADSENSE_PUB;
-  document.head.appendChild(s);
-  // fill the reserved .ad slots with responsive display units
+  if(!ADSENSE_PUB || !/^ca-pub-\d+$/.test(ADSENSE_PUB)) return;
+  // loader already in <head>; just fill the reserved .ad slots with responsive display units
   document.querySelectorAll('.ad').forEach(slot=>{
+    if(slot.classList.contains('live')) return;
     slot.innerHTML='<ins class="adsbygoogle" style="display:block" data-ad-client="'+ADSENSE_PUB+'" data-ad-format="auto" data-full-width-responsive="true"></ins>';
     slot.classList.add('live');
     try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
@@ -701,7 +702,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1455 · sw v17';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1510 · sw v18';}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
