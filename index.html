@@ -428,6 +428,7 @@
 <footer class="wrap">
   <div class="links">
     <a href="#games">Games</a><a href="#about">About</a><a href="#faq">FAQ</a>
+    <a href="privacy.html">Privacy</a>
     <a href="mailto:ej.hudson1004@gmail.com?subject=Peak%20Arcade%20idea">Request a game</a>
   </div>
   <div><span class="brand">PEAK ARCADE</span> · © <span id="yr"></span> · built on the Rock 🪨</div>
@@ -470,6 +471,23 @@
 <div id="toast" aria-live="polite" role="status"></div>
 
 <script>
+/* ===== 💰 ADSENSE — plug-and-play. Paste your publisher ID below once Google approves you,
+   redeploy, and ads go live (uses Auto Ads — also turn Auto ads ON in your AdSense dashboard).
+   Empty = no ad script loads (placeholders stay), so nothing breaks before approval. ===== */
+const ADSENSE_PUB = '';   // ← e.g. 'ca-pub-1234567890123456'  (yours from adsense.google.com)
+function initAds(){
+  if(!ADSENSE_PUB || !/^ca-pub-\d+$/.test(ADSENSE_PUB)) return;   // not set / not approved yet — leave the placeholders
+  const s=document.createElement('script'); s.async=true; s.crossOrigin='anonymous';
+  s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+ADSENSE_PUB;
+  document.head.appendChild(s);
+  // fill the reserved .ad slots with responsive display units
+  document.querySelectorAll('.ad').forEach(slot=>{
+    slot.innerHTML='<ins class="adsbygoogle" style="display:block" data-ad-client="'+ADSENSE_PUB+'" data-ad-format="auto" data-full-width-responsive="true"></ins>';
+    slot.classList.add('live');
+    try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
+  });
+}
+
 /* ===== DATA (add a game = one object) ===== */
 const GAMES=[
   {id:'word', title:'The Word', emoji:'✝️', cat:'Faith', url:'https://snailgamedev.github.io/PeakArcade/word.html', live:true, featured:true, anim:'a-pulse', ac:'#f5c542', ac2:'#b98cff', badge:'✝',
@@ -659,7 +677,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-26·2011 · sw v13';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-26·2011 · sw v14';}
+initAds();
 $('#liveCount').textContent=GAMES.filter(g=>g.live).length;
 $('#searchInput').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();render();});
 $('#sortSel').addEventListener('change',e=>{sortMode=e.target.value;render();});
