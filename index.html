@@ -41,7 +41,10 @@
 {"@type":"Question","name":"Are the games on Peak Arcade free?","acceptedAnswer":{"@type":"Answer","text":"Yes — 100% free to play. No download, no login, no catch. Just open the page, tap a game, and play."}},
 {"@type":"Question","name":"Do I need to download or install anything?","acceptedAnswer":{"@type":"Answer","text":"No. Every game runs right in your web browser. You can also Add to Home Screen to install Peak Arcade like an app and play offline."}},
 {"@type":"Question","name":"Can I play on my phone, tablet, and computer?","acceptedAnswer":{"@type":"Answer","text":"Yes — Peak Arcade works on any device with a browser: phone, tablet, laptop or desktop, built to feel great on touch and on keyboard and mouse."}},
-{"@type":"Question","name":"What kinds of games are there?","acceptedAnswer":{"@type":"Answer","text":"A growing mix — basketball (Would U Dunk), fighting (Slam City), brain games (BrainBoard), adventure (Catch the Snail 1 and 2), and arcade (Coin Kingdom), with more dropping soon like Chess and Tower Defense."}},
+{"@type":"Question","name":"What kinds of games are there?","acceptedAnswer":{"@type":"Answer","text":"A growing mix — basketball (Would U Dunk), wrestling (Slam City), brain games (BrainBoard), adventure (Catch the Snail 1 and 2), a 7-in-1 coin arcade (Coin Kingdom), and The Word, with more dropping soon like Chess and Tower Defense."}},
+{"@type":"Question","name":"Do my scores and progress save?","acceptedAnswer":{"@type":"Answer","text":"Yes — saved on your own device in your browser, no account needed. Coins, high scores, unlocks and streaks are there when you return. Clearing your browser data resets them since it only lives on your device."}},
+{"@type":"Question","name":"Is Peak Arcade safe for kids and the whole family?","acceptedAnswer":{"@type":"Answer","text":"Yes. Built clean on purpose — no gore, no real-money gambling, no sketchy links. A family-friendly arcade."}},
+{"@type":"Question","name":"Do you track me or sell my data?","acceptedAnswer":{"@type":"Answer","text":"No accounts, no personal info collected by us, and no data to sell. Ads via Google use cookies, explained in our Privacy Policy."}},
 {"@type":"Question","name":"How is Peak Arcade free? Is it safe?","acceptedAnswer":{"@type":"Answer","text":"It is free to play and supported by ads, which lets us keep building more games. No accounts, nothing to buy."}}
 ]}</script>
 <link rel="manifest" href="manifest.json">
@@ -433,12 +436,16 @@
   </section>
 
   <section id="faq" class="faq reveal">
-    <h2>❓ Questions</h2>
-    <details><summary>Are the games on Peak Arcade free?</summary><p>Yep — 100% free to play. No download, no login, no catch. Just open the page, tap a game, and play.</p></details>
-    <details><summary>Do I need to download or install anything?</summary><p>Nope. Every game runs right in your web browser. If you want, you can also "Add to Home Screen" to install Peak Arcade like an app and even play offline.</p></details>
-    <details><summary>Can I play on my phone, tablet, and computer?</summary><p>Yes — Peak Arcade works on any device with a browser: phone, tablet, laptop or desktop. The games are built to feel great on touch and on keyboard/mouse.</p></details>
-    <details><summary>What kinds of games are there?</summary><p>A growing mix — basketball (Would U Dunk), fighting (Slam City), brain games (BrainBoard), adventure (Catch the Snail 1 &amp; 2), and arcade (Coin Kingdom), with more dropping soon like Chess and Tower Defense.</p></details>
-    <details><summary>How is Peak Arcade free? Is it safe?</summary><p>It's free for you to play and supported by ads, which is what lets us keep building more games. No accounts, nothing to buy. Made with care — and put out to bless your downtime. 🙏</p></details>
+    <h2>🤔 Got Questions? We Got You.</h2>
+    <details><summary>Wait… it's actually free? What's the catch?</summary><p>No catch. 100% free, forever — no download, no login, no credit card, no "free trial" nonsense. You open the page, you tap a game, you play. That's the whole deal. Ads keep the lights on so you never pay a dime. 🙌</p></details>
+    <details><summary>Do I have to download or install anything?</summary><p>Nope — everything runs right in your browser. But if you're feeling it, hit <b>"Add to Home Screen"</b> (or the ⬇ Install button) and Peak Arcade lives on your phone like a real app — and it even works <b>offline</b> on the plane, the subway, wherever. 📲</p></details>
+    <details><summary>Phone, tablet, laptop — does it work everywhere?</summary><p>All of 'em. Built mobile-first and tuned for touch, but it feels just as clean on keyboard + mouse. One arcade, every screen. 📱💻</p></details>
+    <details><summary>Do my scores and progress save?</summary><p>Yes — saved right on <b>your</b> device (in your browser), no account needed. Coins, high scores, unlocks, streaks — all there when you come back. (Heads up: clearing your browser data wipes it, since it only lives on your device.)</p></details>
+    <details><summary>What games are in here?</summary><p>A growing roster — 🏀 basketball chaos (Would U Dunk), 🥊 wrestling (Slam City), 🧠 brain games (BrainBoard), 🐌 adventure (Catch the Snail 1 &amp; 2), 🪙 a 7-in-1 coin arcade (Coin Kingdom), and ✝️ The Word. More always cooking — Chess, Tower Defense, and friends are on deck.</p></details>
+    <details><summary>Is it safe for kids / the whole family?</summary><p>Yes. Built clean on purpose — no gore, no real-money gambling, no sketchy links. The kind of arcade you can hand your little brother without a second thought. 🛡️</p></details>
+    <details><summary>What's with the Bible verses? 🙏</summary><p>We're a faith-built shop, plain and simple. The Word shows up here gentle — a verse on a loading screen, a quiet "✝ The Word" room — never shoved in your face. Come for the games; if a verse meets you on the way, that's the real high score. 💛</p></details>
+    <details><summary>Do you track me or sell my data?</summary><p>No accounts, no personal info collected by us, no data to sell. Ads (via Google) use cookies — you can read exactly how in our <a href="privacy.html">Privacy Policy</a>. We kept it honest and short.</p></details>
+    <details><summary>Found a bug, or got a game idea?</summary><p>We'd love it — hit us at <a href="mailto:ej.hudson1004@gmail.com?subject=Peak%20Arcade">ej.hudson1004@gmail.com</a>. Half the stuff in here started as "yo what if…" 🔥</p></details>
   </section>
 </main>
 
@@ -694,7 +701,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1426 · sw v16';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1455 · sw v17';}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
