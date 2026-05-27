@@ -216,6 +216,20 @@
   #updateBar.show{transform:translateY(0)}
   #updateBar button{background:#06060e;color:#fff;border:none;border-radius:99px;padding:7px 16px;font-weight:800;font-size:.85rem;cursor:pointer}
   #updateBar button:active{transform:scale(.95)}
+  /* cookie consent (ads + transparency) — Coda voice, kept lively */
+  #cookieBar{position:fixed;left:12px;right:12px;bottom:12px;z-index:350;display:none;align-items:center;justify-content:center;gap:10px 14px;flex-wrap:wrap;
+    background:linear-gradient(180deg,#12122a,var(--bg2));border:1px solid var(--line);border-top:2px solid var(--gold);border-radius:16px;padding:14px 18px;
+    box-shadow:0 16px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,209,102,.08);font-size:.85rem;color:var(--muted);max-width:640px;margin:0 auto}
+  #cookieBar.show{display:flex;animation:ckup .4s cubic-bezier(.2,.9,.3,1.2)}
+  @keyframes ckup{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
+  #cookieBar .ck-cookie{font-size:1.5rem;display:inline-block;transform-origin:60% 85%;animation:ckwiggle 3s ease-in-out infinite}
+  @keyframes ckwiggle{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-14deg)}94%{transform:rotate(11deg)}}
+  #cookieBar .ck-txt{flex:1;min-width:210px;text-align:left;line-height:1.5}
+  #cookieBar .ck-txt b{color:var(--ink)}
+  #cookieBar a{color:var(--ac);font-weight:700;white-space:nowrap}
+  #cookieBar button{background:linear-gradient(90deg,var(--gold),#ffb43d);color:#06060e;border:none;border-radius:99px;padding:9px 18px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 4px 14px rgba(255,180,61,.35);transition:transform .12s}
+  #cookieBar button:hover{transform:translateY(-1px)}
+  #cookieBar button:active{transform:scale(.95)}
   #toast.show{transform:translateX(-50%) translateY(0)}
 
   .panel{position:fixed;top:74px;right:18px;z-index:80;width:232px;background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 20px 50px rgba(0,0,0,.6);opacity:0;visibility:hidden;transform:translateY(-8px);transition:opacity .2s,transform .2s,visibility .2s}
@@ -534,7 +548,7 @@ let favs=LS.get('favs',[]);
 let recent=LS.get('recent',[]);
 let notify=LS.get('notify',[]);
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+function toast(m,ms){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms||1800);}
 
 /* ===== recently played (real plays · no vanity counters) ===== */
 function renderRecent(){
@@ -677,8 +691,26 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-26·2011 · sw v14';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1411 · sw v15';}
 initAds();
+/* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
+function initCookieBar(){
+  if(LS.get('consent',false)) return;
+  const lines=[
+    "Real talk — we run on cookies (the data kind, not chocolate-chip 😔). They serve the ads that keep Peak Arcade <b>100% free</b> and remember your favs, scores & settings.",
+    "Cookies live here, fam. They keep the lights on (ads = free games for you) and hold onto your vibe — favorites, high scores, settings. All out in the open. 🙏",
+    "No shady business — just cookies doin' honest work: serving the ads that keep the arcade free, and saving your progress so you pick up right where you left off.",
+    "Peak Arcade runs on cookies. They power the ads (so <b>you never pay a dime</b>) and keep your scores & settings. Built transparent — like everything 'round here."
+  ];
+  const oks=["Bet, let's play 🎮","We good 👊","Aight, run it 🔥","Say less 🤝"];
+  const txt=lines[Math.floor(Math.random()*lines.length)];
+  const ok=oks[Math.floor(Math.random()*oks.length)];
+  const bar=document.createElement('div'); bar.id='cookieBar';
+  bar.innerHTML='<span class="ck-cookie">🍪</span><span class="ck-txt">'+txt+' <a href="privacy.html">Full Privacy Policy →</a></span><button id="ckOk">'+ok+'</button>';
+  document.body.appendChild(bar); requestAnimationFrame(()=>bar.classList.add('show'));
+  bar.querySelector('#ckOk').onclick=()=>{ LS.set('consent',true); bar.classList.remove('show'); setTimeout(()=>bar.remove(),300); toast('🙌 Appreciate you — now go ball.'); };
+}
+initCookieBar();
 $('#liveCount').textContent=GAMES.filter(g=>g.live).length;
 $('#searchInput').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();render();});
 $('#sortSel').addEventListener('change',e=>{sortMode=e.target.value;render();});
@@ -773,8 +805,18 @@ if('serviceWorker'in navigator){
   });
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}); });
 }
-let dp;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#installBtn').style.display='block';});
-$('#installBtn').onclick=async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;$('#installBtn').style.display='none';};
+/* Install / download — works on Android+desktop (beforeinstallprompt) AND iPhone (manual hint) */
+const IOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
+const STANDALONE=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+let dp;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#installBtn').style.display='block';});
+if(IOS&&!STANDALONE){ $('#installBtn').style.display='block'; }  // iOS gives no prompt event — show button + manual steps
+$('#installBtn').onclick=async()=>{
+  if(dp){ dp.prompt(); await dp.userChoice; dp=null; $('#installBtn').style.display='none'; toast('📲 Peak Arcade installed — it lives on your home screen now! 🔥'); return; }
+  if(IOS){ toast('📲 Tap the Share button ⬆ at the bottom, then "Add to Home Screen" — boom, Peak Arcade lives on your phone!',5200); return; }
+  toast('📲 Open your browser menu → "Install app" / "Add to Home Screen".',4200);
+};
+window.addEventListener('appinstalled',()=>{ try{confetti&&confetti();}catch(e){} toast('🎮 You\'re officially in the arcade — installed! Play offline anytime. 🙏'); });
 
 /* ===== in-page game player (games open ON the arcade · URL stays clean) ===== */
 const player=$('#player'),pFrame=$('#pFrame'),pTitle=$('#pTitle'),pLoad=$('#pLoad');
