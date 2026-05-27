@@ -118,7 +118,10 @@
   .stat b{display:block;font-size:2rem;font-weight:900;background:linear-gradient(90deg,var(--neon2),var(--neon));-webkit-background-clip:text;background-clip:text;color:transparent}
   .stat span{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.6px}
 
-  .ad{margin:32px 0;border:1px dashed var(--line);border-radius:14px;min-height:90px;display:flex;align-items:center;justify-content:center;color:#4f4f78;font-size:.76rem;letter-spacing:2px;text-transform:uppercase;background:repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(255,255,255,.01) 12px,rgba(255,255,255,.01) 24px)}
+  /* ad slots: hidden until a REAL ad loads — no empty "advertisement" boxes during AdSense review (cleaner site = better approval odds) */
+  .ad{display:none}
+  .ad.live{display:block;opacity:1;transform:none;margin:32px 0;min-height:90px;text-align:center}
+  .ad.live::before{content:'Advertisement';display:block;font-size:.6rem;letter-spacing:2px;color:#4f4f78;text-transform:uppercase;margin-bottom:6px}
 
   .sec-head{display:flex;align-items:baseline;justify-content:space-between;margin:44px 0 20px}
   .sec-head h2{font-size:1.6rem;font-weight:800}
@@ -691,7 +694,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1411 · sw v15';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1426 · sw v16';}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
