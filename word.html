@@ -85,15 +85,28 @@
   </div>
 
   <div class="tabs" id="tabs">
-    <div class="tab on" data-p="theme">📖 By Theme</div>
+    <div class="tab on" data-p="need">🕊️ I Need…</div>
+    <div class="tab" data-p="theme">📖 By Theme</div>
+    <div class="tab" data-p="promise">🤞 Promises</div>
     <div class="tab" data-p="books">📚 The Books</div>
     <div class="tab" data-p="gospel">✝ The Gospel</div>
     <div class="tab" data-p="pray">🙏 Pray</div>
   </div>
 
-  <div class="panel on" id="p-theme">
+  <div class="panel on" id="p-need">
+    <div class="secnote">However you’re feeling right now — there’s a word for it. Tap what you need. 🕊️</div>
+    <div class="chips" id="needChips"></div>
+    <div id="needVerse"></div>
+  </div>
+
+  <div class="panel" id="p-theme">
     <div class="chips" id="themeChips"></div>
     <div id="themeVerses"></div>
+  </div>
+
+  <div class="panel" id="p-promise">
+    <div class="secnote">God keeps His word — every promise. A few to stand on. 🤞</div>
+    <div id="promiseList"></div>
   </div>
 
   <div class="panel" id="p-books">
@@ -228,6 +241,38 @@ const BOOKS = [
   ["Revelation","And God shall wipe away all tears from their eyes; and there shall be no more death.","Revelation 21:4"]
 ];
 
+/* ---- I NEED... (need-based, pastoral — a warm line + a fitting verse) ---- */
+const I_NEED = {
+  "Peace 🕊️":      ["You don't have to carry it all. Hand it over.","Be careful for nothing; but in every thing by prayer... let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts.","Philippians 4:6-7"],
+  "Strength 💪":    ["When you've got nothing left, He does.","He giveth power to the faint; and to them that have no might he increaseth strength.","Isaiah 40:29"],
+  "Courage 🦁":     ["Afraid? You're not walking in alone.","Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee.","Isaiah 41:10"],
+  "Hope 🌅":        ["This chapter isn't the whole story.","For I know the thoughts that I think toward you, saith the LORD, thoughts of peace, and not of evil, to give you an expected end.","Jeremiah 29:11"],
+  "Rest 😮‍💨":      ["You're allowed to stop. Come and breathe.","Come unto me, all ye that labour and are heavy laden, and I will give you rest.","Matthew 11:28"],
+  "Comfort 🫂":     ["He's closest when you're hurting the most.","The LORD is nigh unto them that are of a broken heart; and saveth such as be of a contrite spirit.","Psalm 34:18"],
+  "Forgiveness 🤍": ["No sin is too big. The door's still open.","If we confess our sins, he is faithful and just to forgive us our sins, and to cleanse us from all unrighteousness.","1 John 1:9"],
+  "Joy ✨":         ["Joy isn't about the circumstance — it's about Him.","Thou wilt shew me the path of life: in thy presence is fulness of joy.","Psalm 16:11"],
+  "Guidance 🧭":    ["Don't have it figured out? You don't have to.","Trust in the LORD with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths.","Proverbs 3:5-6"],
+  "Patience ⏳":    ["The wait isn't wasted. He's working.","But they that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles.","Isaiah 40:31"],
+  "Provision 🍞":   ["He sees what you need before you ask.","But my God shall supply all your need according to his riches in glory by Christ Jesus.","Philippians 4:19"],
+  "To be loved ❤️": ["You were loved before you did a single thing right.","We love him, because he first loved us.","1 John 4:19"]
+};
+
+/* ---- God's Promises ---- */
+const PROMISES = [
+  ["I will never leave thee, nor forsake thee.","Hebrews 13:5"],
+  ["And we know that all things work together for good to them that love God.","Romans 8:28"],
+  ["He which hath begun a good work in you will perform it until the day of Jesus Christ.","Philippians 1:6"],
+  ["My grace is sufficient for thee: for my strength is made perfect in weakness.","2 Corinthians 12:9"],
+  ["When thou passest through the waters, I will be with thee.","Isaiah 43:2"],
+  ["The LORD will give strength unto his people; the LORD will bless his people with peace.","Psalm 29:11"],
+  ["Cast all your care upon him; for he careth for you.","1 Peter 5:7"],
+  ["And God shall wipe away all tears from their eyes; and there shall be no more death, neither sorrow.","Revelation 21:4"],
+  ["If God be for us, who can be against us?","Romans 8:31"],
+  ["Lo, I am with you alway, even unto the end of the world.","Matthew 28:20"],
+  ["For whosoever shall call upon the name of the Lord shall be saved.","Romans 10:13"],
+  ["Ask, and it shall be given you; seek, and ye shall find.","Matthew 7:7"]
+];
+
 /* ---- verse of the day (rotates by date) ---- */
 const ALL = [].concat(...Object.values(THEMES));
 (function votd(){
@@ -267,6 +312,21 @@ function showBook(idx){ const [name,t,r]=BOOKS[idx];
   bv.innerHTML=`<div class="verse"><div class="t">“${t}”</div><div class="r">— ${r}</div></div>`;
 }
 showBook(0);
+
+/* ---- I NEED... ---- */
+const nc=document.getElementById('needChips'), nv=document.getElementById('needVerse');
+Object.keys(I_NEED).forEach((need,idx)=>{
+  const c=document.createElement('div'); c.className='chip'+(idx===0?' on':''); c.textContent=need;
+  c.onclick=()=>{ document.querySelectorAll('#needChips .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); showNeed(need); };
+  nc.appendChild(c);
+});
+function showNeed(need){ const [line,t,r]=I_NEED[need];
+  nv.innerHTML=`<div class="verse"><div style="color:var(--soft);font-size:13.5px;margin-bottom:9px">${line}</div><div class="t">“${t}”</div><div class="r">— ${r}</div></div>`;
+}
+showNeed(Object.keys(I_NEED)[0]);
+
+/* ---- Promises ---- */
+document.getElementById('promiseList').innerHTML = PROMISES.map(([t,r])=>`<div class="verse"><div class="t">“${t}”</div><div class="r">— ${r}</div></div>`).join('');
 
 /* ---- gospel ---- */
 document.getElementById('p-gospel').innerHTML=`
