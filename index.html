@@ -383,6 +383,7 @@
     <div class="cta">
       <a href="#games" class="btn primary">▶ Start playing</a>
       <button class="btn ghost" id="randomBtn">🎲 Surprise me</button>
+      <button class="btn ghost" id="installHero">📲 Install app</button>
     </div>
     <p class="hero-faith">✝️ free forever · built on the Rock · made to point you <span>higher</span></p>
     <div class="stats">
@@ -702,7 +703,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1510 · sw v18';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1606 · sw v19';}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
@@ -820,14 +821,18 @@ if('serviceWorker'in navigator){
 const IOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
 const STANDALONE=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 let dp;
+async function doInstall(){
+  if(dp){ dp.prompt(); await dp.userChoice; dp=null; $('#installBtn').style.display='none'; toast('📲 Peak Arcade installed — it lives on your home screen now! 🔥'); return; }
+  if(STANDALONE){ toast('✅ Already installed — you\'re running the app! 🎮'); return; }
+  if(IOS){ toast('📲 Tap the Share button ⬆ at the bottom, then "Add to Home Screen" — boom, Peak Arcade lives on your phone!',5200); return; }
+  toast('📲 Open your browser menu → "Install app" / "Add to Home Screen" to download Peak Arcade.',4600);
+}
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#installBtn').style.display='block';});
 if(IOS&&!STANDALONE){ $('#installBtn').style.display='block'; }  // iOS gives no prompt event — show button + manual steps
-$('#installBtn').onclick=async()=>{
-  if(dp){ dp.prompt(); await dp.userChoice; dp=null; $('#installBtn').style.display='none'; toast('📲 Peak Arcade installed — it lives on your home screen now! 🔥'); return; }
-  if(IOS){ toast('📲 Tap the Share button ⬆ at the bottom, then "Add to Home Screen" — boom, Peak Arcade lives on your phone!',5200); return; }
-  toast('📲 Open your browser menu → "Install app" / "Add to Home Screen".',4200);
-};
-window.addEventListener('appinstalled',()=>{ try{confetti&&confetti();}catch(e){} toast('🎮 You\'re officially in the arcade — installed! Play offline anytime. 🙏'); });
+$('#installBtn').onclick=doInstall;
+// prominent hero button — ALWAYS available (hidden only once already installed)
+if($('#installHero')){ $('#installHero').onclick=doInstall; if(STANDALONE) $('#installHero').style.display='none'; }
+window.addEventListener('appinstalled',()=>{ try{confetti&&confetti();}catch(e){} try{$('#installHero').style.display='none';}catch(e){} toast('🎮 You\'re officially in the arcade — installed! Play offline anytime. 🙏'); });
 
 /* ===== in-page game player (games open ON the arcade · URL stays clean) ===== */
 const player=$('#player'),pFrame=$('#pFrame'),pTitle=$('#pTitle'),pLoad=$('#pLoad');
