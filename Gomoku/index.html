@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#3a2b18">
+<meta name="author" content="snailgamedev (Eli Hudson) — © 2026">
+<title>GOMOKU · five in a row</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%233a2b18'/><text x='50%25' y='66%25' font-size='44' text-anchor='middle'>⚪</text></svg>">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --bg-0:#1f1a10; --bg-1:#3a2b18; --bg-2:#5a4128; --line:#86663d;
+    --gold:#f5c542; --gold-2:#fde08a; --cream:#fff8e1; --soft:#e8dcc4; --muted:#a89578;
+    --you:#fff8e1; --you-2:#cab884; --cpu:#1c1207; --cpu-2:#000;
+    --board:#d4a667; --board-2:#b8884c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:radial-gradient(ellipse at top,#5a4128 0%,var(--bg-0) 75%);color:var(--cream);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;overscroll-behavior:none;user-select:none}
+  body{display:flex;flex-direction:column;align-items:center;padding-top:max(8px,env(safe-area-inset-top))}
+  #back{position:fixed;left:10px;top:max(10px,env(safe-area-inset-top));z-index:40;text-decoration:none;background:var(--bg-1);border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;color:var(--soft);letter-spacing:1px}
+  #hdr{width:100%;max-width:520px;padding:8px 14px 6px;display:flex;align-items:center;gap:10px}
+  #title{font-weight:900;letter-spacing:2.5px;font-size:14px;color:var(--gold-2)}
+  #title b{color:var(--gold)}
+  #hud{margin-left:auto;display:flex;gap:6px}
+  .chip{background:var(--bg-1);border:1px solid var(--line);padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--soft)}
+  .chip b{color:var(--gold)}
+  #stage{flex:1;width:100%;max-width:520px;padding:8px 14px;display:flex;flex-direction:column;gap:10px;min-height:0;align-items:center}
+  #turn{font-size:13px;font-weight:900;letter-spacing:2px;padding:6px 14px;border-radius:999px;background:var(--bg-1);border:1px solid var(--line)}
+  #turn.you{background:linear-gradient(90deg,var(--gold),#b8860b);color:#1f1a10;border-color:var(--gold)}
+  #turn.cpu{background:linear-gradient(90deg,#3b3b3b,#000);color:#fff;border-color:#666}
+  #board-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:6px 0;min-height:0}
+  #board{background:linear-gradient(135deg,var(--board),var(--board-2));border:3px solid var(--line);border-radius:8px;touch-action:none;box-shadow:0 12px 36px rgba(0,0,0,.5)}
+  #ctrls{padding:6px 14px max(14px,env(safe-area-inset-bottom));max-width:520px;width:100%}
+  #status{font-size:12px;text-align:center;color:var(--soft);min-height:18px;letter-spacing:1px;padding:4px 0}
+  #status.hot{color:var(--gold)}
+  #btns{display:flex;gap:8px}
+  .gbtn{flex:1;background:var(--bg-1);border:1px solid var(--line);color:var(--cream);padding:11px;border-radius:10px;font-weight:800;font-size:12px;letter-spacing:1px;cursor:pointer}
+  .gbtn.primary{background:linear-gradient(180deg,var(--gold),#b8860b);color:#1f1a10;border-color:var(--gold)}
+  .ov{position:fixed;inset:0;background:rgba(20,16,8,.92);display:none;align-items:center;justify-content:center;padding:24px;z-index:50;backdrop-filter:blur(8px)}
+  .ov.on{display:flex}
+  .modal{background:linear-gradient(180deg,var(--bg-2),var(--bg-1));border:1px solid var(--line);border-radius:16px;padding:22px;max-width:380px;width:100%;text-align:center}
+  .modal h1{font-size:24px;color:var(--gold);letter-spacing:3px;margin-bottom:8px}
+  .modal .sub{font-size:11px;color:var(--soft);letter-spacing:1.5px;margin-bottom:14px}
+  .modal .v{font-size:13px;line-height:1.6;color:var(--cream);padding:12px;background:rgba(0,0,0,.4);border-radius:10px;margin-bottom:14px;border-left:3px solid var(--gold);font-style:italic}
+  .modal .v b{color:var(--gold-2);font-style:normal;display:block;margin-top:8px;font-size:11px;letter-spacing:1px}
+  .modal .stats{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+  .modal .stat{background:rgba(0,0,0,.4);padding:8px 14px;border-radius:8px;min-width:64px}
+  .modal .stat-v{font-size:20px;font-weight:900;color:var(--gold)}
+  .modal .stat-l{font-size:10px;color:var(--muted);letter-spacing:1px}
+</style>
+</head>
+<body>
+<a id="back" href="/PeakArcade/">← arcade</a>
+<div id="hdr">
+  <div id="title">⚪ <b>GOMOKU</b></div>
+  <div id="hud"><div class="chip">YOU <b id="sc-you">0</b></div><div class="chip">CPU <b id="sc-cpu">0</b></div></div>
+</div>
+<div id="stage">
+  <div id="turn">YOUR TURN</div>
+  <div id="board-wrap"><canvas id="board" width="380" height="380"></canvas></div>
+  <div id="status">first to FIVE in a row wins · ⚡ TWIST: get a 4-open-row → 🔥 BLESSING (your 5th stone hits ANY square next turn)</div>
+</div>
+<div id="ctrls">
+  <div id="btns">
+    <button class="gbtn" id="btn-help">? HOW</button>
+    <button class="gbtn primary" id="btn-new">⟳ NEW GAME</button>
+  </div>
+</div>
+<div class="ov on" id="ov-intro">
+  <div class="modal">
+    <h1>⚪ GOMOKU</h1>
+    <div class="sub">five-in-a-row · OUR twist included</div>
+    <div class="v">Standard Gomoku: first to 5 in a row (any direction) WINS. <br><br><b style="color:var(--gold)">OUR TWIST · 🔥 BLESSING:</b> create an OPEN FOUR (4 in a row with both ends empty) and you earn a BLESSING — your next turn you can place a stone ANY empty square (CPU loses its turn protecting). Hard to earn, decisive when earned.<b>— the prize of the high calling · Phil 3:14</b></div>
+    <button class="gbtn primary" id="btn-begin" style="width:100%">▶ PLAY</button>
+  </div>
+</div>
+<div class="ov" id="ov-end">
+  <div class="modal">
+    <h1 id="end-title">YOU WIN</h1>
+    <div class="sub" id="end-sub">five strong</div>
+    <div class="v" id="end-verse"></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-v" id="end-you">0</div><div class="stat-l">YOU</div></div>
+      <div class="stat"><div class="stat-v" id="end-cpu">0</div><div class="stat-l">CPU</div></div>
+    </div>
+    <button class="gbtn primary" id="btn-again" style="width:100%">▶ AGAIN</button>
+  </div>
+</div>
+<script>
+'use strict';
+const KEY='gomoku-v1', N = 13;
+const YOU = 1, CPU = -1;
+const VERSES = [['"the prize of the high calling of God in Christ Jesus."','Phil 3:14'],['"Be strong and of a good courage."','Joshua 1:9'],['"Iron sharpens iron."','Prov 27:17']];
+let save = (function(){try{return Object.assign({you:0,cpu:0},JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){return {you:0,cpu:0};}})();
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){}}
+let aCtx; function ensureAudio(){if(!aCtx)try{aCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+function tone(f,d,t,g){if(!aCtx)return;const o=aCtx.createOscillator(),gn=aCtx.createGain();o.type=t||'sine';o.frequency.value=f;gn.gain.setValueAtTime(g||0.05,aCtx.currentTime);gn.gain.exponentialRampToValueAtTime(0.001,aCtx.currentTime+(d||0.1));o.connect(gn);gn.connect(aCtx.destination);o.start();o.stop(aCtx.currentTime+(d||0.1)+0.02);}
+function sfxPlace(){tone(440,0.06,'sine',0.05);}
+function sfxBless(){[0,80,160].forEach((d,i)=>setTimeout(()=>tone(523*(1+i*0.3),0.18,'triangle',0.08),d));}
+function sfxWin(){[0,80,160,240].forEach((d,i)=>setTimeout(()=>tone(523*(1+i*0.18),0.18,'triangle',0.08),d));}
+let state, cell = 26;
+function newGame(){
+  state = { b: Array.from({length:N},()=>Array(N).fill(0)), turn: YOU, over:false, win: null, youBlessing: false, cpuBlessing: false, lastMove: null };
+  fit(); render();
+}
+function fit(){
+  const wrap = document.getElementById('board-wrap');
+  const m = Math.min(wrap.clientWidth - 24, wrap.clientHeight - 24, 380);
+  cell = Math.floor(m / (N+0.5));
+  const W = cell * (N+0.5);
+  const cv = document.getElementById('board');
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  cv.style.width = W+'px'; cv.style.height = W+'px';
+  cv.width = W*dpr; cv.height = W*dpr;
+  cv.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
+}
+function render(){
+  const ctx = document.getElementById('board').getContext('2d');
+  const W = cell * (N+0.5);
+  ctx.fillStyle = '#d4a667'; ctx.fillRect(0,0,W,W);
+  // grid
+  ctx.strokeStyle = 'rgba(60,30,10,0.7)'; ctx.lineWidth = 1.2;
+  for (let i = 0; i < N; i++){
+    const p = cell*(i+0.75);
+    ctx.beginPath(); ctx.moveTo(cell*0.75, p); ctx.lineTo(cell*(N-0.25), p); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(p, cell*0.75); ctx.lineTo(p, cell*(N-0.25)); ctx.stroke();
+  }
+  // star points
+  ctx.fillStyle = 'rgba(60,30,10,0.7)';
+  [3, Math.floor(N/2), N-4].forEach(r => [3, Math.floor(N/2), N-4].forEach(c => {
+    ctx.beginPath(); ctx.arc(cell*(c+0.75), cell*(r+0.75), 3, 0, Math.PI*2); ctx.fill();
+  }));
+  // stones
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+    const v = state.b[r][c]; if (!v) continue;
+    const x = cell*(c+0.75), y = cell*(r+0.75);
+    ctx.fillStyle = v === YOU ? '#fff8e1' : '#1c1207';
+    ctx.beginPath(); ctx.arc(x, y, cell*0.42, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+    if (state.lastMove && state.lastMove[0] === r && state.lastMove[1] === c){
+      ctx.strokeStyle = '#f5c542'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, cell*0.42, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+  // winning line
+  if (state.win){
+    ctx.strokeStyle = 'rgba(245,197,66,0.9)'; ctx.lineWidth = 4;
+    ctx.beginPath();
+    const [r1,c1] = state.win[0], [r2,c2] = state.win[state.win.length-1];
+    ctx.moveTo(cell*(c1+0.75), cell*(r1+0.75)); ctx.lineTo(cell*(c2+0.75), cell*(r2+0.75)); ctx.stroke();
+  }
+  document.getElementById('sc-you').textContent = save.you;
+  document.getElementById('sc-cpu').textContent = save.cpu;
+  syncTurn();
+}
+function syncTurn(){
+  const el = document.getElementById('turn');
+  if (state.over){ el.className=''; el.textContent='GAME OVER'; }
+  else if (state.turn === YOU){ el.className='you'; el.textContent = state.youBlessing ? '🔥 YOUR BLESSING — pick any square' : '⚪ YOUR TURN'; }
+  else { el.className='cpu'; el.textContent='⚫ CPU THINKING'; }
+}
+document.getElementById('board').addEventListener('click', e => {
+  if (state.over || state.turn !== YOU) return;
+  const r = e.target.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  const cc = Math.round(x/cell - 0.75), rr = Math.round(y/cell - 0.75);
+  if (rr<0||rr>=N||cc<0||cc>=N) return;
+  if (state.b[rr][cc] !== 0) return;
+  ensureAudio();
+  place(rr, cc, YOU);
+});
+function place(r, c, p){
+  state.b[r][c] = p; state.lastMove = [r,c]; sfxPlace();
+  // check win
+  const w = checkFive(r, c, p);
+  if (w){ state.win = w; render(); return endRound(p); }
+  // check open four blessing
+  if (hasOpenFour(r, c, p)){
+    if (p === YOU){ state.youBlessing = true; sfxBless(); setStatus('🔥 OPEN FOUR — BLESSING earned, next move ANYWHERE', 'hot'); }
+    else { state.cpuBlessing = true; sfxBless(); setStatus('💀 CPU got an OPEN FOUR', 'hot'); }
+  }
+  // turn flip (unless blessing redeemed)
+  if (p === YOU && state.youBlessing && state.lastWasBlessing){ state.youBlessing = false; state.lastWasBlessing = false; }
+  state.turn = p === YOU ? CPU : YOU;
+  render();
+  if (state.turn === CPU) setTimeout(cpuMove, 500);
+}
+function setStatus(t,c){ const el = document.getElementById('status'); el.textContent = t; el.className = c||''; }
+function checkFive(r, c, p){
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  for (const [dr,dc] of dirs){
+    const line = [[r,c]];
+    for (let k = 1; k < 6; k++){ const nr=r+dr*k, nc=c+dc*k; if(nr<0||nr>=N||nc<0||nc>=N||state.b[nr][nc]!==p)break; line.push([nr,nc]); }
+    for (let k = 1; k < 6; k++){ const nr=r-dr*k, nc=c-dc*k; if(nr<0||nr>=N||nc<0||nc>=N||state.b[nr][nc]!==p)break; line.unshift([nr,nc]); }
+    if (line.length >= 5) return line.slice(0, 5);
+  }
+  return null;
+}
+function hasOpenFour(r, c, p){
+  // does the just-placed stone create a 4 in a row with both ends open?
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  for (const [dr,dc] of dirs){
+    const line = [[r,c]];
+    let bf = 0, af = 0;
+    for (let k = 1; k < 5; k++){ const nr=r+dr*k, nc=c+dc*k; if(nr<0||nr>=N||nc<0||nc>=N){af=-1;break;} if(state.b[nr][nc]!==p){af = state.b[nr][nc]===0?k:-1; break;} line.push([nr,nc]); }
+    for (let k = 1; k < 5; k++){ const nr=r-dr*k, nc=c-dc*k; if(nr<0||nr>=N||nc<0||nc>=N){bf=-1;break;} if(state.b[nr][nc]!==p){bf = state.b[nr][nc]===0?k:-1; break;} line.unshift([nr,nc]); }
+    if (line.length === 4 && bf > 0 && af > 0) return true;
+  }
+  return false;
+}
+function cpuMove(){
+  if (state.over || state.turn !== CPU) return;
+  // CPU blessing: place anywhere strategic (center-ish)
+  if (state.cpuBlessing){
+    // find best blocking spot
+    let best = pickBlockOrCenter(CPU);
+    state.cpuBlessing = false;
+    state.lastWasBlessing = true;
+    place(best.r, best.c, CPU);
+    return;
+  }
+  let pick = pickBestMove(CPU);
+  place(pick.r, pick.c, CPU);
+}
+function pickBestMove(player){
+  // score every empty cell; threat-weight + center bias
+  let best = {r: Math.floor(N/2), c: Math.floor(N/2)}, bestS = -Infinity;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+    if (state.b[r][c] !== 0) continue;
+    let s = scoreAt(r, c, player) + scoreAt(r, c, -player) * 0.9;
+    s += Math.max(0, 4 - Math.abs(r - N/2)) * 0.3;
+    s += Math.max(0, 4 - Math.abs(c - N/2)) * 0.3;
+    if (s > bestS){ bestS = s; best = {r, c}; }
+  }
+  return best;
+}
+function scoreAt(r, c, p){
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  let total = 0;
+  for (const [dr,dc] of dirs){
+    let same = 0, opp = 0, empties = 0;
+    for (let k = -4; k <= 4; k++){
+      if (k === 0) continue;
+      const nr = r+dr*k, nc = c+dc*k;
+      if (nr<0||nr>=N||nc<0||nc>=N) continue;
+      if (state.b[nr][nc] === p) same++;
+      else if (state.b[nr][nc] === -p) opp++;
+      else empties++;
+    }
+    total += same*same + (same >= 3 ? 30 : 0);
+    if (opp >= 3) total -= 25;
+  }
+  return total;
+}
+function pickBlockOrCenter(player){
+  // block YOU's strongest threat or grab center
+  let best = {r: Math.floor(N/2), c: Math.floor(N/2)}, bestS = -Infinity;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+    if (state.b[r][c] !== 0) continue;
+    let s = scoreAt(r, c, -player) * 1.5 + scoreAt(r, c, player);
+    if (s > bestS){ bestS = s; best = {r, c}; }
+  }
+  return best;
+}
+function endRound(winner){
+  state.over = true; render();
+  if (winner === YOU){ save.you++; sfxWin(); }
+  else { save.cpu++; }
+  persist();
+  setTimeout(()=>{
+    document.getElementById('end-title').textContent = winner === YOU ? '🏆 YOU WIN' : '💀 CPU WINS';
+    document.getElementById('end-sub').textContent = 'five in a row';
+    const v = VERSES[(save.you+save.cpu)%VERSES.length];
+    document.getElementById('end-verse').innerHTML = v[0]+' <b>— '+v[1]+'</b>';
+    document.getElementById('end-you').textContent = save.you;
+    document.getElementById('end-cpu').textContent = save.cpu;
+    document.getElementById('ov-end').classList.add('on');
+  }, 700);
+}
+document.getElementById('btn-begin').addEventListener('click', () => { ensureAudio(); newGame(); document.getElementById('ov-intro').classList.remove('on'); });
+document.getElementById('btn-new').addEventListener('click', () => { document.getElementById('ov-end').classList.remove('on'); newGame(); });
+document.getElementById('btn-again').addEventListener('click', () => { document.getElementById('ov-end').classList.remove('on'); newGame(); });
+document.getElementById('btn-help').addEventListener('click', () => document.getElementById('ov-intro').classList.add('on'));
+window.addEventListener('resize', () => { if (state) { fit(); render(); } });
+if ('serviceWorker' in navigator){ const had = !!navigator.serviceWorker.controller; let r = false; navigator.serviceWorker.addEventListener('controllerchange', () => { if(r)return; r=true; if(had) location.reload(); }); addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(reg => { reg.update(); setInterval(()=>reg.update(),60000); }).catch(()=>{})); }
+</script>
+</body>
+</html>
