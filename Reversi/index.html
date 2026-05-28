@@ -76,6 +76,10 @@
     <h1>⚪ REVERSI</h1>
     <div class="sub">flip the board · OUR twist</div>
     <div class="v">Place a stone so it sandwiches enemy stones in a straight line — those stones FLIP to your color. Most stones at the end WINS.<br><br><b style="color:var(--gold)">OUR TWIST · ⭐ BLESSED SQUARES:</b> 4 random squares each game are marked ⭐. Capturing them flips +3 extra adjacent enemies in a "halo." Plays decisive when grabbed.<b>— the last shall be first · Matt 20:16</b></div>
+    <div style="display:flex;gap:6px;justify-content:center;margin-bottom:14px">
+      <button class="gbtn primary" id="play-cpu" style="font-size:11px;flex:0 0 auto;padding:8px 14px">🤖 vs CPU</button>
+      <button class="gbtn" id="play-local" style="font-size:11px;flex:0 0 auto;padding:8px 14px">👥 2P LOCAL</button>
+    </div>
     <button class="gbtn primary" id="btn-begin" style="width:100%">▶ PLAY</button>
   </div>
 </div>
@@ -102,7 +106,7 @@ let aCtx; function ensureAudio(){if(!aCtx)try{aCtx=new(window.AudioContext||wind
 function tone(f,d,t,g){if(!aCtx)return;const o=aCtx.createOscillator(),gn=aCtx.createGain();o.type=t||'sine';o.frequency.value=f;gn.gain.setValueAtTime(g||0.05,aCtx.currentTime);gn.gain.exponentialRampToValueAtTime(0.001,aCtx.currentTime+(d||0.1));o.connect(gn);gn.connect(aCtx.destination);o.start();o.stop(aCtx.currentTime+(d||0.1)+0.02);}
 function sfxFlip(){tone(440,0.06,'sine',0.05);}
 function sfxBonus(){[0,80].forEach((d,i)=>setTimeout(()=>tone(523*(1+i*0.3),0.14,'triangle',0.07),d));}
-let state, last = null;
+let state, last = null, play = 'cpu';
 function newGame(){
   const b = Array.from({length:N},()=>Array(N).fill(0));
   b[3][3]=YOU; b[4][4]=YOU; b[3][4]=CPU; b[4][3]=CPU;
@@ -161,7 +165,7 @@ function place(r, c, p){
   if (legalMoves(state.b, opp).length > 0) state.turn = opp;
   else if (legalMoves(state.b, p).length > 0) { state.turn = p; setStatus('opponent must PASS · go again', 'hot'); return true; }
   else return endGame();
-  if (state.turn === CPU) setTimeout(cpuMove, 600);
+  if (play === 'cpu' && state.turn === CPU) setTimeout(cpuMove, 600);
   return true;
 }
 function cpuMove(){
@@ -201,7 +205,7 @@ function endGame(){
 function render(){
   const b = document.getElementById('board');
   b.innerHTML = '';
-  const legal = !state.over && state.turn === YOU ? legalMoves(state.b, YOU) : [];
+  const legal = !state.over && (play === 'local' || state.turn === YOU) ? legalMoves(state.b, state.turn) : [];
   const lset = new Set(legal.map(m => m[0]+','+m[1]));
   let yc = 0, cc = 0;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
@@ -215,7 +219,11 @@ function render(){
       sq.appendChild(s);
       if (v === YOU) yc++; else cc++;
     }
-    sq.addEventListener('click', () => { if (state.turn === YOU && !state.over){ ensureAudio(); place(r, c, YOU); } });
+    sq.addEventListener('click', () => {
+      if (state.over) return;
+      if (play === 'cpu' && state.turn !== YOU) return;
+      ensureAudio(); place(r, c, state.turn);
+    });
     b.appendChild(sq);
   }
   document.getElementById('cnt-you').textContent = yc;
@@ -225,10 +233,12 @@ function render(){
 function syncTurn(){
   const el = document.getElementById('turn');
   if (state.over){ el.className=''; el.textContent='GAME OVER'; }
-  else if (state.turn === YOU){ el.className='you'; el.textContent='⚪ YOUR TURN'; }
-  else { el.className='cpu'; el.textContent='⚫ CPU THINKING'; }
+  else if (state.turn === YOU){ el.className='you'; el.textContent = play === 'local' ? '⚪ P1 TURN' : '⚪ YOUR TURN'; }
+  else { el.className='cpu'; el.textContent = play === 'local' ? '⚫ P2 TURN' : '⚫ CPU THINKING'; }
 }
 function setStatus(t,c){ const el = document.getElementById('status'); el.textContent = t; el.className = c||''; }
+document.getElementById('play-cpu').addEventListener('click', () => { play = 'cpu'; document.getElementById('play-cpu').classList.add('primary'); document.getElementById('play-local').classList.remove('primary'); });
+document.getElementById('play-local').addEventListener('click', () => { play = 'local'; document.getElementById('play-local').classList.add('primary'); document.getElementById('play-cpu').classList.remove('primary'); });
 document.getElementById('btn-begin').addEventListener('click', () => { ensureAudio(); newGame(); document.getElementById('ov-intro').classList.remove('on'); });
 document.getElementById('btn-new').addEventListener('click', () => { document.getElementById('ov-end').classList.remove('on'); newGame(); });
 document.getElementById('btn-again').addEventListener('click', () => { document.getElementById('ov-end').classList.remove('on'); newGame(); });
