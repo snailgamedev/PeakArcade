@@ -913,14 +913,15 @@ function buildJourney(){
 /* ===== 🕐 TODAY STRIP — live clock · date · day-of-year · countdown to local-midnight reset.
    Updates every 30s (clock = minute precision, countdown = minute precision · zero RAF, zero lag). ===== */
 function buildToday(){
+  let tickT = null;
   function tick(){
-    const d = new Date();
-    const h = d.getHours(), m = d.getMinutes();
-    // 12h clock with am/pm
+    const d = new Date();   // Date() ALWAYS uses the device's local time — already synced to your system clock
+    const h = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
+    // 12h clock with seconds + am/pm
     const h12 = ((h + 11) % 12) + 1;
     const ampm = h < 12 ? 'am' : 'pm';
-    const clock = h12 + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
-    $('#tsClock').textContent = clock;
+    const pad = n => (n < 10 ? '0' + n : n);
+    $('#tsClock').textContent = h12 + ':' + pad(m) + ':' + pad(s) + ' ' + ampm;
     // Date — Thu · May 28
     const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
     const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
@@ -929,15 +930,19 @@ function buildToday(){
     const start = new Date(d.getFullYear(), 0, 1);
     const doy = Math.floor((d - start) / 86400000) + 1;
     $('#tsDoy').textContent = 'day ' + doy + '/365';
-    // Countdown to local midnight (when daily features flip — GOTD, Pulse, daily verse)
+    // Countdown to local midnight
     const midnight = new Date(d); midnight.setHours(24, 0, 0, 0);
     const msLeft = midnight - d;
     const hL = Math.floor(msLeft / 3600000);
     const mL = Math.floor((msLeft % 3600000) / 60000);
-    $('#tsCountdown').textContent = hL + 'h ' + (mL < 10 ? '0' + mL : mL) + 'm';
+    const sL = Math.floor((msLeft % 60000) / 1000);
+    $('#tsCountdown').textContent = hL + 'h ' + pad(mL) + 'm ' + pad(sL) + 's';
   }
-  tick();
-  setInterval(tick, 30 * 1000);   // 30s = minute-accurate w/o burning the main thread
+  function start(){ tick(); clearInterval(tickT); tickT = setInterval(tick, 1000); }
+  function stop(){ clearInterval(tickT); }
+  start();
+  // PERF: pause the 1s tick when the tab is hidden — modern browsers throttle anyway, but explicit is cleaner.
+  document.addEventListener('visibilitychange', () => { document.hidden ? stop() : start(); });
 }
 
 /* ===== 🌅 DAILY PULSE — time-of-day greeting · Sunday vibes · returning-user awareness · time-curated game pick ===== */
