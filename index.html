@@ -346,6 +346,19 @@
   /* smoother scroll feel for in-page nav (Vault button, anchor links) */
   html{scroll-behavior:smooth}
   @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+  /* ── MOBILE ANTI-SCROLL-FATIGUE — collapse extras + sticky jump-to-games ─────
+     On screens ≤720px, the widget grid hides behind a toggle so games appear
+     sooner. The sticky "▶ Jump to games" button floats bottom-right until you
+     reach the games section. Desktop stays full-detail. */
+  @media (max-width: 720px){
+    #widgetsToggle{display:flex !important}
+    #widgetsWrap{display:none !important}
+    #widgetsWrap.show{display:grid !important}
+    #widgetsToggle.open #widgetsCaret{transform:rotate(180deg)}
+    #jumpGames{display:inline-flex !important}
+    #jumpGames.hide{display:none !important}
+  }
+  #widgetsCaret{transition:transform .25s}
   /* daily word */
   .word{margin-top:48px}
   .word-card{max-width:700px;margin-inline:auto;text-align:center;padding:36px 30px;border-radius:24px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(124,92,255,.14),rgba(34,211,238,.05));position:relative;overflow:hidden}
@@ -447,22 +460,20 @@
       <span id="tsCountdown" style="color:var(--hot);font-weight:900;font-size:.88rem">—h —m</span>
     </div>
   </section>
-  <!-- 🌅 DAILY PULSE · greets you by time-of-day, shows Sunday vibes, references your visit history -->
-  <section class="reveal" style="margin:8px 0 18px">
-    <div id="pulse" style="background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(255,77,141,.08),rgba(245,197,66,.10));border:1px solid var(--line);border-radius:18px;padding:18px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:18px;box-shadow:0 12px 36px -18px rgba(124,92,255,.4)">
-      <div style="flex:1;min-width:220px">
-        <div id="pulseGreet" style="font-size:1.1rem;font-weight:900;letter-spacing:.5px;background:linear-gradient(90deg,var(--neon2),var(--hot));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:4px"></div>
-        <div id="pulseSub" style="font-size:.85rem;color:var(--muted);line-height:1.45"></div>
-      </div>
-      <div id="pulsePick" style="font-size:.82rem;background:rgba(0,0,0,.35);border:1px solid var(--line);padding:10px 14px;border-radius:12px;line-height:1.4;max-width:280px;cursor:pointer;transition:transform .2s,border-color .2s">
-        <div style="font-size:.7rem;letter-spacing:1.5px;color:var(--gold);font-weight:900;margin-bottom:3px">🎯 TONIGHT'S PICK</div>
-        <div id="pulsePickGame" style="font-weight:700;color:var(--ink)"></div>
-      </div>
+  <!-- 🌅 DAILY PULSE · greeting + day-vibe in ONE line · pick lives in GOTD below to avoid duplicate CTAs -->
+  <section class="reveal" style="margin:8px 0 14px">
+    <div id="pulse" style="background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(255,77,141,.08),rgba(245,197,66,.10));border:1px solid var(--line);border-radius:16px;padding:14px 20px;box-shadow:0 12px 36px -22px rgba(124,92,255,.4)">
+      <div id="pulseGreet" style="font-size:1.05rem;font-weight:900;letter-spacing:.5px;background:linear-gradient(90deg,var(--neon2),var(--hot));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:3px"></div>
+      <div id="pulseSub" style="font-size:.84rem;color:var(--muted);line-height:1.45"></div>
     </div>
   </section>
-  <!-- 🎁 WIDGET GRID · Spin · Daily Challenge · Scripture of the Day · Your Journey -->
-  <section class="reveal" style="margin:8px 0 18px">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+  <!-- 🎁 WIDGET GRID · COLLAPSED BY DEFAULT ON MOBILE so games appear sooner · power users tap to expand -->
+  <section class="reveal" style="margin:8px 0 14px">
+    <button id="widgetsToggle" class="widgets-toggle" style="display:none;width:100%;background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:14px;padding:11px 16px;color:var(--ink);font-weight:800;letter-spacing:.5px;font-size:.85rem;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <span>🎁 <span style="color:var(--gold)">Today's extras</span> · Spin · Challenge · Scripture · Stats</span>
+      <span id="widgetsCaret" style="color:var(--neon);font-weight:900;font-size:1rem">▾</span>
+    </button>
+    <div id="widgetsWrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:0">
       <!-- 🌀 SPIN THE WHEEL -->
       <div id="wgSpin" style="background:linear-gradient(160deg,rgba(124,92,255,.18),rgba(255,77,141,.08));border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;transition:transform .2s,border-color .2s">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -502,7 +513,9 @@
       </div>
     </div>
   </section>
-  <section class="reveal"><div class="gotd" id="gotd"></div></section>
+  <section class="reveal" style="margin-top:14px"><div class="gotd" id="gotd"></div></section>
+  <!-- 📲 STICKY MOBILE JUMP-TO-GAMES — helps users skip the intro stack and dive in -->
+  <a href="#games" id="jumpGames" style="display:none;position:fixed;bottom:18px;right:18px;z-index:280;background:linear-gradient(90deg,var(--neon),var(--hot));color:#fff;padding:11px 18px;border-radius:999px;font-weight:900;font-size:.85rem;letter-spacing:.5px;box-shadow:0 12px 28px -8px rgba(124,92,255,.55);text-decoration:none;display:none;align-items:center;gap:6px">▶ Jump to games</a>
 
   <div class="ad reveal">advertisement</div>
 
@@ -810,6 +823,27 @@ function buildGOTD(){
 
 /* ===== 🎁 HUB WIDGETS — 4 mini-cards: Spin · Daily Challenge · Scripture · Your Journey ===== */
 
+/* 📲 Mobile widget-collapse toggle + sticky Jump-to-games behavior */
+function buildMobileFlow(){
+  // Widgets toggle — collapsed by default on mobile; tap to expand
+  const tog = document.getElementById('widgetsToggle');
+  const wrap = document.getElementById('widgetsWrap');
+  if (tog && wrap){
+    tog.addEventListener('click', () => {
+      const open = wrap.classList.toggle('show');
+      tog.classList.toggle('open', open);
+    });
+  }
+  // Sticky "Jump to games" hides once the games grid scrolls into view
+  const jump = document.getElementById('jumpGames');
+  const gamesSec = document.getElementById('games');
+  if (jump && gamesSec && 'IntersectionObserver' in window){
+    new IntersectionObserver(entries => {
+      entries.forEach(e => jump.classList.toggle('hide', e.isIntersecting));
+    }, { rootMargin: '-100px 0px' }).observe(gamesSec);
+  }
+}
+
 /* 🌀 SPIN THE WHEEL — visual random game picker */
 function buildSpin(){
   const el = document.getElementById('wgSpin');
@@ -945,18 +979,13 @@ function buildToday(){
   document.addEventListener('visibilitychange', () => { document.hidden ? stop() : start(); });
 }
 
-/* ===== 🌅 DAILY PULSE — time-of-day greeting · Sunday vibes · returning-user awareness · time-curated game pick ===== */
+/* ===== 🌅 DAILY PULSE — single inline band: greeting + day-vibe (pick lives in GOTD to avoid duplicate CTAs) ===== */
 function buildPulse(){
   const d = new Date();
   const hour = d.getHours();
-  const dow = d.getDay();   // 0 = Sun
-  const live = GAMES.filter(g=>g.live);
-  // streak/sessions context
-  let streak = 0, knownSessions = 0;
+  const dow = d.getDay();
+  let streak = 0;
   try{ streak = +(LS.get('streak') || 0); }catch(e){}
-  try{ knownSessions = +(LS.get('sessions') || 0); }catch(e){}
-
-  // Greeting · varies by time, day, and whether you're new vs returning
   let greet, sub;
   if (dow === 0 && hour >= 8 && hour <= 20){
     greet = "🙏 Sunday quiet · welcome";
@@ -977,28 +1006,10 @@ function buildPulse(){
     greet = "🌃 Night mode · soft landing";
     sub = "low-stakes vibes · The Word or Coin Kingdom";
   }
-  // streak/returning flair
   if (streak >= 7) sub += ` · 🔥 ${streak}-day streak holding`;
   else if (streak >= 2) sub += ` · day ${streak} of your streak`;
-
-  // Time-curated pick
-  let pickPool;
-  if (dow === 0) pickPool = live.filter(g => g.id === 'word' || g.id === 'wordup' || g.id === 'bb');
-  else if (hour < 12) pickPool = live.filter(g => g.id === 'bb' || g.id === 'wordup' || g.id === 'coin');
-  else if (hour < 17) pickPool = live.filter(g => g.id === 'wud' || g.id === 'sc' || g.id === 'coin');
-  else if (hour < 21) pickPool = live.filter(g => g.id === 'wud' || g.id === 'sc' || g.id === 'bb');
-  else pickPool = live.filter(g => g.id === 'word' || g.id === 'cts1' || g.id === 'cts2' || g.id === 'coin');
-  if (!pickPool.length) pickPool = live;
-  // stable pick within the same window (uses hour-bucket as seed)
-  const bucket = Math.floor(hour/4) + dow*4;
-  const pick = pickPool[(bucket + (knownSessions||0)) % pickPool.length];
-
   $('#pulseGreet').textContent = greet;
   $('#pulseSub').textContent = sub;
-  $('#pulsePickGame').innerHTML = `${pick.emoji} <b>${pick.title}</b><br><span style="color:var(--muted);font-size:.78rem">${(pick.blurb||'').slice(0,72)}…</span>`;
-  $('#pulsePick').onclick = () => playGame(pick.id);
-  $('#pulsePick').onmouseenter = e => { e.target.closest('#pulsePick').style.transform='translateY(-2px)'; e.target.closest('#pulsePick').style.borderColor='var(--neon)'; };
-  $('#pulsePick').onmouseleave = e => { e.target.closest('#pulsePick').style.transform=''; e.target.closest('#pulsePick').style.borderColor='var(--line)'; };
 }
 /* ===== confetti (peak-moment delight, self-cleaning) ===== */
 function confetti(){const e=['🎉','✨','🔥','🙌','⭐','💯'];for(let i=0;i<20;i++){const s=document.createElement('div');s.textContent=e[i%e.length];
@@ -1241,7 +1252,7 @@ addEventListener('keydown',e=>{
 
 /* ===== boot ===== */
 document.querySelector('.stat b[data-count]').dataset.count=GAMES.filter(g=>g.live).length;
-buildChips();buildCarousel();buildToday();buildGOTD();buildPulse();buildSpin();buildChallenge();buildVerseWidget();buildJourney();render();renderRecent();animCounters();
+buildChips();buildCarousel();buildToday();buildGOTD();buildPulse();buildSpin();buildChallenge();buildVerseWidget();buildJourney();buildMobileFlow();render();renderRecent();animCounters();
 /* deep-link launch (app shortcuts / shared game links) + ?q= search (SearchAction) — then clean the URL */
 (function(){try{const sp=new URLSearchParams(location.search);
   const q=sp.get('q');
