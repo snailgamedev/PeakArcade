@@ -68,6 +68,39 @@
   /* back to arcade — only when standalone */
   #pa-hub{position:fixed;left:12px;bottom:12px;z-index:60;background:rgba(7,7,15,.88);color:#fff;font:700 12px/1 var(--ui);
     padding:9px 14px;border-radius:99px;border:1px solid #7c5cff;text-decoration:none;backdrop-filter:blur(6px);display:none}
+  /* ── POLISH ADDITIONS — search · save · share · random · streak ── */
+  /* streak chip */
+  .streakChip{display:inline-flex;align-items:center;gap:6px;background:rgba(245,197,66,.08);border:1px solid var(--bg-3);
+    color:var(--gold-2);font:800 11px/1 var(--ui);padding:5px 10px;border-radius:99px;letter-spacing:1px;margin-top:8px}
+  /* verse-of-the-day random button */
+  .vrand{display:inline-flex;align-items:center;gap:6px;background:rgba(185,140,255,.08);border:1px solid var(--bg-3);
+    color:var(--ac);font:800 11px/1 var(--ui);padding:7px 12px;border-radius:99px;cursor:pointer;margin-top:10px}
+  .vrand:hover{background:rgba(185,140,255,.16);border-color:var(--ac)}
+  /* search bar */
+  .searchWrap{position:relative;margin:8px 0 14px}
+  .searchInp{width:100%;padding:12px 14px 12px 38px;border-radius:12px;border:1px solid var(--bg-3);
+    background:var(--bg-2);color:var(--cream);font:600 14px/1.4 var(--ui);outline:none;transition:border-color .2s}
+  .searchInp::placeholder{color:var(--muted)}
+  .searchInp:focus{border-color:var(--ac)}
+  .searchWrap::before{content:"🔍";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.7;pointer-events:none}
+  .searchClear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;
+    color:var(--muted);font-size:18px;cursor:pointer;padding:6px;display:none}
+  .searchClear.on{display:block}
+  .searchHint{color:var(--muted);font-size:11.5px;margin:-4px 0 10px;padding:0 4px}
+  /* verse card with action footer */
+  .verse{position:relative}
+  .vfoot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:8px;flex-wrap:wrap}
+  .vfoot .r{margin-top:0}
+  .vact{display:flex;gap:6px}
+  .vb{background:rgba(255,255,255,.05);border:1px solid var(--bg-3);color:var(--soft);
+    font-size:14px;line-height:1;padding:7px 10px;border-radius:10px;cursor:pointer;transition:transform .12s,background .2s,border-color .2s}
+  .vb:active{transform:scale(.94)}
+  .vb:hover{background:rgba(255,255,255,.08);border-color:var(--ac)}
+  .vb.fav.on{background:rgba(255,77,141,.16);border-color:#ff4d8d;color:#ff4d8d}
+  /* saved verses panel */
+  .savedEmpty{padding:30px 16px;text-align:center;color:var(--muted);font:italic 14px/1.6 var(--font)}
+  .savedEmpty .h{font-size:36px;margin-bottom:10px}
+  .savedEmpty b{color:var(--soft)}
 </style>
 </head>
 <body>
@@ -76,19 +109,32 @@
     <div class="cross">✝</div>
     <h1>THE WORD</h1>
     <div class="sub">A MINI-BIBLE · THE REAL PEAK</div>
+    <div id="streakChip" class="streakChip" style="display:none"></div>
   </header>
 
   <div class="votd">
     <div class="lbl">📖 VERSE OF THE DAY</div>
     <div class="vt" id="votdText"></div>
     <div class="vr" id="votdRef"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="vrand" id="randBtn">🎲 Another verse</button>
+      <button class="vb fav" id="votdFav" aria-label="Save verse of the day" style="font-size:14px">🤍 Save</button>
+      <button class="vb" id="votdShare" aria-label="Share verse of the day" style="font-size:14px">📤 Share</button>
+    </div>
   </div>
+
+  <div class="searchWrap">
+    <input id="searchInp" class="searchInp" type="text" placeholder="Search all verses (strength, love, peace…)" aria-label="Search verses">
+    <button class="searchClear" id="searchClear" aria-label="Clear search">×</button>
+  </div>
+  <div id="searchResults" style="display:none"></div>
 
   <div class="tabs" id="tabs">
     <div class="tab on" data-p="need">🕊️ I Need…</div>
     <div class="tab" data-p="theme">📖 By Theme</div>
     <div class="tab" data-p="promise">🤞 Promises</div>
     <div class="tab" data-p="books">📚 The Books</div>
+    <div class="tab" data-p="saved">❤️ Saved <span id="savedCount" style="opacity:.7;font-size:11px"></span></div>
     <div class="tab" data-p="gospel">✝ The Gospel</div>
     <div class="tab" data-p="pray">🙏 Pray</div>
   </div>
@@ -115,6 +161,11 @@
     <div id="bookVerse"></div>
   </div>
 
+  <div class="panel" id="p-saved">
+    <div class="secnote">Verses you've saved live here. Tap the heart on any verse to add it. ❤️</div>
+    <div id="savedList"></div>
+  </div>
+
   <div class="panel gospel" id="p-gospel"></div>
 
   <div class="panel" id="p-pray"></div>
@@ -129,7 +180,91 @@
 
 <script>
 /* ========= THE WORD — a mini-Bible. Curated, real verses (KJV/common renderings).
-   Verse of the day + by-theme + a verse per book + the Gospel + prayer. ========= */
+   Verse of the day + by-theme + a verse per book + the Gospel + prayer.
+   v2 polish (2026-05-28): ❤️ Save · 🔍 Search · 📤 Share · 🎲 Random · 🔥 Streak ========= */
+
+/* ── localStorage helpers ── */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem('word_'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('word_'+k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ── 🔥 daily visit streak (local-day calc · matches hub) ── */
+(function streak(){
+  const today = (function(){ const d = new Date(); d.setHours(0,0,0,0); return Math.floor(d.getTime()/864e5); })();
+  const last = LS.get('lastDay', 0);
+  let streak = LS.get('streak', 0);
+  if (last !== today){
+    if (last === today - 1) streak++;
+    else streak = 1;
+    LS.set('streak', streak);
+    LS.set('lastDay', today);
+  }
+  if (streak >= 2){
+    const chip = document.getElementById('streakChip');
+    chip.style.display = 'inline-flex';
+    chip.innerHTML = '🔥 ' + streak + '-day visit streak';
+  }
+})();
+
+/* ── ❤️ Saved verses ── */
+function verseKey(t, r){ return r + '::' + t.slice(0, 30); }
+function isVerseSaved(t, r){ const saved = LS.get('saved', []); return saved.some(s => s.key === verseKey(t, r)); }
+function toggleSaveVerse(t, r){
+  let saved = LS.get('saved', []);
+  const k = verseKey(t, r);
+  if (saved.some(s => s.key === k)){
+    saved = saved.filter(s => s.key !== k);
+    toast('💔 Removed from saved');
+  } else {
+    saved.unshift({ key:k, t:t, r:r, ts:Date.now() });
+    if (saved.length > 100) saved = saved.slice(0, 100);
+    toast('❤️ Saved — see "Saved" tab');
+  }
+  LS.set('saved', saved);
+  updateSavedCount();
+  return saved.some(s => s.key === k);
+}
+function updateSavedCount(){
+  const n = (LS.get('saved', []) || []).length;
+  document.getElementById('savedCount').textContent = n ? '· ' + n : '';
+}
+
+/* ── 📤 Share verse · Web Share API + clipboard fallback ── */
+function shareVerse(t, r){
+  const text = '"' + t + '" — ' + r + ' · via The Word @ Peak Arcade · snailgamedev.github.io/PeakArcade/word.html';
+  if (navigator.share){
+    navigator.share({ title: 'The Word', text: text }).then(()=>toast('✓ Shared')).catch(()=>{});
+  } else if (navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>toast('📋 Copied — go bless someone'));
+  } else { toast('Hold to select + copy the verse above'); }
+}
+
+/* ── verse-card HTML helper · use everywhere a verse renders ── */
+function verseCard(t, r, opts){
+  opts = opts || {};
+  const saved = isVerseSaved(t, r);
+  const tEsc = t.replace(/"/g,'&quot;').replace(/'/g,"\\'");
+  const rEsc = r.replace(/'/g,"\\'");
+  return '<div class="verse">' +
+    (opts.pre ? '<div style="color:var(--soft);font-size:13.5px;margin-bottom:9px">' + opts.pre + '</div>' : '') +
+    '<div class="t">"' + t + '"</div>' +
+    '<div class="vfoot">' +
+      '<div class="r">— ' + r + '</div>' +
+      '<div class="vact">' +
+        '<button class="vb fav ' + (saved?'on':'') + '" onclick="onCardSave(this, \'' + tEsc + '\', \'' + rEsc + '\')" aria-label="Save verse">' + (saved?'❤️':'🤍') + '</button>' +
+        '<button class="vb" onclick="shareVerse(\'' + tEsc + '\', \'' + rEsc + '\')" aria-label="Share verse">📤</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+function onCardSave(btn, t, r){
+  const nowSaved = toggleSaveVerse(t, r);
+  btn.classList.toggle('on', nowSaved);
+  btn.textContent = nowSaved ? '❤️' : '🤍';
+  // also refresh saved panel if open
+  if (document.getElementById('p-saved').classList.contains('on')) renderSaved();
+}
 
 const THEMES = {
   "Strength": [
@@ -273,20 +408,30 @@ const PROMISES = [
   ["Ask, and it shall be given you; seek, and ye shall find.","Matthew 7:7"]
 ];
 
-/* ---- verse of the day (rotates by date) ---- */
+/* ---- verse of the day (rotates by date) — also wires up save/share buttons ---- */
 const ALL = [].concat(...Object.values(THEMES));
 (function votd(){
   const d=new Date(); const i=(d.getFullYear()*367 + d.getMonth()*31 + d.getDate()) % ALL.length;
   const [t,r]=ALL[i];
-  document.getElementById('votdText').textContent='“'+t+'”';
+  const vt = document.getElementById('votdText');
+  vt.textContent='“'+t+'”'; vt.dataset.t = t; vt.dataset.r = r;
   document.getElementById('votdRef').textContent='— '+r;
+  const favBtn = document.getElementById('votdFav');
+  if (favBtn){
+    const saved = isVerseSaved(t, r);
+    favBtn.classList.toggle('on', saved);
+    favBtn.textContent = saved ? '❤️ Saved' : '🤍 Save';
+  }
 })();
 
-/* ---- tabs ---- */
+/* ---- tabs (now refresh Saved panel when switching to it) ---- */
 document.querySelectorAll('.tab').forEach(tab=>tab.onclick=()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   tab.classList.add('on'); document.getElementById('p-'+tab.dataset.p).classList.add('on');
+  if (tab.dataset.p === 'saved') renderSaved();
+  // clear any active search when switching tabs
+  if (searchInp.value){ searchInp.value=''; doSearch(''); }
 });
 
 /* ---- themes ---- */
@@ -297,7 +442,7 @@ Object.keys(THEMES).forEach((name,idx)=>{
   tc.appendChild(c);
 });
 function showTheme(name){
-  tv.innerHTML=THEMES[name].map(([t,r])=>`<div class="verse"><div class="t">“${t}”</div><div class="r">— ${r}</div></div>`).join('');
+  tv.innerHTML=THEMES[name].map(([t,r])=>verseCard(t,r)).join('');
 }
 showTheme(Object.keys(THEMES)[0]);
 
@@ -309,7 +454,7 @@ BOOKS.forEach(([name,t,r],idx)=>{
   bc.appendChild(c);
 });
 function showBook(idx){ const [name,t,r]=BOOKS[idx];
-  bv.innerHTML=`<div class="verse"><div class="t">“${t}”</div><div class="r">— ${r}</div></div>`;
+  bv.innerHTML = verseCard(t, r);
 }
 showBook(0);
 
@@ -321,12 +466,112 @@ Object.keys(I_NEED).forEach((need,idx)=>{
   nc.appendChild(c);
 });
 function showNeed(need){ const [line,t,r]=I_NEED[need];
-  nv.innerHTML=`<div class="verse"><div style="color:var(--soft);font-size:13.5px;margin-bottom:9px">${line}</div><div class="t">“${t}”</div><div class="r">— ${r}</div></div>`;
+  nv.innerHTML = verseCard(t, r, { pre: line });
 }
 showNeed(Object.keys(I_NEED)[0]);
 
 /* ---- Promises ---- */
-document.getElementById('promiseList').innerHTML = PROMISES.map(([t,r])=>`<div class="verse"><div class="t">“${t}”</div><div class="r">— ${r}</div></div>`).join('');
+document.getElementById('promiseList').innerHTML = PROMISES.map(([t,r])=>verseCard(t,r)).join('');
+
+/* ---- ❤️ Saved panel ---- */
+function renderSaved(){
+  const saved = LS.get('saved', []) || [];
+  const out = document.getElementById('savedList');
+  if (!saved.length){
+    out.innerHTML = '<div class="savedEmpty"><div class="h">🤍</div>No saved verses yet.<br><b>Tap the heart on any verse</b> to keep it here.</div>';
+    return;
+  }
+  out.innerHTML = saved.map(s => verseCard(s.t, s.r)).join('');
+}
+renderSaved();
+updateSavedCount();
+
+/* ---- 🔍 Search across all sources ---- */
+const searchInp = document.getElementById('searchInp');
+const searchClear = document.getElementById('searchClear');
+const searchResults = document.getElementById('searchResults');
+function doSearch(q){
+  q = q.trim().toLowerCase();
+  searchClear.classList.toggle('on', !!q);
+  if (!q){
+    searchResults.style.display = 'none';
+    document.querySelectorAll('.panel').forEach(p => { if (p.id === 'p-' + (document.querySelector('.tab.on')||{}).dataset?.p) p.style.display = ''; });
+    document.querySelectorAll('.panel.on').forEach(p => p.style.display = '');
+    return;
+  }
+  // Combine all sources into one searchable list
+  const hits = [];
+  for (const [theme, verses] of Object.entries(THEMES)){
+    verses.forEach(([t, r]) => {
+      if (t.toLowerCase().includes(q) || r.toLowerCase().includes(q) || theme.toLowerCase().includes(q))
+        hits.push({ t, r, src: '📖 ' + theme });
+    });
+  }
+  BOOKS.forEach(([name, t, r]) => {
+    if (t.toLowerCase().includes(q) || r.toLowerCase().includes(q) || name.toLowerCase().includes(q))
+      hits.push({ t, r, src: '📚 ' + name });
+  });
+  PROMISES.forEach(([t, r]) => {
+    if (t.toLowerCase().includes(q) || r.toLowerCase().includes(q))
+      hits.push({ t, r, src: '🤞 Promises' });
+  });
+  Object.entries(I_NEED).forEach(([need, arr]) => {
+    const [line, t, r] = arr;
+    if (t.toLowerCase().includes(q) || r.toLowerCase().includes(q) || need.toLowerCase().includes(q) || line.toLowerCase().includes(q))
+      hits.push({ t, r, src: '🕊️ ' + need });
+  });
+  // De-dupe by ref+first-30-chars
+  const seen = new Set();
+  const unique = hits.filter(h => { const k = h.r + h.t.slice(0,30); if (seen.has(k)) return false; seen.add(k); return true; });
+  // Hide normal panels, show results
+  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+  searchResults.style.display = '';
+  if (!unique.length){
+    searchResults.innerHTML = '<div class="savedEmpty"><div class="h">🔍</div>No verses matched "<b>' + q + '</b>".<br>Try: peace · strength · love · fear · hope · joy</div>';
+  } else {
+    searchResults.innerHTML = '<div class="searchHint">Found ' + unique.length + ' verse' + (unique.length===1?'':'s') + ' across the Word.</div>' +
+      unique.map(h => '<div style="font-size:10.5px;letter-spacing:1px;color:var(--ac);font-weight:800;margin:14px 0 4px">' + h.src + '</div>' + verseCard(h.t, h.r)).join('');
+  }
+}
+searchInp.addEventListener('input', e => doSearch(e.target.value));
+searchClear.addEventListener('click', () => { searchInp.value = ''; doSearch(''); searchInp.focus(); });
+
+/* ---- 🎲 Random verse for VotD ---- */
+function pickRandomVerse(){
+  const allVerses = [];
+  for (const verses of Object.values(THEMES)) allVerses.push(...verses);
+  BOOKS.forEach(b => allVerses.push([b[1], b[2]]));
+  PROMISES.forEach(p => allVerses.push(p));
+  return allVerses[Math.floor(Math.random() * allVerses.length)];
+}
+function refreshVOTD(){
+  const v = pickRandomVerse();
+  document.getElementById('votdText').textContent = '"' + v[0] + '"';
+  document.getElementById('votdRef').textContent = '— ' + v[1];
+  document.getElementById('votdText').dataset.t = v[0];
+  document.getElementById('votdText').dataset.r = v[1];
+  // sync fav button state
+  const favBtn = document.getElementById('votdFav');
+  const saved = isVerseSaved(v[0], v[1]);
+  favBtn.classList.toggle('on', saved);
+  favBtn.textContent = saved ? '❤️ Saved' : '🤍 Save';
+}
+document.getElementById('randBtn').addEventListener('click', refreshVOTD);
+document.getElementById('votdFav').addEventListener('click', () => {
+  const t = document.getElementById('votdText').dataset.t;
+  const r = document.getElementById('votdText').dataset.r;
+  if (!t) return;
+  const nowSaved = toggleSaveVerse(t, r);
+  const btn = document.getElementById('votdFav');
+  btn.classList.toggle('on', nowSaved);
+  btn.textContent = nowSaved ? '❤️ Saved' : '🤍 Save';
+  if (document.getElementById('p-saved').classList.contains('on')) renderSaved();
+});
+document.getElementById('votdShare').addEventListener('click', () => {
+  const t = document.getElementById('votdText').dataset.t;
+  const r = document.getElementById('votdText').dataset.r;
+  if (t && r) shareVerse(t, r);
+});
 
 /* ---- gospel ---- */
 document.getElementById('p-gospel').innerHTML=`
