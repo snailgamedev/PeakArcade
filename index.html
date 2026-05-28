@@ -460,6 +460,48 @@
       </div>
     </div>
   </section>
+  <!-- 🎁 WIDGET GRID · Spin · Daily Challenge · Scripture of the Day · Your Journey -->
+  <section class="reveal" style="margin:8px 0 18px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+      <!-- 🌀 SPIN THE WHEEL -->
+      <div id="wgSpin" style="background:linear-gradient(160deg,rgba(124,92,255,.18),rgba(255,77,141,.08));border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;transition:transform .2s,border-color .2s">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span id="wgSpinIc" style="font-size:1.6rem;display:inline-block;transition:transform .8s cubic-bezier(.2,.7,.3,1)">🌀</span>
+          <b style="font-size:.74rem;letter-spacing:1.5px;color:var(--gold)">SPIN THE WHEEL</b>
+        </div>
+        <div id="wgSpinLabel" style="font-size:.82rem;color:var(--muted);line-height:1.4">tap to land on a random game</div>
+      </div>
+
+      <!-- 🔥 DAILY CHALLENGE -->
+      <div id="wgChallenge" style="background:linear-gradient(160deg,rgba(245,197,66,.14),rgba(255,140,40,.06));border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;transition:transform .2s,border-color .2s">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:1.6rem">🔥</span>
+          <b style="font-size:.74rem;letter-spacing:1.5px;color:var(--gold)">TODAY'S CHALLENGE</b>
+        </div>
+        <div id="wgChallengeTxt" style="font-size:.82rem;color:var(--ink);line-height:1.4;font-weight:700"></div>
+        <div id="wgChallengeStatus" style="font-size:.72rem;color:var(--muted);margin-top:4px"></div>
+      </div>
+
+      <!-- 📜 SCRIPTURE OF THE DAY -->
+      <div id="wgVerse" style="background:linear-gradient(160deg,rgba(34,211,238,.08),rgba(124,92,255,.12));border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;transition:transform .2s,border-color .2s">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:1.6rem">✝️</span>
+          <b style="font-size:.74rem;letter-spacing:1.5px;color:var(--gold)">SCRIPTURE TODAY</b>
+        </div>
+        <div id="wgVerseTxt" style="font-size:.78rem;color:var(--ink);font-style:italic;line-height:1.45"></div>
+        <div id="wgVerseRef" style="font-size:.7rem;color:var(--neon2);margin-top:4px;font-weight:800;letter-spacing:1px"></div>
+      </div>
+
+      <!-- 📊 YOUR JOURNEY -->
+      <div id="wgJourney" style="background:linear-gradient(160deg,rgba(255,77,141,.12),rgba(245,197,66,.06));border:1px solid var(--line);border-radius:14px;padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:1.6rem">📊</span>
+          <b style="font-size:.74rem;letter-spacing:1.5px;color:var(--gold)">YOUR JOURNEY</b>
+        </div>
+        <div id="wgJourneyStats" style="display:flex;gap:14px;flex-wrap:wrap;font-size:.75rem;color:var(--muted)"></div>
+      </div>
+    </div>
+  </section>
   <section class="reveal"><div class="gotd" id="gotd"></div></section>
 
   <div class="ad reveal">advertisement</div>
@@ -764,6 +806,108 @@ function buildGOTD(){
     <div class="gotd-txt"><div class="gotd-k">🎯 Today's Pick · fresh every day</div><div class="gotd-t">${g.title}</div><div class="gotd-b">${g.blurb}</div></div>
     <button class="gotd-play" data-go="${g.id}">▶ Play</button>`;
   $('#gotd .gotd-play').onclick=()=>playGame(g.id);
+}
+
+/* ===== 🎁 HUB WIDGETS — 4 mini-cards: Spin · Daily Challenge · Scripture · Your Journey ===== */
+
+/* 🌀 SPIN THE WHEEL — visual random game picker */
+function buildSpin(){
+  const el = document.getElementById('wgSpin');
+  if (!el) return;
+  el.onclick = () => {
+    const live = GAMES.filter(g => g.live);
+    if (!live.length) return;
+    const pick = live[Math.floor(Math.random() * live.length)];
+    const ic = document.getElementById('wgSpinIc');
+    const label = document.getElementById('wgSpinLabel');
+    // animate spin
+    ic.textContent = '🌀'; ic.style.transform = 'rotate(0deg)';
+    requestAnimationFrame(()=>{ ic.style.transform = 'rotate(' + (720 + Math.random()*360) + 'deg)'; });
+    label.textContent = 'spinning…';
+    setTimeout(()=>{
+      ic.textContent = pick.emoji; ic.style.transform = 'rotate(0deg)';
+      label.innerHTML = '<b style="color:var(--ink)">' + pick.title + '</b><br><span style="font-size:.72rem;color:var(--muted)">tap to play · or spin again</span>';
+      el.onclick = () => playGame(pick.id);
+      setTimeout(()=>{ el.onclick = buildSpin._again; }, 3500);  // back to spin mode after 3.5s
+    }, 850);
+  };
+  buildSpin._again = el.onclick;
+}
+
+/* 🔥 DAILY CHALLENGE — rotates daily, completion stored in LS */
+function buildChallenge(){
+  const live = GAMES.filter(g => g.live);
+  if (!live.length) return;
+  // 7 challenge templates that cycle by day-of-year
+  const TEMPLATES = [
+    { txt: 'Play 🥊 Slam City — win 1 match', game:'sc' },
+    { txt: 'Play 🏀 Would U Dunk — score 30+', game:'wud' },
+    { txt: 'Open ✝️ The Word — read 1 verse', game:'word' },
+    { txt: 'Play 🧠 BrainBoard — clear 1 round', game:'bb' },
+    { txt: 'Play 🪙 Coin Kingdom — earn 100 coins', game:'coin' },
+    { txt: 'Play 📖 Word Up — get 7/10 on a quiz', game:'wordup' },
+    { txt: 'Play 🐌 Catch the Snail 2 — finish a run', game:'cts2' }
+  ];
+  const day = localDay();
+  const ch = TEMPLATES[day % TEMPLATES.length];
+  document.getElementById('wgChallengeTxt').textContent = ch.txt;
+  const completed = (LS.get('challenge_' + day) === true || LS.get('challenge_' + day) === 1);
+  const statusEl = document.getElementById('wgChallengeStatus');
+  if (completed){
+    statusEl.innerHTML = '<span style="color:#22c55e;font-weight:900">✅ DONE today · come back tomorrow</span>';
+  } else {
+    statusEl.innerHTML = '<span style="color:var(--neon)">→ tap to start · marks done after playing</span>';
+  }
+  const cardEl = document.getElementById('wgChallenge');
+  cardEl.onclick = () => {
+    // mark done + launch the game
+    LS.set('challenge_' + day, true);
+    statusEl.innerHTML = '<span style="color:#22c55e;font-weight:900">✅ MARKED DONE</span>';
+    playGame(ch.game);
+  };
+}
+
+/* 📜 SCRIPTURE OF THE DAY — rotates daily from a curated pool */
+function buildVerseWidget(){
+  const POOL = [
+    ['"I can do all things through Christ which strengtheneth me."', 'Phil 4:13'],
+    ['"For God so loved the world, that he gave his only begotten Son…"', 'John 3:16'],
+    ['"Trust in the Lord with all thine heart."', 'Prov 3:5'],
+    ['"The joy of the Lord is your strength."', 'Neh 8:10'],
+    ['"Be strong and of a good courage."', 'Joshua 1:9'],
+    ['"…they that wait upon the Lord shall renew their strength."', 'Isa 40:31'],
+    ['"For I know the plans I have for you, declares the Lord…"', 'Jer 29:11'],
+    ['"Greater is he that is in you, than he that is in the world."', '1 John 4:4'],
+    ['"Cast all your anxiety on him because he cares for you."', '1 Peter 5:7'],
+    ['"Iron sharpens iron."', 'Prov 27:17'],
+    ['"Be still, and know that I am God."', 'Psalm 46:10'],
+    ['"…the steps of a good man are ordered by the Lord."', 'Psalm 37:23'],
+    ['"…we walk by faith, not by sight."', '2 Cor 5:7'],
+    ['"…I make all things new."', 'Rev 21:5'],
+    ['"…my strength is made perfect in weakness."', '2 Cor 12:9']
+  ];
+  const v = POOL[localDay() % POOL.length];
+  document.getElementById('wgVerseTxt').textContent = v[0];
+  document.getElementById('wgVerseRef').textContent = '— ' + v[1];
+  document.getElementById('wgVerse').onclick = () => playGame('word');
+}
+
+/* 📊 YOUR JOURNEY — hub-level personal stats (streak, sessions, games tried, plays) */
+function buildJourney(){
+  const streak = +(LS.get('streak') || 0);
+  const sessions = +(LS.get('sessions') || 1);
+  const recent = LS.get('recent') || [];
+  const recentCount = Array.isArray(recent) ? recent.length : 0;
+  const totalPlays = (LS.get('totalPlays') || 0);
+  const stats = [
+    { label: '🔥 streak', val: streak ? streak + 'd' : '—' },
+    { label: '🎮 played', val: totalPlays || '0' },
+    { label: '✦ games tried', val: recentCount },
+    { label: '🌅 sessions', val: sessions }
+  ];
+  document.getElementById('wgJourneyStats').innerHTML = stats.map(s =>
+    `<div><b style="display:block;color:var(--gold);font-size:.95rem;font-weight:900">${s.val}</b><span style="font-size:.7rem">${s.label}</span></div>`
+  ).join('');
 }
 
 /* ===== 🕐 TODAY STRIP — live clock · date · day-of-year · countdown to local-midnight reset.
@@ -1092,7 +1236,7 @@ addEventListener('keydown',e=>{
 
 /* ===== boot ===== */
 document.querySelector('.stat b[data-count]').dataset.count=GAMES.filter(g=>g.live).length;
-buildChips();buildCarousel();buildToday();buildGOTD();buildPulse();render();renderRecent();animCounters();
+buildChips();buildCarousel();buildToday();buildGOTD();buildPulse();buildSpin();buildChallenge();buildVerseWidget();buildJourney();render();renderRecent();animCounters();
 /* deep-link launch (app shortcuts / shared game links) + ?q= search (SearchAction) — then clean the URL */
 (function(){try{const sp=new URLSearchParams(location.search);
   const q=sp.get('q');
