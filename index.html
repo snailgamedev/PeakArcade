@@ -535,6 +535,8 @@ const GAMES=[
     blurb:'The OG snail chase — simple, quick, and where it all started.', tags:['adventure']},
   {id:'coin', title:'Coin Kingdom', emoji:'🪙', cat:'Arcade', url:'https://snailgamedev.github.io/CoinKingdom/', live:true, featured:true, anim:'a-flip', ac:'#ffd166', ac2:'#ff8a3d', badge:'NEW',
     blurb:'EIGHT games, one treasury — pusher, flip, catcher, toss, 🎲 dice, 🗼 stack, 🎡 lucky spin & 📍 coin drop. Climb the Kingdom ranks.', tags:['arcade','coin','dice','plinko']},
+  {id:'wordup', title:'Word Up', emoji:'📖', cat:'Puzzle', url:'https://snailgamedev.github.io/WordUp/', live:true, featured:true, anim:'a-pulse', ac:'#a78bff', ac2:'#ff5d8f', badge:'NEW',
+    blurb:'Bible & brain trivia — three quizzes (✝️ Bible · 🌍 World · 🎲 Mixed) with word search + crossword on the way. Spread the Word, test the smarts. 🙏', tags:['trivia','bible','brain','word']},
   {id:'judge', title:'The Judge', emoji:'⚖️', cat:'Strategy', url:'', live:false, anim:'a-swing', ac:'#34d399', ac2:'#0891b2',
     blurb:"You're on the bench. Hear the case, weigh it, make the call. Wisdom on trial.", tags:['strategy']},
   {id:'golf', title:'Golf × Tennis', emoji:'🎾', cat:'Sports', url:'', live:false, anim:'a-arc', ac:'#a78bfa', ac2:'#22d3ee',
@@ -714,7 +716,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·2108 · sw v22';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·2223 · sw v23';}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
