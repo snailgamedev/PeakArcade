@@ -521,21 +521,21 @@ function initAds(){
 
 /* ===== DATA (add a game = one object) ===== */
 const GAMES=[
-  {id:'word', title:'The Word', emoji:'✝️', cat:'Faith', url:'https://snailgamedev.github.io/PeakArcade/word.html', live:true, featured:true, anim:'a-pulse', ac:'#f5c542', ac2:'#b98cff', badge:'✝',
+  {id:'word', title:'The Word', emoji:'✝️', cat:'Faith', url:'https://snailgamedev.github.io/PeakArcade/word.html', live:true, featured:true, anim:'a-pulse', ac:'#f5c542', ac2:'#b98cff', badge:'✝', added:'2026-05-26',
     blurb:'A mini-Bible — verse of the day, scripture by theme, a verse from every book, and the Gospel. The real peak isn’t a high score. 🙏', tags:['faith','bible']},
   {id:'wud', title:'Would U Dunk', emoji:'🏀', cat:'Sports',  url:'https://snailgamedev.github.io/Would-U-Dunk/', live:true, featured:true, anim:'a-bounce', ac:'#ff8a3d', ac2:'#ff4d8d', badge:'HOT',
     blurb:'Auto-rolling basketball chaos. Stack modifiers, climb the CPU tiers, go crazy.', tags:['arcade','chaos']},
-  {id:'sc', title:'Slam City', emoji:'🥊', cat:'Fighting', url:'https://snailgamedev.github.io/SlamCity/', live:true, featured:true, anim:'a-shake', ac:'#f43f5e', ac2:'#fb7185', badge:'NEW',
+  {id:'sc', title:'Slam City', emoji:'🥊', cat:'Fighting', url:'https://snailgamedev.github.io/SlamCity/', live:true, featured:true, anim:'a-shake', ac:'#f43f5e', ac2:'#fb7185', badge:'NEW', added:'2026-05-22',
     blurb:'Real-time fighter with the crew. Joystick + buttons, proximity hits, dynamic OVR.', tags:['fighting','3D']},
-  {id:'bb', title:'BrainBoard', emoji:'🧠', cat:'Puzzle', url:'https://snailgamedev.github.io/BrainBoard/', live:true, featured:true, anim:'a-pulse', ac:'#22d3ee', ac2:'#7c5cff', badge:'',
+  {id:'bb', title:'BrainBoard', emoji:'🧠', cat:'Puzzle', url:'https://snailgamedev.github.io/BrainBoard/', live:true, featured:true, anim:'a-pulse', ac:'#22d3ee', ac2:'#7c5cff', badge:'', added:'2026-05-23',
     blurb:'A brain-arcade hub — mini-games for your memory, speed, and smarts.', tags:['puzzle','brain']},
   {id:'cts2', title:'Catch the Snail 2', emoji:'🐌', cat:'Adventure', url:'https://snailgamedev.github.io/catch-the-snail-2/snail-game.html', live:true, featured:true, anim:'a-arc', ac:'#34d399', ac2:'#0891b2', badge:'HOT',
     blurb:'The sequel — chase the snail through a bigger world, boss fights and 160+ verses. Peak.', tags:['adventure','boss']},
   {id:'cts1', title:'Catch the Snail', emoji:'🐌', cat:'Adventure', url:'https://snailgamedev.github.io/catch-the-snail/', live:true, anim:'a-pulse', ac:'#a3e635', ac2:'#22d3ee', badge:'',
     blurb:'The OG snail chase — simple, quick, and where it all started.', tags:['adventure']},
-  {id:'coin', title:'Coin Kingdom', emoji:'🪙', cat:'Arcade', url:'https://snailgamedev.github.io/CoinKingdom/', live:true, featured:true, anim:'a-flip', ac:'#ffd166', ac2:'#ff8a3d', badge:'NEW',
+  {id:'coin', title:'Coin Kingdom', emoji:'🪙', cat:'Arcade', url:'https://snailgamedev.github.io/CoinKingdom/', live:true, featured:true, anim:'a-flip', ac:'#ffd166', ac2:'#ff8a3d', badge:'NEW', added:'2026-05-26',
     blurb:'EIGHT games, one treasury — pusher, flip, catcher, toss, 🎲 dice, 🗼 stack, 🎡 lucky spin & 📍 coin drop. Climb the Kingdom ranks.', tags:['arcade','coin','dice','plinko']},
-  {id:'wordup', title:'Word Up', emoji:'📖', cat:'Puzzle', url:'https://snailgamedev.github.io/WordUp/', live:true, featured:true, anim:'a-pulse', ac:'#a78bff', ac2:'#ff5d8f', badge:'NEW',
+  {id:'wordup', title:'Word Up', emoji:'📖', cat:'Puzzle', url:'https://snailgamedev.github.io/WordUp/', live:true, featured:true, anim:'a-pulse', ac:'#a78bff', ac2:'#ff5d8f', badge:'NEW', added:'2026-05-27',
     blurb:'Bible & brain trivia — three quizzes (✝️ Bible · 🌍 World · 🎲 Mixed) with word search + crossword on the way. Spread the Word, test the smarts. 🙏', tags:['trivia','bible','brain','word']},
   {id:'judge', title:'The Judge', emoji:'⚖️', cat:'Strategy', url:'', live:false, anim:'a-swing', ac:'#34d399', ac2:'#0891b2',
     blurb:"You're on the bench. Hear the case, weigh it, make the call. Wisdom on trial.", tags:['strategy']},
@@ -587,8 +587,13 @@ async function shareThing(title,url){
 /* ===== card ===== */
 function cardHTML(g){
   const fav=favs.includes(g.id), noti=notify.includes(g.id);
+  // 🆕 dynamic NEW badge — auto-tags any game added within the last 7 days; otherwise uses the static badge
+  const recent = g.added && (Date.now() - new Date(g.added).getTime()) < 7*864e5;
   const corner=g.live
-    ? (g.badge==='HOT'?'<span class="corner hot">🔥 HOT</span>':g.badge==='NEW'?'<span class="corner new">✦ NEW</span>':'<span class="corner live"><span class="dot"></span>LIVE</span>')
+    ? (recent ? '<span class="corner new">✦ NEW</span>'
+       : g.badge==='HOT' ? '<span class="corner hot">🔥 HOT</span>'
+       : g.badge==='NEW' ? '<span class="corner new">✦ NEW</span>'
+       : '<span class="corner live"><span class="dot"></span>LIVE</span>')
     : '<div class="ribbon">SOON</div>';
   return `<div class="card ${g.live?'':'soon'}" data-id="${g.id}" style="--ac:${g.ac};--ac2:${g.ac2};--tg:linear-gradient(135deg,${g.ac},${g.ac2})">
     ${corner}
@@ -716,7 +721,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·2223 · sw v23';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·2258 · sw v24';}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
