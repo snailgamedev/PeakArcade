@@ -434,6 +434,10 @@
     <div class="sec-head reveal"><h2>🔥 All games</h2><span id="allCount"></span></div>
     <div class="grid" id="gameGrid"></div>
     <div class="empty hide" id="emptyState">Nothin' here yet 🤷 — try another filter.<br><button class="clearbtn" id="clearFilters">↺ Clear filters</button></div>
+    <div class="reveal" style="margin-top:18px;text-align:center">
+      <button id="showVaultBtn" class="btn ghost" style="font-size:.95rem">🗂 Browse the Vault · coming-soon games</button>
+      <p style="font-size:.8rem;color:var(--muted);margin-top:8px;opacity:.7">Future drops live here. Once we ship them, they move up into the main grid above.</p>
+    </div>
   </section>
 
   <div class="ad reveal">advertisement</div>
@@ -758,6 +762,12 @@ $('#liveCount').textContent=GAMES.filter(g=>g.live).length;
 $('#searchInput').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();render();});
 $('#sortSel').addEventListener('change',e=>{sortMode=e.target.value;render();});
 $('#clearFilters').onclick=()=>{query='';activeCat='All';sortMode='featured';$('#searchInput').value='';$('#sortSel').value='featured';$$('.chip').forEach(x=>x.classList.toggle('on',x.dataset.cat==='All'));render();toast('↺ Filters cleared');};
+$('#showVaultBtn').onclick=()=>{
+  activeCat='Coming soon'; query=''; $('#searchInput').value='';
+  $$('.chip').forEach(x=>x.classList.toggle('on', x.dataset.cat==='Coming soon'));
+  render(); document.querySelector('#games').scrollIntoView({behavior:'smooth',block:'start'});
+  toast('🗂 Vault opened — these drop when they\'re ready');
+};
 /* easter egg: type PEAK (not while in a field) → confetti + blessing */
 let _eg='';addEventListener('keydown',e=>{if(/^(input|textarea|select)$/i.test(document.activeElement.tagName))return;if(/^[a-zA-Z]$/.test(e.key)){_eg=(_eg+e.key.toUpperCase()).slice(-4);if(_eg==='PEAK'){confetti();toast('🔥 PEAK unlocked! "I can do all things through Christ" — Phil 4:13 💪');_eg='';}}});
 const WORD=[
@@ -844,7 +854,7 @@ if('serviceWorker'in navigator){
       if(reg.waiting){ try{reg.waiting.postMessage('SKIP_WAITING');}catch(e){} }   // 🆕 FORCE: never leave an update waiting
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed' && navigator.serviceWorker.controller){ toast('✨ Updating Peak Arcade to the latest…'); /* SW auto-activates (skipWaiting) → controllerchange → reload */ } }); });
-      reg.update(); setInterval(()=>reg.update(), 60*1000);   // 🆕 check every minute so updates land fast
+      reg.update(); setInterval(()=>reg.update(), 10*60*1000);   // FIX (lag): poll every 10 min, not 60s · visibility-change handler below catches the rest
     }).catch(()=>{});
   });
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}); });
