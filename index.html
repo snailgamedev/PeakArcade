@@ -566,6 +566,16 @@ const LS={get(k,d){try{const v=localStorage.getItem('pa_'+k);return v==null?d:JS
 let favs=LS.get('favs',[]);
 let recent=LS.get('recent',[]);
 let notify=LS.get('notify',[]);
+// 🆕 notify-REAL · on load, if any game you flagged "🔔 notify me" is NOW live → greet you w/ it + clear from list
+(function dropGreet(){
+  if(!notify.length) return;
+  const dropped = notify.filter(id => { const g=GAMES.find(x=>x.id===id); return g && g.live; });
+  if(!dropped.length) return;
+  notify = notify.filter(id => !dropped.includes(id)); LS.set('notify', notify);
+  setTimeout(()=>{ const id=dropped[0], g=GAMES.find(x=>x.id===id);
+    if(g){ toast('🎉 '+g.title+' is LIVE now — you asked for this one! 🙌'); try{confetti&&confetti();}catch(e){} }
+  }, 1400);
+})();
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 function toast(m,ms){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms||1800);}
 
@@ -724,7 +734,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·2342 · sw v25';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-28·0001 · sw v26';}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
