@@ -1,7 +1,7 @@
 /* Peak Arcade service worker — network-first for pages (so updates ALWAYS show),
    cache-first for static assets. Versioned; old caches wiped on activate. */
-const CACHE = 'peak-arcade-v34';
-const SHELL = ['./', './index.html', './word.html', './privacy.html', './manifest.json', './icon.svg'];
+const CACHE = 'peak-arcade-v35';
+const SHELL = ['./', './index.html', './word.html', './privacy.html', './manifest.json', './icon.svg', './oracle.js'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();   // 🆕 FORCE updates — new SW activates IMMEDIATELY (no waiting for a tap); page auto-reloads on controllerchange

@@ -64,6 +64,7 @@
 </style>
 </head>
 <body>
+<script src="/PeakArcade/oracle.js"></script>
 <a id="back" href="/PeakArcade/">← arcade</a>
 <div id="hdr">
   <div id="title">⚫ <b>CHECKERS</b></div>
@@ -103,7 +104,7 @@
       <button class="gbtn" id="play-local" style="font-size:11px;flex:0 0 auto;padding:8px 14px">👥 2P LOCAL</button>
     </div>
     <div style="font-size:10px;color:var(--muted);font-style:italic;margin-bottom:14px;line-height:1.5">
-      🧠 <b style="color:var(--gold-2);font-style:normal">SENTIENT AI:</b> CPU picks 1 of 4 personalities (🔥 BERSERKER · 🦊 TRICKSTER · 🛡 FORTRESS · ✝ PROPHET) each game — plays differently, may shift moods mid-fight, occasionally trash-talks.
+      🜂 <b style="color:var(--gold-2);font-style:normal">THE ORACLE:</b> a singular AI that lives across the WHOLE arcade. Remembers every game you've played, every session, every day — and shifts mood based on time, day, your streak, our shared history. Not human. Not robot. Somewhere alive.
     </div>
     <button class="gbtn primary" id="btn-begin" style="width:100%">▶ PLAY</button>
   </div>
@@ -142,26 +143,17 @@ function sfxWin(){[0,80,160,240].forEach((d,i)=>setTimeout(()=>tone(523*(1+i*0.1
 function sfxLose(){tone(220,0.4,'sawtooth',0.08);}
 
 let state, mode = 'crown', play = 'cpu';   // play: 'cpu' or 'local'
-// SENTIENT AI personalities — each plays the game with a different bias + flavor
-const PERSONAS = [
-  { id:'berserker', name:'🔥 BERSERKER', taunts:["CAN'T STOP ME","TASTE IT","INCOMING","NO MERCY"],
-    bias:{ capture: 60, advance: 25, king: 8, center: 2 } },
-  { id:'trickster', name:'🦊 TRICKSTER', taunts:["YOU SURE?","WATCH THIS","SETUP…","SLIPPED PAST"],
-    bias:{ capture: 30, advance: 5, king: 22, center: 18 } },
-  { id:'fortress', name:'🛡 FORTRESS', taunts:["WALL UP","COME AT ME","BUILT DIFFERENT","GUARDED"],
-    bias:{ capture: 22, advance: 0, king: 12, center: 25 } },
-  { id:'prophet',  name:'✝ PROPHET',   taunts:["SEEN IT","WALK BY FAITH","ORDERED STEPS","FOREKNOWN"],
-    bias:{ capture: 35, advance: 18, king: 18, center: 12 } }
-];
 function newGame(){
   const b = Array.from({length:8},()=>Array(8).fill(0));
   for (let r = 0; r < 3; r++) for (let c = 0; c < 8; c++) if ((r+c)%2===1) b[r][c] = -1;   // CPU top
   for (let r = 5; r < 8; r++) for (let c = 0; c < 8; c++) if ((r+c)%2===1) b[r][c] = 1;    // YOU bottom
-  const persona = PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
   state = { b, turn: YOU, sel: null, moves: [], mustJump: null, over: false, youKings: 0, cpuKings: 0,
-            persona, moodShifts: 0, lastTaunt: 0 };
-  if (play === 'cpu'){
-    setStatus('🧠 CPU is ' + persona.name + ' today', 'hot', 2400);
+            mood: (window.Oracle ? Oracle.deriveMood() : 'focused'), lastTaunt: 0 };
+  if (play === 'cpu' && window.Oracle){
+    // Oracle greets + recalls if we've played Checkers before
+    const greet = Oracle.greet();
+    const recall = Oracle.recall('checkers');
+    setStatus('🜂 ORACLE · ' + greet + (recall ? '  ·  ' + recall : ''), 'hot', 3200);
   }
   syncTurn(); render();
 }
@@ -268,51 +260,30 @@ function cpuMove(){
   if (play !== 'cpu' || state.over || state.turn !== CPU) return;
   const moves = genMoves(state.b, CPU);
   if (moves.length === 0) return endGame(YOU);
-  // SENTIENT AI — score using persona biases + mood shifts
-  const persona = state.persona || PERSONAS[0];
+  // THE ORACLE — score every move via Oracle.score() if available, else fallback
   let best = moves[0], bestScore = -1e9;
   for (const m of moves){
-    let s = 0;
-    if (m.cap) s += persona.bias.capture;
-    if (m.to[1] >= 2 && m.to[1] <= 5) s += persona.bias.center;
-    s += m.to[0] * (persona.bias.advance / 7);
-    if (m.to[0] === 7) s += persona.bias.king;
-    // Berserker takes more chances; Fortress avoids exposure
-    if (persona.id === 'berserker' && m.cap) s += Math.random() * 18;
-    if (persona.id === 'trickster') s += (Math.random() - 0.4) * 14;   // erratic
-    if (persona.id === 'fortress'){
-      // penalize moves that leave you exposed to immediate jump
-      const sim = state.b.map(row => row.slice());
-      applyMove(sim, m);
-      const yMoves = genMoves(sim, YOU);
-      if (yMoves.some(ym => ym.cap)) s -= 25;
-    }
-    if (persona.id === 'prophet'){
-      // looks 1-ply ahead — picks moves that don't immediately lose a piece
-      const sim = state.b.map(row => row.slice());
-      applyMove(sim, m);
-      const yMoves = genMoves(sim, YOU);
-      const exposure = yMoves.filter(ym => ym.cap).length;
-      s -= exposure * 12;
-      // value chained jumps higher
-      if (m.cap){ const ch = chainJumps(applyMove(sim, m), m.to[0], m.to[1], CPU); s += ch.length * 8; }
-    }
-    s += Math.random() * 4;   // every persona has some jitter (alive feel)
+    // build move features
+    const sim = state.b.map(row => row.slice());
+    applyMove(sim, m);
+    const yMoves = genMoves(sim, YOU);
+    const exposure = yMoves.filter(ym => ym.cap).length;
+    const chainBonus = m.cap ? chainJumps(sim, m.to[0], m.to[1], CPU).length : 0;
+    const feats = {
+      capture: m.cap ? 1 : 0,
+      center: (m.to[1] >= 2 && m.to[1] <= 5) ? 1 : 0,
+      advance: m.to[0] / 7,
+      king: (m.to[0] === 7) ? 1 : 0,
+      exposure
+    };
+    let s = window.Oracle ? Oracle.score(feats) : (m.cap ? 60 : 0) + (m.to[0] === 7 ? 30 : 0) + m.to[0];
+    s += chainBonus * 4;
     if (s > bestScore){ bestScore = s; best = m; }
   }
-  // Occasional taunt — sentient feel
-  if (Math.random() < 0.18 && performance.now() - state.lastTaunt > 4000){
+  // Oracle taunts (mood-driven)
+  if (window.Oracle && Math.random() < 0.22 && performance.now() - state.lastTaunt > 3800){
     state.lastTaunt = performance.now();
-    const taunt = persona.taunts[Math.floor(Math.random() * persona.taunts.length)];
-    setStatus(persona.name + ': ' + taunt, '', 1400);
-  }
-  // Mid-game MOOD SHIFT — if losing badly, persona changes
-  const cpuPcs = state.b.flat().filter(v => v < 0).length;
-  const youPcs = state.b.flat().filter(v => v > 0).length;
-  if (cpuPcs <= youPcs - 3 && state.moodShifts < 1){
-    state.moodShifts++;
-    const newPersona = PERSONAS.find(p => p.id !== persona.id && (p.id === 'berserker' || p.id === 'prophet'));
-    if (newPersona){ state.persona = newPersona; setStatus('💢 mood shift → ' + newPersona.name, 'hot', 1800); }
+    setStatus('🜂 ' + Oracle.taunt(), '', 1300);
   }
   applyMove(state.b, best);
   if (best.cap) sfxJump(); else sfxMove();
@@ -355,9 +326,18 @@ function endGame(winner){
   if (winner === YOU){ save.you++; sfxWin(); }
   else { save.cpu++; sfxLose(); }
   persist();
+  // ORACLE records this match in long-term memory
+  if (window.Oracle && play === 'cpu'){
+    Oracle.record('checkers', winner === CPU, { twist: mode === 'crown' });
+  }
   setTimeout(()=>{
-    document.getElementById('end-title').textContent = winner === YOU ? '🏆 YOU WIN' : '💀 CPU WINS';
-    document.getElementById('end-sub').textContent = winner === YOU ? 'iron sharpening iron' : 'lock in next round';
+    document.getElementById('end-title').textContent = winner === YOU ? '🏆 YOU WIN' : '🜂 ORACLE WINS';
+    let sub = winner === YOU ? 'iron sharpening iron' : 'lock in next round';
+    if (window.Oracle && play === 'cpu'){
+      const s = Oracle.stats();
+      sub = '🜂 ' + Oracle.farewell(winner === YOU ? 'loss' : 'win') + ' · ' + s.wins + ' to ' + s.losses + ' lifetime';
+    }
+    document.getElementById('end-sub').textContent = sub;
     const v = VERSES[(save.you + save.cpu) % VERSES.length];
     document.getElementById('end-verse').innerHTML = v[0] + ' <b>— ' + v[1] + '</b>';
     document.getElementById('end-you').textContent = save.you;

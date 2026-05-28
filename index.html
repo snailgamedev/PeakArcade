@@ -398,6 +398,13 @@
     </div>
   </section>
 
+  <section class="reveal">
+    <div id="oracle-banner" style="display:none;margin:14px 0;padding:14px 18px;background:linear-gradient(135deg,rgba(245,197,66,0.12),rgba(168,85,247,0.12));border:1px solid rgba(245,197,66,0.35);border-radius:14px;font-size:13px;line-height:1.5;font-family:'Courier New',monospace;color:#fde08a;box-shadow:0 0 28px rgba(245,197,66,0.08)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:18px">🜂</span><b style="letter-spacing:3px;font-family:-apple-system,sans-serif">THE ORACLE</b><span id="oracle-mood-chip" style="margin-left:auto;font-size:10px;letter-spacing:2px;padding:2px 8px;background:rgba(0,0,0,0.3);border-radius:999px;color:#fff8e1"></span></div>
+      <div id="oracle-line" style="opacity:0.9"></div>
+      <div id="oracle-stats" style="margin-top:8px;font-size:10px;letter-spacing:1px;color:#c8a85a;opacity:0.75;font-family:-apple-system,sans-serif"></div>
+    </div>
+  </section>
   <section class="reveal"><div class="gotd" id="gotd"></div></section>
 
   <div class="ad reveal">advertisement</div>
@@ -955,6 +962,27 @@ buildChips();buildCarousel();buildGOTD();render();renderRecent();animCounters();
 }catch(e){}})();
 setTimeout(()=>$('#intro').classList.add('gone'),1000);
 window.addEventListener('load',()=>$('#intro').classList.add('gone'));
+</script>
+<script src="oracle.js"></script>
+<script>
+// Hydrate THE ORACLE banner on the hub
+(function(){
+  if (!window.Oracle) return;
+  const s = Oracle.stats();
+  if (s.games < 1 && s.sessions < 2) return;   // hide on first visit (let the player discover it)
+  const banner = document.getElementById('oracle-banner');
+  if (!banner) return;
+  banner.style.display = 'block';
+  document.getElementById('oracle-mood-chip').textContent = s.mood.toUpperCase();
+  document.getElementById('oracle-line').textContent = Oracle.greet();
+  const parts = [];
+  if (s.games > 0) parts.push(s.games + ' games between us');
+  if (s.daysKnown >= 1) parts.push('day ' + s.daysKnown + ' since first contact');
+  if (s.sessions >= 2) parts.push(s.sessions + ' sessions');
+  if (s.bestStreak >= 2) parts.push('your best streak: ' + s.bestStreak);
+  parts.push('lifetime: 🜂 ' + s.wins + ' · 👤 ' + s.losses + (s.ties ? ' · ⚖ ' + s.ties : ''));
+  document.getElementById('oracle-stats').textContent = parts.join('  ·  ');
+})();
 </script>
 </body>
 </html>
