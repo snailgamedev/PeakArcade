@@ -434,6 +434,19 @@
     </div>
   </section>
 
+  <!-- 🌅 DAILY PULSE · greets you by time-of-day, shows Sunday vibes, references your visit history -->
+  <section class="reveal" style="margin:18px 0">
+    <div id="pulse" style="background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(255,77,141,.08),rgba(245,197,66,.10));border:1px solid var(--line);border-radius:18px;padding:18px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:18px;box-shadow:0 12px 36px -18px rgba(124,92,255,.4)">
+      <div style="flex:1;min-width:220px">
+        <div id="pulseGreet" style="font-size:1.1rem;font-weight:900;letter-spacing:.5px;background:linear-gradient(90deg,var(--neon2),var(--hot));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:4px"></div>
+        <div id="pulseSub" style="font-size:.85rem;color:var(--muted);line-height:1.45"></div>
+      </div>
+      <div id="pulsePick" style="font-size:.82rem;background:rgba(0,0,0,.35);border:1px solid var(--line);padding:10px 14px;border-radius:12px;line-height:1.4;max-width:280px;cursor:pointer;transition:transform .2s,border-color .2s">
+        <div style="font-size:.7rem;letter-spacing:1.5px;color:var(--gold);font-weight:900;margin-bottom:3px">🎯 TONIGHT'S PICK</div>
+        <div id="pulsePickGame" style="font-weight:700;color:var(--ink)"></div>
+      </div>
+    </div>
+  </section>
   <section class="reveal"><div class="gotd" id="gotd"></div></section>
 
   <div class="ad reveal">advertisement</div>
@@ -739,6 +752,62 @@ function buildGOTD(){
     <button class="gotd-play" data-go="${g.id}">▶ Play</button>`;
   $('#gotd .gotd-play').onclick=()=>playGame(g.id);
 }
+
+/* ===== 🌅 DAILY PULSE — time-of-day greeting · Sunday vibes · returning-user awareness · time-curated game pick ===== */
+function buildPulse(){
+  const d = new Date();
+  const hour = d.getHours();
+  const dow = d.getDay();   // 0 = Sun
+  const live = GAMES.filter(g=>g.live);
+  // streak/sessions context
+  let streak = 0, knownSessions = 0;
+  try{ streak = +(LS.get('streak') || 0); }catch(e){}
+  try{ knownSessions = +(LS.get('sessions') || 0); }catch(e){}
+
+  // Greeting · varies by time, day, and whether you're new vs returning
+  let greet, sub;
+  if (dow === 0 && hour >= 8 && hour <= 20){
+    greet = "🙏 Sunday quiet · welcome";
+    sub = "rest day · still time for a few rounds before sundown";
+  } else if (hour < 6){
+    greet = "🌙 Small hours · welcome back";
+    sub = "the world's asleep · the arcade is yours";
+  } else if (hour < 12){
+    greet = "🌅 Mornin' · let's go";
+    sub = "freshest games up top · coffee and a round";
+  } else if (hour < 17){
+    greet = "⚡ Midday · lock in";
+    sub = "peak energy hours · best time for SC + WUD";
+  } else if (hour < 21){
+    greet = "🌇 Evening · post up";
+    sub = "wind down with a brain game or pick a fight";
+  } else {
+    greet = "🌃 Night mode · soft landing";
+    sub = "low-stakes vibes · The Word or Coin Kingdom";
+  }
+  // streak/returning flair
+  if (streak >= 7) sub += ` · 🔥 ${streak}-day streak holding`;
+  else if (streak >= 2) sub += ` · day ${streak} of your streak`;
+
+  // Time-curated pick
+  let pickPool;
+  if (dow === 0) pickPool = live.filter(g => g.id === 'word' || g.id === 'wordup' || g.id === 'bb');
+  else if (hour < 12) pickPool = live.filter(g => g.id === 'bb' || g.id === 'wordup' || g.id === 'coin');
+  else if (hour < 17) pickPool = live.filter(g => g.id === 'wud' || g.id === 'sc' || g.id === 'coin');
+  else if (hour < 21) pickPool = live.filter(g => g.id === 'wud' || g.id === 'sc' || g.id === 'bb');
+  else pickPool = live.filter(g => g.id === 'word' || g.id === 'cts1' || g.id === 'cts2' || g.id === 'coin');
+  if (!pickPool.length) pickPool = live;
+  // stable pick within the same window (uses hour-bucket as seed)
+  const bucket = Math.floor(hour/4) + dow*4;
+  const pick = pickPool[(bucket + (knownSessions||0)) % pickPool.length];
+
+  $('#pulseGreet').textContent = greet;
+  $('#pulseSub').textContent = sub;
+  $('#pulsePickGame').innerHTML = `${pick.emoji} <b>${pick.title}</b><br><span style="color:var(--muted);font-size:.78rem">${(pick.blurb||'').slice(0,72)}…</span>`;
+  $('#pulsePick').onclick = () => playGame(pick.id);
+  $('#pulsePick').onmouseenter = e => { e.target.closest('#pulsePick').style.transform='translateY(-2px)'; e.target.closest('#pulsePick').style.borderColor='var(--neon)'; };
+  $('#pulsePick').onmouseleave = e => { e.target.closest('#pulsePick').style.transform=''; e.target.closest('#pulsePick').style.borderColor='var(--line)'; };
+}
 /* ===== confetti (peak-moment delight, self-cleaning) ===== */
 function confetti(){const e=['🎉','✨','🔥','🙌','⭐','💯'];for(let i=0;i<20;i++){const s=document.createElement('div');s.textContent=e[i%e.length];
   s.style.cssText='position:fixed;left:50%;top:42%;font-size:1.5rem;z-index:500;pointer-events:none;transition:transform 1.3s cubic-bezier(.2,.7,.3,1),opacity 1.3s;will-change:transform';
@@ -980,7 +1049,7 @@ addEventListener('keydown',e=>{
 
 /* ===== boot ===== */
 document.querySelector('.stat b[data-count]').dataset.count=GAMES.filter(g=>g.live).length;
-buildChips();buildCarousel();buildGOTD();render();renderRecent();animCounters();
+buildChips();buildCarousel();buildGOTD();buildPulse();render();renderRecent();animCounters();
 /* deep-link launch (app shortcuts / shared game links) + ?q= search (SearchAction) — then clean the URL */
 (function(){try{const sp=new URLSearchParams(location.search);
   const q=sp.get('q');
