@@ -108,6 +108,10 @@
     <button class="diff-btn on" data-d="1">PRO</button>
     <button class="diff-btn" data-d="2">SHARP</button>
   </div>
+  <div id="mode-row" style="display:flex;gap:6px;justify-content:center;font-size:11px;margin-top:6px">
+    <button class="diff-btn on" data-mode="classic">⚫ CLASSIC</button>
+    <button class="diff-btn" data-mode="blessed">✨ BLESSED DISC</button>
+  </div>
 </div>
 
 <div id="btns">
@@ -165,7 +169,7 @@ const VERSES = [
 ];
 
 let save = loadSave();
-let state = null, diff = 1;
+let state = null, diff = 1, mode = 'classic';   // 'classic' or 'blessed' (BLESSED DISC twist)
 
 function loadSave(){ try{ return Object.assign({you:0,cpu:0,ties:0}, JSON.parse(localStorage.getItem(SAVE_KEY)||'{}')); }catch(e){ return {you:0,cpu:0,ties:0}; } }
 function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
@@ -179,9 +183,32 @@ function sfxLose(){ tone(196, 0.3, 'sawtooth', 0.07); setTimeout(()=>tone(147, 0
 
 function newGame(){
   const grid = Array.from({length:ROWS}, () => Array(COLS).fill(0));
-  state = { grid, turn: YOU, history: [], over: false, winLine: null };
+  // BLESSED DISC twist: each player gets 1 free-place-anywhere disc per game
+  state = { grid, turn: YOU, history: [], over: false, winLine: null,
+            youBless: mode === 'blessed' ? 1 : 0, cpuBless: mode === 'blessed' ? 1 : 0, blessArmed: false };
   renderBoard();
   setTurnUI();
+  syncBlessBtn();
+}
+function syncBlessBtn(){
+  let btn = document.getElementById('btn-bless');
+  if (mode !== 'blessed'){ if (btn) btn.style.display = 'none'; return; }
+  if (!btn){
+    btn = document.createElement('button');
+    btn.id = 'btn-bless'; btn.className = 'gbtn';
+    btn.style.cssText = 'background:linear-gradient(180deg,#f5c542,#b8860b);color:#08172e;border-color:#f5c542;font-weight:900';
+    document.getElementById('btns').insertBefore(btn, document.getElementById('btn-new'));
+    btn.addEventListener('click', () => {
+      if (!state || state.over || state.turn !== YOU || state.youBless <= 0) return;
+      state.blessArmed = !state.blessArmed;
+      btn.textContent = state.blessArmed ? '✨ TAP ANY CELL' : '✨ BLESSED DISC ('+state.youBless+')';
+      btn.style.boxShadow = state.blessArmed ? '0 0 18px #f5c542' : 'none';
+    });
+  }
+  btn.style.display = '';
+  btn.textContent = state.youBless > 0 ? '✨ BLESSED DISC ('+state.youBless+')' : '✨ USED';
+  btn.disabled = state.youBless <= 0 || state.turn !== YOU || state.over;
+  btn.style.opacity = btn.disabled ? '.4' : '1';
 }
 
 function renderBoard(){
@@ -199,7 +226,10 @@ function renderBoard(){
       }
       // highlight winning line
       if (state.winLine && state.winLine.some(p => p[0] === r && p[1] === c)) cell.classList.add('win');
-      cell.addEventListener('click', () => dropInCol(c));
+      cell.addEventListener('click', () => {
+        if (state.blessArmed && state.youBless > 0){ blessedPlace(r, c); return; }
+        dropInCol(c);
+      });
       b.appendChild(cell);
     }
   }
@@ -237,6 +267,24 @@ function dropInCol(c){
   setTurnUI();
   setTimeout(cpuMove, 420);
 }
+// BLESSED click on any individual cell (when bless is armed)
+function blessedPlace(r, c){
+  if (!state || state.over || state.turn !== YOU) return;
+  if (!state.blessArmed || state.youBless <= 0) return;
+  if (state.grid[r][c] !== 0) return;
+  ensureAudio();
+  state.grid[r][c] = YOU; state.history.push([r, c, YOU]);
+  state.youBless--; state.blessArmed = false;
+  sfxDrop();
+  // mini gold burst sound
+  setTimeout(()=>{ [0,80].forEach((d,i)=>setTimeout(()=>tone(880+i*220, 0.12, 'triangle', 0.07), d)); }, 50);
+  state.turn = CPU; renderBoard(); syncBlessBtn();
+  const winLine = checkWin(state.grid, YOU);
+  if (winLine) return endRound(YOU, winLine);
+  if (isFull(state.grid)) return endRound(0, null);
+  setTurnUI();
+  setTimeout(cpuMove, 420);
+}
 
 function lowestEmpty(grid, c){
   for (let r = ROWS - 1; r >= 0; r--) if (grid[r][c] === 0) return r;
@@ -267,6 +315,22 @@ function checkWin(grid, p){
 
 function cpuMove(){
   if (!state || state.over || state.turn !== CPU) return;
+  // BLESSED DISC twist: if CPU has a bless AND can win OR block by ANY-cell, use it
+  if (state.cpuBless > 0){
+    const blessSpot = cpuBlessOpportunity();
+    if (blessSpot){
+      const [br, bc] = blessSpot;
+      state.grid[br][bc] = CPU; state.history.push([br, bc, CPU]);
+      state.cpuBless--; sfxDrop();
+      setTimeout(()=>{ [0,80].forEach((d,i)=>setTimeout(()=>tone(660+i*220, 0.12, 'triangle', 0.07), d)); }, 50);
+      state.turn = YOU; renderBoard(); syncBlessBtn();
+      const winLine = checkWin(state.grid, CPU);
+      if (winLine) return endRound(CPU, winLine);
+      if (isFull(state.grid)) return endRound(0, null);
+      setTurnUI();
+      return;
+    }
+  }
   let col = pickCol();
   const row = lowestEmpty(state.grid, col);
   if (row < 0){
@@ -278,11 +342,30 @@ function cpuMove(){
   state.history.push([fRow, col, CPU]);
   sfxDrop();
   state.turn = YOU;
-  renderBoard();
+  renderBoard(); syncBlessBtn();
   const winLine = checkWin(state.grid, CPU);
   if (winLine) return endRound(CPU, winLine);
   if (isFull(state.grid)) return endRound(0, null);
   setTurnUI();
+}
+function cpuBlessOpportunity(){
+  // Check every empty cell — if placing there wins for CPU OR blocks YOU's immediate win, use bless
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+    if (state.grid[r][c] !== 0) continue;
+    state.grid[r][c] = CPU;
+    const won = checkWin(state.grid, CPU);
+    state.grid[r][c] = 0;
+    if (won) return [r, c];
+  }
+  // block YOU's win
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+    if (state.grid[r][c] !== 0) continue;
+    state.grid[r][c] = YOU;
+    const youWin = checkWin(state.grid, YOU);
+    state.grid[r][c] = 0;
+    if (youWin) return [r, c];
+  }
+  return null;
 }
 
 function pickCol(){
@@ -449,11 +532,19 @@ document.getElementById('btn-undo').addEventListener('click', undo);
 document.querySelectorAll('.col-arrow').forEach(a => {
   a.addEventListener('click', () => dropInCol(+a.dataset.c));
 });
-document.querySelectorAll('.diff-btn').forEach(b => {
+document.querySelectorAll('.diff-btn[data-d]').forEach(b => {
   b.addEventListener('click', () => {
-    document.querySelectorAll('.diff-btn').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.diff-btn[data-d]').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
     diff = +b.dataset.d;
+  });
+});
+document.querySelectorAll('.diff-btn[data-mode]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn[data-mode]').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    mode = b.dataset.mode;
+    if (state) { newGame(); }   // restart with new mode
   });
 });
 
