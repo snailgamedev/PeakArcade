@@ -502,8 +502,8 @@
   </section>
   <!-- 🎁 WIDGET GRID · COLLAPSED BY DEFAULT ON MOBILE so games appear sooner · power users tap to expand -->
   <section class="reveal" style="margin:8px 0 14px">
-    <button id="widgetsToggle" class="widgets-toggle" style="display:none;width:100%;background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:14px;padding:11px 16px;color:var(--ink);font-weight:800;letter-spacing:.5px;font-size:.85rem;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
-      <span>🎁 <span style="color:var(--gold)">Today's extras</span> · Spin · Challenge · Scripture · Stats</span>
+    <button id="widgetsToggle" class="widgets-toggle" aria-label="Open daily extras: random spin, daily challenge, daily scripture, trophies, your stats" style="display:none;width:100%;background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:14px;padding:11px 16px;color:var(--ink);font-weight:800;letter-spacing:.5px;font-size:.85rem;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <span>🎁 <span style="color:var(--gold)">Today's extras</span> — tap to see daily Spin · Challenge · Scripture · Trophies · Stats</span>
       <span id="widgetsCaret" style="color:var(--neon);font-weight:900;font-size:1rem">▾</span>
     </button>
     <div id="widgetsWrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:0">
@@ -546,14 +546,15 @@
       </div>
       <!-- 🏆 TROPHY CASE -->
       <div id="wgTrophies" style="background:linear-gradient(160deg,rgba(34,211,238,.10),rgba(245,197,66,.06));border:1px solid var(--line);border-radius:14px;padding:14px 16px;grid-column:1/-1">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;justify-content:space-between;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:1.6rem">🏆</span>
             <b style="font-size:.74rem;letter-spacing:1.5px;color:var(--gold)">TROPHY CASE</b>
           </div>
           <span id="trophyCount" style="font-size:.7rem;color:var(--muted);font-weight:800"></span>
         </div>
-        <div id="trophyGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px"></div>
+        <div style="font-size:.7rem;color:var(--muted);margin-bottom:8px;line-height:1.4">Tap any trophy to see how to unlock it. Locked = grey. Unlocked = gold.</div>
+        <div id="trophyGrid" style="display:grid;gap:8px"></div>
       </div>
     </div>
   </section>
@@ -596,7 +597,7 @@
     <div class="grid" id="gameGrid"></div>
     <div class="empty hide" id="emptyState">Nothin' here yet 🤷 — try another filter.<br><button class="clearbtn" id="clearFilters">↺ Clear filters</button></div>
     <div class="reveal" style="margin-top:18px;text-align:center">
-      <button id="showVaultBtn" class="btn ghost" style="font-size:.95rem">🗂 Browse the Vault · coming-soon games</button>
+      <button id="showVaultBtn" class="btn ghost" style="font-size:.95rem;white-space:nowrap">🗂 Browse the Vault</button>
       <p style="font-size:.8rem;color:var(--muted);margin-top:8px;opacity:.7">Future drops live here. Once we ship them, they move up into the main grid above.</p>
     </div>
   </section>
@@ -753,7 +754,7 @@ let notify=LS.get('notify',[]);
   }, 1400);
 })();
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-function toast(m,ms){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms||1800);}
+function toast(m,ms){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms||2200);}
 
 /* ===== recently played (real plays · no vanity counters) ===== */
 function renderRecent(){
@@ -806,7 +807,17 @@ function render(){
   else list=[...list].sort((a,b)=>(b.featured?1:0)-(a.featured?1:0)||(b.live-a.live)); // featured first, live before soon
   $('#gameGrid').innerHTML=list.map(cardHTML).join('');
   $('#emptyState').classList.toggle('hide',list.length>0);
-  $('#allCount').textContent=list.length+' game'+(list.length===1?'':'s');
+  // CLARITY FIX: distinguish "playable now" from "coming soon" instead of one bare number that confuses
+  {
+    const liveN = list.filter(g=>g.live).length;
+    const soonN = list.filter(g=>!g.live).length;
+    let label;
+    if (liveN && soonN) label = liveN + ' playable now · ' + soonN + ' coming';
+    else if (liveN) label = liveN + ' playable now';
+    else if (soonN) label = soonN + ' coming soon';
+    else label = '0 games';
+    $('#allCount').textContent = label;
+  }
   $$('.fav').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();toggleFav(b.dataset.fav);});
   $$('#gameGrid [data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();playGame(a.dataset.go);});
   $$('#gameGrid [data-notify]').forEach(b=>b.onclick=()=>toggleNotify(b.dataset.notify));
@@ -901,10 +912,22 @@ function renderTrophies(){
   const unlocked = new Set(checkTrophies(true));
   document.getElementById('trophyCount').textContent = unlocked.size + ' / ' + TROPHIES.length + ' unlocked';
   const grid = document.getElementById('trophyGrid');
+  grid.style.gridTemplateColumns = 'repeat(auto-fill,minmax(90px,1fr))';
   grid.innerHTML = TROPHIES.map(t => {
     const got = unlocked.has(t.id);
-    return `<div title="${t.name} — ${t.desc}" style="aspect-ratio:1;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:${got?'linear-gradient(160deg,rgba(245,197,66,.18),rgba(255,77,141,.08))':'rgba(0,0,0,.35)'};${got?'':'filter:grayscale(1) opacity(.35)'};transition:transform .15s">${t.emoji}</div>`;
+    return `<div class="trophy-tile" data-tid="${t.id}" style="border-radius:10px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 6px;gap:4px;background:${got?'linear-gradient(160deg,rgba(245,197,66,.18),rgba(255,77,141,.08))':'rgba(0,0,0,.32)'};${got?'':'opacity:.55'};transition:transform .15s,border-color .15s;cursor:pointer;text-align:center;min-height:74px">
+      <div style="font-size:1.5rem;${got?'':'filter:grayscale(1)'}">${t.emoji}</div>
+      <div style="font-size:.62rem;font-weight:800;color:${got?'var(--gold)':'var(--muted)'};letter-spacing:.3px;line-height:1.15">${t.name}</div>
+    </div>`;
   }).join('');
+  // Tap on a trophy reveals a toast with how to unlock it
+  grid.querySelectorAll('.trophy-tile').forEach(el => {
+    el.addEventListener('click', () => {
+      const t = TROPHIES.find(x => x.id === el.dataset.tid);
+      const got = unlocked.has(t.id);
+      toast((got?'✅ ':'🔒 ') + t.emoji + ' ' + t.name + ' — ' + t.desc, 3500);
+    });
+  });
 }
 /* ⭐ DAILY BLESSING — once per local day, gives a Faith Star + a verse pop */
 function buildBlessing(){
@@ -943,13 +966,24 @@ function buildMobileFlow(){
       tog.classList.toggle('open', open);
     });
   }
-  // Sticky "Jump to games" hides once the games grid scrolls into view
+  // Sticky "Jump to games" — appears only AFTER hero is scrolled past, hides once the games grid is reached.
   const jump = document.getElementById('jumpGames');
   const gamesSec = document.getElementById('games');
-  if (jump && gamesSec && 'IntersectionObserver' in window){
-    new IntersectionObserver(entries => {
-      entries.forEach(e => jump.classList.toggle('hide', e.isIntersecting));
-    }, { rootMargin: '-100px 0px' }).observe(gamesSec);
+  const heroSec = document.querySelector('.hero');
+  if (jump){
+    jump.classList.add('hide');   // start hidden so first paint is clean
+    if (heroSec && 'IntersectionObserver' in window){
+      // Show jump button only when hero is OUT of view
+      new IntersectionObserver(entries => {
+        entries.forEach(e => jump.classList.toggle('hide', e.isIntersecting));
+      }, { threshold: 0.1 }).observe(heroSec);
+    }
+    if (gamesSec && 'IntersectionObserver' in window){
+      // Hide jump button when the games grid is in view
+      new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) jump.classList.add('hide'); });
+      }, { rootMargin: '-100px 0px' }).observe(gamesSec);
+    }
   }
 }
 
@@ -1167,7 +1201,17 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-28·0001 · sw v26';}
+{const bs=$('#buildStamp'); if(bs){
+  // Pull live SW cache version so the footer never lies — refreshed every deploy.
+  const today = new Date(); const ymd = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  let swV = 'v47';
+  if ('serviceWorker' in navigator){
+    fetch('sw.js?_v='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(t=>{
+      const m = t.match(/peak-arcade-(v\d+)/); if (m){ swV = m[1]; bs.textContent = 'build ' + ymd + ' · sw ' + swV; }
+    }).catch(()=>{});
+  }
+  bs.textContent = 'build ' + ymd + ' · sw ' + swV;
+}}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
