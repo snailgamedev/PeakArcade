@@ -112,6 +112,10 @@
     <button class="diff-btn on" data-mode="classic">⚫ CLASSIC</button>
     <button class="diff-btn" data-mode="blessed">✨ BLESSED DISC</button>
   </div>
+  <div id="play-row" style="display:flex;gap:6px;justify-content:center;font-size:11px;margin-top:4px">
+    <button class="diff-btn on" data-play="cpu">🤖 vs CPU</button>
+    <button class="diff-btn" data-play="local">👥 2P LOCAL</button>
+  </div>
 </div>
 
 <div id="btns">
@@ -169,7 +173,7 @@ const VERSES = [
 ];
 
 let save = loadSave();
-let state = null, diff = 1, mode = 'classic';   // 'classic' or 'blessed' (BLESSED DISC twist)
+let state = null, diff = 1, mode = 'classic', play = 'cpu';   // play: 'cpu' or 'local'
 
 function loadSave(){ try{ return Object.assign({you:0,cpu:0,ties:0}, JSON.parse(localStorage.getItem(SAVE_KEY)||'{}')); }catch(e){ return {you:0,cpu:0,ties:0}; } }
 function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
@@ -238,12 +242,12 @@ function renderBoard(){
 function setTurnUI(){
   const el = document.getElementById('turn');
   if (state.over){ el.className = ''; el.textContent = 'GAME OVER'; }
-  else if (state.turn === YOU){ el.className = 'you'; el.textContent = '🟡 YOUR TURN'; }
-  else { el.className = 'cpu'; el.textContent = '🔴 CPU THINKING…'; }
+  else if (state.turn === YOU){ el.className = 'you'; el.textContent = play === 'local' ? '🟡 P1 TURN' : '🟡 YOUR TURN'; }
+  else { el.className = 'cpu'; el.textContent = play === 'local' ? '🔴 P2 TURN' : '🔴 CPU THINKING…'; }
   // column arrows
   document.querySelectorAll('.col-arrow').forEach(a => {
     const c = +a.dataset.c;
-    const canDrop = state.grid[0][c] === 0 && state.turn === YOU && !state.over;
+    const canDrop = state.grid[0][c] === 0 && !state.over && (play === 'local' || state.turn === YOU);
     a.classList.toggle('show', canDrop);
   });
   document.getElementById('sc-you').textContent = save.you;
@@ -251,21 +255,24 @@ function setTurnUI(){
 }
 
 function dropInCol(c){
-  if (!state || state.over || state.turn !== YOU) return;
+  if (!state || state.over) return;
+  // In LOCAL mode, either player can drop on their own turn; in CPU mode, only YOU
+  if (play === 'cpu' && state.turn !== YOU) return;
   if (state.grid[0][c] !== 0) return;
   ensureAudio();
   const row = lowestEmpty(state.grid, c);
   if (row < 0) return;
-  state.grid[row][c] = YOU;
-  state.history.push([row, c, YOU]);
+  const p = state.turn;   // YOU or CPU
+  state.grid[row][c] = p;
+  state.history.push([row, c, p]);
   sfxDrop();
-  state.turn = CPU;
+  state.turn = p === YOU ? CPU : YOU;
   renderBoard();
-  const winLine = checkWin(state.grid, YOU);
-  if (winLine) return endRound(YOU, winLine);
+  const winLine = checkWin(state.grid, p);
+  if (winLine) return endRound(p, winLine);
   if (isFull(state.grid)) return endRound(0, null);
   setTurnUI();
-  setTimeout(cpuMove, 420);
+  if (play === 'cpu' && state.turn === CPU) setTimeout(cpuMove, 420);
 }
 // BLESSED click on any individual cell (when bless is armed)
 function blessedPlace(r, c){
@@ -545,6 +552,14 @@ document.querySelectorAll('.diff-btn[data-mode]').forEach(b => {
     b.classList.add('on');
     mode = b.dataset.mode;
     if (state) { newGame(); }   // restart with new mode
+  });
+});
+document.querySelectorAll('.diff-btn[data-play]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn[data-play]').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    play = b.dataset.play;
+    if (state){ newGame(); }
   });
 });
 
