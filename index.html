@@ -114,6 +114,10 @@
   .hero h1 .glow{background:linear-gradient(90deg,var(--neon2),var(--neon),var(--hot),var(--gold),var(--neon2));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(124,92,255,.45));animation:shimmer 7s linear infinite}
   .hero p{color:var(--muted);font-size:clamp(1rem,2.5vw,1.24rem);margin-top:18px;max-width:540px;margin-inline:auto}
   .cta{display:flex;gap:11px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+  .dlbtn{animation:dlpulse 2.4s ease-in-out infinite}
+  @keyframes dlpulse{0%,100%{box-shadow:0 0 16px rgba(124,92,255,.45)}50%{box-shadow:0 0 32px rgba(124,92,255,.85)}}
+  .dl-hint{color:var(--muted);font-size:.86rem;margin-top:14px}
+  .dl-hint b{color:var(--ink)} .dl-hint a{color:var(--neon2);font-weight:800;cursor:pointer;text-decoration:underline}
   .btn{padding:13px 27px;border-radius:14px;font-weight:800;font-size:1rem;transition:transform .15s,filter .15s,box-shadow .15s;border:1px solid var(--line);display:inline-flex;align-items:center;gap:8px}
   .btn.primary{background:linear-gradient(90deg,var(--neon),var(--hot));color:#fff;border:none;box-shadow:0 12px 34px -10px rgba(124,92,255,.7)}
   .btn.primary:hover{transform:translateY(-3px);filter:brightness(1.1)}
@@ -383,8 +387,9 @@
     <div class="cta">
       <a href="#games" class="btn primary">▶ Start playing</a>
       <button class="btn ghost" id="randomBtn">🎲 Surprise me</button>
-      <button class="btn ghost" id="installHero">📲 Install app</button>
+      <button class="btn primary dlbtn" id="installHero">⬇️ Download app</button>
     </div>
+    <p class="dl-hint" id="dlHint">📲 <b>Download Peak Arcade free</b> — installs like a real app, plays offline. <a href="#" id="dlHelp">how?</a></p>
     <p class="hero-faith">✝️ free forever · built on the Rock · made to point you <span>higher</span></p>
     <div class="stats">
       <div class="stat"><b data-count="3">0</b><span>Games</span></div>
@@ -668,12 +673,18 @@ function confetti(){const e=['🎉','✨','🔥','🙌','⭐','💯'];for(let i=
   s.style.cssText='position:fixed;left:50%;top:42%;font-size:1.5rem;z-index:500;pointer-events:none;transition:transform 1.3s cubic-bezier(.2,.7,.3,1),opacity 1.3s;will-change:transform';
   document.body.appendChild(s);requestAnimationFrame(()=>{s.style.transform='translate('+(Math.random()*460-230)+'px,'+(Math.random()*-340-40)+'px) rotate('+(Math.random()*540-270)+'deg)';s.style.opacity='0';});
   setTimeout(()=>s.remove(),1400);}}
-/* ===== daily visit streak (per-user, real) ===== */
-(function(){const today=Math.floor(Date.now()/864e5);const last=LS.get('lastDay',null);let st=LS.get('streak',0);
-  if(last===today){/* same day */}else if(last===today-1){st++;}else{st=1;}
-  LS.set('streak',st);LS.set('lastDay',today);
+/* ===== daily visit streak (per-user, real · LOCAL calendar days — opening it 10× in one day NEVER bumps it; only a brand-new day does) ===== */
+(function(){
+  const key=d=>{const x=new Date(d);return x.getFullYear()*10000+(x.getMonth()+1)*100+x.getDate();};  // local YYYYMMDD int
+  const today=key(Date.now());
+  const yd=new Date(); yd.setDate(yd.getDate()-1); const yesterday=key(yd);                            // true local "yesterday" (handles month/year rollover)
+  const last=LS.get('lastDay',null); let st=LS.get('streak',0);
+  if(last===today){ /* already counted today → re-opening does NOTHING */ }
+  else if(last===yesterday){ st++; }   // came back the very next day → streak grows
+  else { st=1; }                       // first visit, or missed a day → reset to 1
+  LS.set('streak',st); LS.set('lastDay',today);
   if(st>=2){const c=$('#streakChip');if(c){c.textContent='🔥 Day '+st+' streak';c.classList.remove('hide');}}
-  if(last===today-1&&[3,7,14,30,50,100].includes(st)){setTimeout(()=>{toast('🔥 '+st+'-day streak! You keep comin\' back — love that 🙌');confetti();},1100);}
+  if(last===yesterday&&[3,7,14,30,50,100].includes(st)){setTimeout(()=>{toast('🔥 '+st+'-day streak! You keep comin\' back — love that 🙌');confetti();},1100);}
 })();
 
 /* ===== theme accent ===== */
@@ -703,7 +714,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·1655 · sw v20';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·2034 · sw v21';}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
@@ -831,8 +842,14 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#in
 if(IOS&&!STANDALONE){ $('#installBtn').style.display='block'; }  // iOS gives no prompt event — show button + manual steps
 $('#installBtn').onclick=doInstall;
 // prominent hero button — ALWAYS available (hidden only once already installed)
-if($('#installHero')){ $('#installHero').onclick=doInstall; if(STANDALONE) $('#installHero').style.display='none'; }
-window.addEventListener('appinstalled',()=>{ try{confetti&&confetti();}catch(e){} try{$('#installHero').style.display='none';}catch(e){} toast('🎮 You\'re officially in the arcade — installed! Play offline anytime. 🙏'); });
+if($('#installHero')){ $('#installHero').onclick=doInstall; if(STANDALONE){ $('#installHero').style.display='none'; const h=$('#dlHint'); if(h) h.style.display='none'; } }
+// "how?" — clear, platform-aware download steps
+if($('#dlHelp')){ $('#dlHelp').onclick=e=>{ e.preventDefault();
+  if(dp){ doInstall(); return; }
+  if(IOS){ toast('📲 iPhone/iPad: tap the Share button ⬆ (bottom of Safari) → scroll to "Add to Home Screen" → Add. Peak Arcade installs like an app!',6500); return; }
+  toast('📲 To download: Chrome/Edge — click the ⊕/install icon in the address bar (or ⋮ menu → "Install Peak Arcade"). Safari Mac — Share → "Add to Dock". Then it opens like a real app + works offline!',7500);
+}; }
+window.addEventListener('appinstalled',()=>{ try{confetti&&confetti();}catch(e){} try{$('#installHero').style.display='none'; $('#dlHint').style.display='none';}catch(e){} toast('🎮 You\'re officially in the arcade — installed! Play offline anytime. 🙏'); });
 
 /* ===== in-page game player (games open ON the arcade · URL stays clean) ===== */
 const player=$('#player'),pFrame=$('#pFrame'),pTitle=$('#pTitle'),pLoad=$('#pLoad');
