@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0a0a3e">
+<meta name="author" content="snailgamedev (Eli Hudson) — © 2026">
+<title>HOLY MAZE · the chase</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%230a0a3e'/><text x='50%25' y='66%25' font-size='44' text-anchor='middle'>👻</text></svg>">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --bg-0:#04042a; --bg-1:#0a0a3e; --bg-2:#13135c; --wall:#2238b8; --wall-2:#3b53d6;
+    --gold:#f5c542; --gold-2:#fde08a; --cream:#fff8e1; --soft:#cfd6f7; --muted:#8088c0;
+    --red:#ff5b6e; --pink:#ff8bb0; --cyan:#67e8f9; --orange:#ff8b3d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:var(--bg-0);color:var(--cream);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;overscroll-behavior:none;user-select:none}
+  body{display:flex;flex-direction:column;align-items:center;padding-top:max(8px,env(safe-area-inset-top))}
+
+  #back{position:fixed;left:10px;top:max(10px,env(safe-area-inset-top));z-index:40;text-decoration:none;background:var(--bg-2);border:1px solid var(--wall);padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;color:var(--soft);letter-spacing:1px}
+  #back:active{transform:scale(.96)}
+
+  #hdr{width:100%;max-width:520px;padding:8px 14px 6px;display:flex;align-items:center;gap:10px}
+  #title{font-weight:900;letter-spacing:2.5px;font-size:14px;color:var(--gold-2)}
+  #title b{color:var(--gold)}
+  #hud{margin-left:auto;display:flex;gap:6px;align-items:center}
+  .chip{background:var(--bg-2);border:1px solid var(--wall);padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--soft)}
+  .chip b{color:var(--gold)}
+  #lives{display:flex;gap:3px}
+  .heart{font-size:13px}
+
+  #stage{flex:1;width:100%;max-width:520px;padding:8px 14px;display:flex;flex-direction:column;gap:8px;min-height:0;align-items:center;font-family:-apple-system,sans-serif}
+
+  #board-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:6px 0;min-height:0}
+  #board{background:#000;border:2px solid var(--wall);border-radius:10px;touch-action:none;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 30px rgba(34,56,184,.3)}
+
+  #status{font-size:12px;letter-spacing:1.5px;color:var(--muted);font-weight:800;min-height:18px;text-align:center}
+  #status.hyped{color:var(--gold)}
+  #status.danger{color:var(--red)}
+
+  /* CONTROLS */
+  #ctrls{padding:0 14px max(14px,env(safe-area-inset-bottom));max-width:520px;width:100%}
+  #verse{min-height:30px;text-align:center;font-size:12px;line-height:1.4;color:var(--soft);font-style:italic;opacity:.9;padding:0 8px;margin-bottom:8px}
+  #verse b{color:var(--gold-2);font-style:normal}
+  #btns{display:flex;gap:8px}
+  .gbtn{flex:1;background:var(--bg-2);border:1px solid var(--wall);color:var(--cream);padding:11px;border-radius:10px;font-weight:800;font-size:12px;letter-spacing:1px;cursor:pointer;font-family:-apple-system,sans-serif}
+  .gbtn.primary{background:linear-gradient(180deg,var(--gold),#b8860b);color:var(--bg-0);border-color:var(--gold)}
+  .gbtn:active{transform:scale(.96)}
+
+  /* OVERLAYS */
+  .ov{position:fixed;inset:0;background:rgba(4,4,42,.92);display:none;align-items:center;justify-content:center;padding:24px;z-index:50;backdrop-filter:blur(8px)}
+  .ov.on{display:flex}
+  .modal{background:linear-gradient(180deg,var(--bg-2),var(--bg-1));border:1px solid var(--wall);border-radius:16px;padding:22px;max-width:380px;width:100%;text-align:center}
+  .modal h1{font-size:24px;color:var(--gold);letter-spacing:3px;margin-bottom:8px}
+  .modal .sub{font-size:11px;color:var(--soft);letter-spacing:1.5px;margin-bottom:14px}
+  .modal .v{font-size:13px;line-height:1.6;color:var(--cream);padding:12px;background:rgba(0,0,0,.4);border-radius:10px;margin-bottom:14px;border-left:3px solid var(--gold);font-style:italic}
+  .modal .v b{color:var(--gold-2);font-style:normal;display:block;margin-top:8px;font-size:11px;letter-spacing:1px}
+  .modal .stats{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+  .modal .stat{background:rgba(0,0,0,.4);padding:8px 14px;border-radius:8px;min-width:64px}
+  .modal .stat-v{font-size:20px;font-weight:900;color:var(--gold)}
+  .modal .stat-l{font-size:10px;color:var(--muted);letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<a id="back" href="/PeakArcade/">← arcade</a>
+
+<div id="hdr">
+  <div id="title">👻 <b>HOLY MAZE</b></div>
+  <div id="hud">
+    <div class="chip">SCORE <b id="score">0</b></div>
+    <div class="chip">L<b id="level">1</b></div>
+    <div id="lives" class="chip"><span class="heart">💛</span><span class="heart">💛</span><span class="heart">💛</span></div>
+  </div>
+</div>
+
+<div id="stage">
+  <div id="status">tap BEGIN — eat the light, dodge the dark</div>
+  <div id="board-wrap">
+    <canvas id="board" width="390" height="450"></canvas>
+  </div>
+</div>
+
+<div id="ctrls">
+  <div id="verse">the path of the just is as the shining light</div>
+  <div id="btns">
+    <button class="gbtn" id="btn-help">? HOW</button>
+    <button class="gbtn primary" id="btn-go">▶ START</button>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div class="ov on" id="ov-intro">
+  <div class="modal">
+    <h1>👻 HOLY MAZE</h1>
+    <div class="sub">the chase · scripture pellets · 4 ghosts</div>
+    <div class="v">
+      Move with arrows or swipe. Eat every <span style="color:#fde08a">verse pellet</span> to clear the level. Four ghosts hunt — touch one and lose a heart. Eat a <span style="color:#ff5b6e">⭐ power scroll</span> and the chase flips for 6 seconds — eat them while they flee.
+      <b>— the path of the just is as the shining light · Prov 4:18</b>
+    </div>
+    <div style="text-align:left;font-size:11px;color:var(--soft);line-height:1.7;margin-bottom:14px">
+      <div>📱 swipe ANY direction · ⌨ arrows or WASD</div>
+      <div>💛 3 hearts · 4 ghosts (each with own personality)</div>
+      <div>⭐ 4 power scrolls (corners) — flip the chase</div>
+      <div>📜 clear all pellets = next level (ghosts get faster)</div>
+    </div>
+    <button class="gbtn primary" id="btn-begin" style="width:100%">✦ BEGIN</button>
+  </div>
+</div>
+
+<!-- HELP -->
+<div class="ov" id="ov-help">
+  <div class="modal">
+    <h1>HOW TO PLAY</h1>
+    <div class="sub">controls + tips</div>
+    <div style="text-align:left;font-size:13px;color:var(--soft);line-height:1.7;margin-bottom:14px">
+      <div><b style="color:var(--gold-2)">📱 MOBILE</b> — swipe in any direction</div>
+      <div><b style="color:var(--gold-2)">⌨ KEYBOARD</b> — arrows or WASD</div>
+      <div><b style="color:var(--gold-2)">⏸ PAUSE</b> — spacebar</div>
+      <br>
+      <div>👻 4 ghost personalities:</div>
+      <div>🔴 RED · direct chaser</div>
+      <div>🩷 PINK · 4-tile ambusher</div>
+      <div>🩵 CYAN · flanks from your blind side</div>
+      <div>🧡 ORANGE · scatters then strikes</div>
+      <br>
+      <div>⭐ Power scroll → ghosts blue + flee → eat them for 200/400/800/1600</div>
+    </div>
+    <button class="gbtn primary" id="btn-help-close" style="width:100%">LOCK IN</button>
+  </div>
+</div>
+
+<!-- LEVEL / GAME OVER -->
+<div class="ov" id="ov-end">
+  <div class="modal">
+    <h1 id="end-title">LEVEL CLEAR</h1>
+    <div class="sub" id="end-sub">moving on…</div>
+    <div class="v" id="end-verse"></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-v" id="end-score">0</div><div class="stat-l">SCORE</div></div>
+      <div class="stat"><div class="stat-v" id="end-best">0</div><div class="stat-l">BEST</div></div>
+      <div class="stat"><div class="stat-v" id="end-level">1</div><div class="stat-l">LEVEL</div></div>
+    </div>
+    <button class="gbtn primary" id="btn-next" style="width:100%">▶ CONTINUE</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const SAVE_KEY = 'holymaze-v1';
+
+// Maze: 13 wide × 15 tall. # wall, . pellet, o power, _ ghost den, space = path no pellet
+// Note: borders are walls. Outer paths wrap horizontally on row 7 (the tunnel)
+const MAZE = [
+  '#############',
+  '#o.........o#',
+  '#.##.###.##.#',
+  '#.##.###.##.#',
+  '#...........#',
+  '#.##.#.#.##.#',
+  '#....#.#....#',
+  '###.##.##.###',
+  '#....#.#....#',
+  '#.##.#.#.##.#',
+  '#...........#',
+  '#.##.###.##.#',
+  '#.##.###.##.#',
+  '#o.........o#',
+  '#############'
+];
+const COLS = MAZE[0].length, ROWS = MAZE.length;
+
+const VERSES = [
+  ['"The path of the just is as the shining light…"', 'Prov 4:18'],
+  ['"Thy word is a lamp unto my feet…"', 'Psalm 119:105'],
+  ['"…walk in the light, as he is in the light."', '1 John 1:7'],
+  ['"Be still, and know that I am God."', 'Psalm 46:10'],
+  ['"…run with patience the race that is set before us."', 'Hebrews 12:1'],
+  ['"…we walk by faith, not by sight."', '2 Cor 5:7'],
+  ['"…the light shineth in darkness; and the darkness comprehended it not."', 'John 1:5'],
+  ['"…be strong and of a good courage."', 'Joshua 1:9']
+];
+
+let save = loadSave();
+let state = null, raf = 0, lastT = 0;
+let cell = 22;  // computed
+let aCtx;
+
+function loadSave(){ try{ return Object.assign({best:0,plays:0}, JSON.parse(localStorage.getItem(SAVE_KEY)||'{}')); }catch(e){ return {best:0,plays:0}; } }
+function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
+function ensureAudio(){ if (!aCtx) try{ aCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
+function tone(freq, dur, type, gain){ if (!aCtx) return; const o = aCtx.createOscillator(), g = aCtx.createGain(); o.type = type || 'sine'; o.frequency.value = freq; g.gain.setValueAtTime(gain || 0.04, aCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, aCtx.currentTime + (dur || 0.08)); o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + (dur || 0.08) + 0.02); }
+function sfxEat(){ tone(770, 0.04, 'square', 0.03); }
+function sfxPower(){ [0,80,160].forEach((d,i)=>setTimeout(()=>tone(660*(1+i*0.3), 0.12, 'triangle', 0.06), d)); }
+function sfxGhost(){ tone(1320, 0.2, 'triangle', 0.07); setTimeout(()=>tone(1760, 0.2, 'triangle', 0.05), 80); }
+function sfxDie(){ tone(330, 0.3, 'sawtooth', 0.08); setTimeout(()=>tone(196, 0.4, 'sawtooth', 0.06), 200); setTimeout(()=>tone(110, 0.5, 'sawtooth', 0.05), 500); }
+function sfxClear(){ [0,80,160,240,320].forEach((d,i)=>setTimeout(()=>tone(523*(1+i*0.18), 0.18, 'triangle', 0.07), d)); }
+
+function isWall(r, c){
+  if (c < 0 || c >= COLS) return false;   // tunnel allowed on horizontal wrap
+  if (r < 0 || r >= ROWS) return true;
+  return MAZE[r][c] === '#';
+}
+function tunnelRow(){ return 7; }   // the row with the open sides
+
+function wrapC(c){
+  if (c < 0) return COLS - 1;
+  if (c >= COLS) return 0;
+  return c;
+}
+
+function newGame(){
+  const pellets = {};
+  let pelletCount = 0;
+  for (let r = 0; r < ROWS; r++){
+    for (let c = 0; c < COLS; c++){
+      const ch = MAZE[r][c];
+      if (ch === '.') { pellets[r+','+c] = 1; pelletCount++; }
+      else if (ch === 'o') { pellets[r+','+c] = 2; pelletCount++; }
+    }
+  }
+  state = {
+    player: { r:11, c:6, dr:0, dc:0, ndr:0, ndc:0, prog:0 },
+    ghosts: [
+      { r:7, c:5, dr:0, dc:1, color:'red',    name:'RED',    style:'chase',   prog:0, eyes:0, eaten:0, eyesFrames:0 },
+      { r:7, c:6, dr:0, dc:1, color:'pink',   name:'PINK',   style:'ambush',  prog:0, eyes:0, eaten:0, eyesFrames:0 },
+      { r:7, c:7, dr:0, dc:1, color:'cyan',   name:'CYAN',   style:'flank',   prog:0, eyes:0, eaten:0, eyesFrames:0 },
+      { r:7, c:6, dr:-1, dc:0, color:'orange',name:'ORANGE', style:'scatter', prog:0, eyes:0, eaten:0, eyesFrames:0 }
+    ],
+    pellets,
+    pelletCount,
+    score: 0,
+    level: 1,
+    lives: 3,
+    fearTimer: 0,        // remaining ms ghosts are scared
+    fearCombo: 0,        // ghosts eaten in current power phase
+    paused: false,
+    over: false,
+    levelClear: false,
+    playerSpeed: 6.5,    // cells per second
+    ghostSpeed: 5.8
+  };
+  save.plays = (save.plays || 0) + 1; persist();
+  syncHud();
+  fitBoard();
+}
+
+function fitBoard(){
+  const wrap = document.getElementById('board-wrap');
+  const maxW = Math.min(wrap.clientWidth - 16, 430);
+  const maxH = wrap.clientHeight - 8;
+  let c = Math.floor(Math.min(maxW / COLS, maxH / ROWS));
+  c = Math.max(16, Math.min(36, c));
+  cell = c;
+  const canvas = document.getElementById('board');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.style.width = (COLS * cell) + 'px';
+  canvas.style.height = (ROWS * cell) + 'px';
+  canvas.width = COLS * cell * dpr;
+  canvas.height = ROWS * cell * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+// ───────────────────────── TICK
+function tick(dt){
+  if (!state || state.over || state.paused || state.levelClear) return;
+
+  // PLAYER
+  movePlayer(dt);
+  // PELLET
+  checkPellet();
+  // GHOSTS
+  for (const g of state.ghosts) moveGhost(g, dt);
+  // GHOST COLLISION
+  for (const g of state.ghosts){
+    if (g.eyes) continue;
+    if (g.r === state.player.r && g.c === state.player.c){
+      if (state.fearTimer > 0){ eatGhost(g); }
+      else return playerHit();
+    }
+  }
+
+  // FEAR DECAY
+  if (state.fearTimer > 0){
+    state.fearTimer -= dt * 1000;
+    if (state.fearTimer <= 0){ state.fearTimer = 0; state.fearCombo = 0; setStatus(''); }
+  }
+
+  // ALL PELLETS GONE?
+  if (state.pelletCount <= 0) return clearLevel();
+}
+
+function movePlayer(dt){
+  const p = state.player;
+  // try queued direction
+  if ((p.ndr || p.ndc) && p.prog <= 0){
+    const tnr = p.r + p.ndr, tnc = wrapC(p.c + p.ndc);
+    if (!isWall(tnr, tnc) || (p.r === tunnelRow() && (p.ndc === -1 || p.ndc === 1))){
+      p.dr = p.ndr; p.dc = p.ndc;
+    }
+  }
+  // current dir
+  if (!p.dr && !p.dc) return;
+  if (p.prog <= 0){
+    // about to step into new cell
+    const nr = p.r + p.dr, nc = wrapC(p.c + p.dc);
+    const isTunnelStep = (p.r === tunnelRow() && (p.dc === -1 || p.dc === 1));
+    if (isWall(nr, nc) && !isTunnelStep){ p.dr = 0; p.dc = 0; return; }
+    p.prog = 1;
+  }
+  p.prog -= dt * state.playerSpeed;
+  if (p.prog <= 0){
+    p.r += p.dr;
+    p.c = wrapC(p.c + p.dc);
+    p.prog = 0;
+  }
+}
+
+function moveGhost(g, dt){
+  if (g.prog <= 0){
+    chooseGhostDir(g);
+    g.prog = 1;
+  }
+  const spd = g.eyes ? state.ghostSpeed * 1.6 : (state.fearTimer > 0 ? state.ghostSpeed * 0.55 : state.ghostSpeed);
+  g.prog -= dt * spd;
+  if (g.prog <= 0){
+    g.r += g.dr;
+    g.c = wrapC(g.c + g.dc);
+    g.prog = 0;
+    // eyes reached den?
+    if (g.eyes){
+      g.eyesFrames++;
+      if (g.r === 7 && g.c >= 5 && g.c <= 7){ g.eyes = 0; }
+    }
+  }
+}
+
+function chooseGhostDir(g){
+  // pick a direction that doesn't reverse, prefers chasing target unless fearing
+  const opts = [[-1,0],[1,0],[0,-1],[0,1]];
+  const valid = [];
+  for (const [dr, dc] of opts){
+    if (dr === -g.dr && dc === -g.dc) continue;     // no reverse
+    const nr = g.r + dr, nc = wrapC(g.c + dc);
+    const isTunnelStep = (g.r === tunnelRow() && (dc === -1 || dc === 1));
+    if (!isWall(nr, nc) || isTunnelStep) valid.push([dr,dc]);
+  }
+  if (valid.length === 0){
+    // dead-end → allow reverse
+    g.dr = -g.dr; g.dc = -g.dc; return;
+  }
+  // target picking
+  let target = aimFor(g);
+  let pick = valid[0]; let bestD = Infinity;
+  if (state.fearTimer > 0 && !g.eyes){
+    // flee: pick direction MAXIMIZING distance to player
+    let bestF = -Infinity;
+    for (const [dr,dc] of valid){
+      const nr = g.r + dr, nc = wrapC(g.c + dc);
+      const d = Math.abs(nr - state.player.r) + Math.abs(nc - state.player.c);
+      if (d > bestF){ bestF = d; pick = [dr,dc]; }
+    }
+  } else {
+    for (const [dr,dc] of valid){
+      const nr = g.r + dr, nc = wrapC(g.c + dc);
+      const d = Math.abs(nr - target.r) + Math.abs(nc - target.c);
+      if (d < bestD){ bestD = d; pick = [dr,dc]; }
+    }
+  }
+  g.dr = pick[0]; g.dc = pick[1];
+}
+
+function aimFor(g){
+  const p = state.player;
+  if (g.eyes) return { r: 7, c: 6 };
+  if (g.style === 'chase') return { r: p.r, c: p.c };
+  if (g.style === 'ambush') return { r: p.r + p.dr*4, c: p.c + p.dc*4 };
+  if (g.style === 'flank') return { r: p.r - p.dr*2, c: p.c - p.dc*2 };
+  if (g.style === 'scatter'){
+    const dist = Math.abs(p.r - g.r) + Math.abs(p.c - g.c);
+    return (dist > 6) ? { r: p.r, c: p.c } : { r: ROWS-1, c: 0 };
+  }
+  return { r: p.r, c: p.c };
+}
+
+function checkPellet(){
+  const p = state.player;
+  if (p.prog > 0.4) return;  // must be mid-cell
+  const key = p.r + ',' + p.c;
+  const v = state.pellets[key];
+  if (!v) return;
+  delete state.pellets[key];
+  state.pelletCount--;
+  if (v === 1){ state.score += 10; sfxEat(); }
+  else if (v === 2){
+    state.score += 50;
+    state.fearTimer = 6000;
+    state.fearCombo = 0;
+    sfxPower();
+    setStatus('⭐ SCROLL OF LIGHT — chase them!', 'hyped');
+  }
+  syncHud();
+}
+
+function eatGhost(g){
+  state.fearCombo++;
+  const bonus = 100 * Math.pow(2, state.fearCombo);  // 200, 400, 800, 1600
+  state.score += bonus;
+  g.eyes = 1; g.eyesFrames = 0; g.dr = 0; g.dc = -1;
+  // immediate teleport-back stage
+  sfxGhost();
+  setStatus('+' + bonus + ' · ' + g.name + ' down', 'hyped');
+  syncHud();
+}
+
+function playerHit(){
+  state.lives--;
+  sfxDie();
+  setStatus('💀 HIT — ' + state.lives + ' hearts left', 'danger');
+  if (state.lives <= 0) return gameOver();
+  // respawn
+  state.player.r = 11; state.player.c = 6; state.player.dr = 0; state.player.dc = 0; state.player.ndr = 0; state.player.ndc = 0; state.player.prog = 0;
+  state.ghosts.forEach((g, i) => { g.r = 7; g.c = 5 + (i % 3); g.dr = 0; g.dc = 1; g.prog = 0; g.eyes = 0; });
+  state.fearTimer = 0; state.fearCombo = 0;
+  state.paused = true;
+  setTimeout(() => { if (state) state.paused = false; setStatus(''); }, 900);
+  syncHud();
+}
+
+function clearLevel(){
+  state.levelClear = true;
+  sfxClear();
+  if (state.score > save.best){ save.best = state.score; persist(); }
+  document.getElementById('end-title').textContent = '✦ LEVEL ' + state.level + ' CLEAR';
+  document.getElementById('end-sub').textContent = 'ghosts get faster…';
+  const v = VERSES[state.level % VERSES.length];
+  document.getElementById('end-verse').innerHTML = v[0] + ' <b>— ' + v[1] + '</b>';
+  document.getElementById('end-score').textContent = state.score;
+  document.getElementById('end-best').textContent = save.best;
+  document.getElementById('end-level').textContent = state.level;
+  document.getElementById('btn-next').textContent = '▶ NEXT LEVEL';
+  document.getElementById('ov-end').classList.add('on');
+}
+
+function nextLevel(){
+  state.level++;
+  state.playerSpeed = Math.min(10, state.playerSpeed + 0.3);
+  state.ghostSpeed = Math.min(9.5, state.ghostSpeed + 0.45);
+  // reset pellets + positions
+  state.pellets = {};
+  state.pelletCount = 0;
+  for (let r = 0; r < ROWS; r++){
+    for (let c = 0; c < COLS; c++){
+      const ch = MAZE[r][c];
+      if (ch === '.') { state.pellets[r+','+c] = 1; state.pelletCount++; }
+      else if (ch === 'o') { state.pellets[r+','+c] = 2; state.pelletCount++; }
+    }
+  }
+  state.player.r = 11; state.player.c = 6; state.player.dr = 0; state.player.dc = 0; state.player.ndr = 0; state.player.ndc = 0; state.player.prog = 0;
+  state.ghosts.forEach((g, i) => { g.r = 7; g.c = 5 + (i % 3); g.dr = 0; g.dc = 1; g.prog = 0; g.eyes = 0; });
+  state.levelClear = false;
+  state.fearTimer = 0;
+  document.getElementById('ov-end').classList.remove('on');
+  syncHud();
+}
+
+function gameOver(){
+  state.over = true;
+  if (state.score > save.best){ save.best = state.score; persist(); }
+  document.getElementById('end-title').textContent = '🪦 FALLEN';
+  document.getElementById('end-sub').textContent = 'rise and try again';
+  const v = VERSES[(state.score + state.level) % VERSES.length];
+  document.getElementById('end-verse').innerHTML = v[0] + ' <b>— ' + v[1] + '</b>';
+  document.getElementById('end-score').textContent = state.score;
+  document.getElementById('end-best').textContent = save.best;
+  document.getElementById('end-level').textContent = state.level;
+  document.getElementById('btn-next').textContent = '▶ NEW GAME';
+  document.getElementById('ov-end').classList.add('on');
+}
+
+function syncHud(){
+  document.getElementById('score').textContent = state.score;
+  document.getElementById('level').textContent = state.level;
+  const lvs = document.getElementById('lives');
+  lvs.innerHTML = '';
+  for (let i = 0; i < state.lives; i++){
+    const h = document.createElement('span'); h.className = 'heart'; h.textContent = '💛'; lvs.appendChild(h);
+  }
+  for (let i = state.lives; i < 3; i++){
+    const h = document.createElement('span'); h.className = 'heart'; h.style.opacity = '.2'; h.textContent = '🖤'; lvs.appendChild(h);
+  }
+}
+
+let statusT = 0;
+function setStatus(text, cls){
+  const el = document.getElementById('status');
+  el.textContent = text;
+  el.className = cls || '';
+  clearTimeout(statusT);
+  if (text) statusT = setTimeout(()=>{ el.textContent = ''; el.className = ''; }, 1200);
+}
+
+// ───────────────────────── RENDER
+function draw(){
+  if (!state) return;
+  const canvas = document.getElementById('board');
+  const ctx = canvas.getContext('2d');
+  const w = COLS * cell, h = ROWS * cell;
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+
+  // walls
+  ctx.strokeStyle = '#2238b8';
+  ctx.lineWidth = Math.max(2, cell * 0.12);
+  for (let r = 0; r < ROWS; r++){
+    for (let c = 0; c < COLS; c++){
+      if (MAZE[r][c] !== '#') continue;
+      // draw a rounded rect representing the wall block
+      const x = c * cell, y = r * cell;
+      ctx.fillStyle = '#13135c';
+      ctx.fillRect(x + cell*0.08, y + cell*0.08, cell*0.84, cell*0.84);
+      ctx.strokeStyle = '#3b53d6';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x + cell*0.08, y + cell*0.08, cell*0.84, cell*0.84);
+    }
+  }
+
+  // pellets
+  for (const key in state.pellets){
+    const [r, c] = key.split(',').map(Number);
+    const x = c * cell + cell/2, y = r * cell + cell/2;
+    const v = state.pellets[key];
+    if (v === 1){
+      ctx.fillStyle = '#fde08a';
+      ctx.beginPath(); ctx.arc(x, y, Math.max(1.5, cell*0.10), 0, Math.PI*2); ctx.fill();
+    } else {
+      const pulse = 0.7 + 0.3 * Math.sin(performance.now()/200);
+      ctx.fillStyle = 'rgba(255,91,110,' + pulse + ')';
+      ctx.beginPath(); ctx.arc(x, y, cell*0.30, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff8e1';
+      ctx.beginPath(); ctx.arc(x, y, cell*0.18, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // player
+  const p = state.player;
+  const px = (p.c + (1 - p.prog) * p.dc) * cell + cell/2;
+  const py = (p.r + (1 - p.prog) * p.dr) * cell + cell/2;
+  const mouth = 0.15 + 0.25 * Math.abs(Math.sin(performance.now()/120));
+  ctx.fillStyle = '#f5c542';
+  ctx.beginPath();
+  let startA = -Math.PI/2 + mouth, endA = -Math.PI/2 - mouth + Math.PI*2;
+  // rotate based on direction
+  let rot = 0;
+  if (p.dc > 0) rot = -Math.PI/2;
+  else if (p.dc < 0) rot = Math.PI/2;
+  else if (p.dr < 0) rot = Math.PI;
+  ctx.translate(px, py);
+  ctx.rotate(rot);
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, cell*0.42, startA, endA);
+  ctx.closePath();
+  ctx.fill();
+  ctx.rotate(-rot);
+  ctx.translate(-px, -py);
+
+  // ghosts
+  for (const g of state.ghosts){
+    const gx = (g.c + (1 - g.prog) * g.dc) * cell + cell/2;
+    const gy = (g.r + (1 - g.prog) * g.dr) * cell + cell/2;
+    const isFear = state.fearTimer > 0 && !g.eyes;
+    let body;
+    if (g.eyes) body = '#222';
+    else if (isFear) body = (state.fearTimer < 1500 && Math.floor(performance.now()/180) % 2) ? '#fff8e1' : '#2238b8';
+    else body = ({ red:'#ff5b6e', pink:'#ff8bb0', cyan:'#67e8f9', orange:'#ff8b3d' })[g.color];
+
+    if (g.eyes){
+      // just eyes during eyes-return
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(gx - cell*0.12, gy, cell*0.13, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(gx + cell*0.12, gy, cell*0.13, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#67e8f9';
+      ctx.beginPath(); ctx.arc(gx - cell*0.10, gy, cell*0.06, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(gx + cell*0.14, gy, cell*0.06, 0, Math.PI*2); ctx.fill();
+      continue;
+    }
+    // body: dome on top + ragged bottom
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.arc(gx, gy - cell*0.05, cell*0.42, Math.PI, 0);   // dome
+    // ragged bottom
+    ctx.lineTo(gx + cell*0.42, gy + cell*0.40);
+    const teeth = 4;
+    for (let i = 0; i < teeth; i++){
+      const tx1 = gx + cell*0.42 - cell*0.84 * ((i + 0.5) / teeth);
+      const ty1 = gy + cell*0.30;
+      const tx2 = gx + cell*0.42 - cell*0.84 * ((i + 1) / teeth);
+      const ty2 = gy + cell*0.40;
+      ctx.lineTo(tx1, ty1);
+      ctx.lineTo(tx2, ty2);
+    }
+    ctx.lineTo(gx - cell*0.42, gy - cell*0.05);
+    ctx.closePath();
+    ctx.fill();
+    // eyes
+    if (!isFear){
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(gx - cell*0.14, gy - cell*0.05, cell*0.12, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(gx + cell*0.14, gy - cell*0.05, cell*0.12, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#13135c';
+      const lx = Math.max(-cell*0.05, Math.min(cell*0.05, g.dc * cell*0.04));
+      const ly = Math.max(-cell*0.05, Math.min(cell*0.05, g.dr * cell*0.04));
+      ctx.beginPath(); ctx.arc(gx - cell*0.14 + lx, gy - cell*0.05 + ly, cell*0.06, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(gx + cell*0.14 + lx, gy - cell*0.05 + ly, cell*0.06, 0, Math.PI*2); ctx.fill();
+    } else {
+      // scared face
+      ctx.fillStyle = '#fff8e1';
+      ctx.fillRect(gx - cell*0.20, gy - cell*0.10, cell*0.10, cell*0.10);
+      ctx.fillRect(gx + cell*0.10, gy - cell*0.10, cell*0.10, cell*0.10);
+      ctx.strokeStyle = '#fff8e1'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < 4; i++){
+        ctx.moveTo(gx - cell*0.25 + i * cell*0.16, gy + cell*0.10);
+        ctx.lineTo(gx - cell*0.25 + (i + 0.5) * cell*0.16, gy + cell*0.06);
+        ctx.lineTo(gx - cell*0.25 + (i + 1) * cell*0.16, gy + cell*0.10);
+      }
+      ctx.stroke();
+    }
+  }
+}
+
+// ───────────────────────── LOOP
+function loop(t){
+  if (!state) return;
+  if (!lastT) lastT = t;
+  let dt = (t - lastT) / 1000; lastT = t;
+  if (dt > 0.05) dt = 0.05;
+  tick(dt);
+  draw();
+  raf = requestAnimationFrame(loop);
+}
+
+// ───────────────────────── INPUT
+function setDir(dr, dc){
+  if (!state) return;
+  state.player.ndr = dr; state.player.ndc = dc;
+  // if not moving, try immediate
+  if (!state.player.dr && !state.player.dc && state.player.prog <= 0){
+    const tnr = state.player.r + dr, tnc = wrapC(state.player.c + dc);
+    if (!isWall(tnr, tnc) || (state.player.r === tunnelRow() && (dc === -1 || dc === 1))){
+      state.player.dr = dr; state.player.dc = dc; state.player.prog = 1;
+    }
+  }
+}
+
+window.addEventListener('keydown', e => {
+  if (!state) return;
+  const k = e.key;
+  if (k === 'ArrowUp' || k === 'w' || k === 'W'){ setDir(-1, 0); e.preventDefault(); }
+  else if (k === 'ArrowDown' || k === 's' || k === 'S'){ setDir(1, 0); e.preventDefault(); }
+  else if (k === 'ArrowLeft' || k === 'a' || k === 'A'){ setDir(0, -1); e.preventDefault(); }
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D'){ setDir(0, 1); e.preventDefault(); }
+  else if (k === ' '){ if (state) state.paused = !state.paused; e.preventDefault(); }
+});
+
+let touchStart = null;
+const boardEl = document.getElementById('board');
+boardEl.addEventListener('touchstart', e => { const t = e.changedTouches[0]; touchStart = { x:t.clientX, y:t.clientY }; }, { passive:true });
+boardEl.addEventListener('touchmove', e => { e.preventDefault(); }, { passive:false });
+boardEl.addEventListener('touchend', e => {
+  if (!touchStart) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStart.x, dy = t.clientY - touchStart.y;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;
+  if (Math.abs(dx) > Math.abs(dy)) setDir(0, dx > 0 ? 1 : -1);
+  else setDir(dy > 0 ? 1 : -1, 0);
+  touchStart = null;
+}, { passive:true });
+
+// BUTTONS
+document.getElementById('btn-begin').addEventListener('click', () => {
+  ensureAudio();
+  document.getElementById('ov-intro').classList.remove('on');
+  startGame();
+});
+document.getElementById('btn-go').addEventListener('click', () => {
+  ensureAudio();
+  if (state && !state.over && !state.levelClear) return;
+  startGame();
+});
+document.getElementById('btn-help').addEventListener('click', () => document.getElementById('ov-help').classList.add('on'));
+document.getElementById('btn-help-close').addEventListener('click', () => document.getElementById('ov-help').classList.remove('on'));
+document.getElementById('btn-next').addEventListener('click', () => {
+  if (state && state.over){ startGame(); }
+  else nextLevel();
+});
+
+function startGame(){
+  newGame();
+  lastT = 0;
+  cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(loop);
+  document.getElementById('btn-go').textContent = '⏸ PAUSE';
+}
+
+window.addEventListener('resize', () => { if (state) fitBoard(); });
+fitBoard();
+// ?auto=1 → auto-begin (useful for screenshot tests + share/PWA installs)
+if (location.search.includes('auto=1')){ setTimeout(()=>document.getElementById('btn-begin').click(), 250); }
+// idle draw (empty board)
+{
+  const canvas = document.getElementById('board');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, COLS*cell, ROWS*cell);
+}
+
+if ('serviceWorker' in navigator){
+  const had = !!navigator.serviceWorker.controller; let r = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (r) return; r = true; if (had) location.reload(); });
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(reg => { reg.update(); setInterval(()=>reg.update(), 60000); }).catch(()=>{}));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) navigator.serviceWorker.getRegistration().then(r => r && r.update()).catch(()=>{}); });
+}
+</script>
+</body>
+</html>

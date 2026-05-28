@@ -1,0 +1,10 @@
+{
+  "name": "Holy Maze · the chase",
+  "short_name": "Holy Maze",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#04042a",
+  "theme_color": "#0a0a3e",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
