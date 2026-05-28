@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#3a2410">
+<meta name="author" content="snailgamedev (Eli Hudson) — © 2026">
+<title>MANCALA · vs CPU</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%233a2410'/><text x='50%25' y='66%25' font-size='44' text-anchor='middle'>🪨</text></svg>">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --bg-0:#1f1408; --bg-1:#3a2410; --bg-2:#6b4318; --line:#9b5928;
+    --pit:#2a1808; --pit-2:#4a2c10; --gold:#f5c542; --gold-2:#fde08a;
+    --cream:#fff8e1; --soft:#e6d5b8; --muted:#a98d6e;
+    --you:#f5c542; --cpu:#9c1a1f; --stone:#cfae84; --stone-d:#7a5a30;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:radial-gradient(ellipse at top,#6b4318 0%,var(--bg-0) 75%);color:var(--cream);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;overscroll-behavior:none;user-select:none}
+  body{display:flex;flex-direction:column;align-items:center;padding-top:max(8px,env(safe-area-inset-top))}
+  #back{position:fixed;left:10px;top:max(10px,env(safe-area-inset-top));z-index:40;text-decoration:none;background:var(--bg-1);border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;color:var(--soft);letter-spacing:1px}
+  #hdr{width:100%;max-width:520px;padding:8px 14px 6px;display:flex;align-items:center;gap:10px}
+  #title{font-weight:900;letter-spacing:2.5px;font-size:14px;color:var(--gold-2)}
+  #title b{color:var(--gold)}
+  #hud{margin-left:auto;display:flex;gap:6px}
+  .chip{background:var(--bg-1);border:1px solid var(--line);padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--soft)}
+  .chip b{color:var(--gold)}
+  #stage{flex:1;width:100%;max-width:520px;padding:8px 14px;display:flex;flex-direction:column;gap:10px;min-height:0;align-items:center;justify-content:center}
+  #turn{font-size:13px;font-weight:900;letter-spacing:2px;padding:6px 14px;border-radius:999px;background:var(--bg-1);border:1px solid var(--line)}
+  #turn.you{background:linear-gradient(90deg,var(--you),#b8860b);color:#1f1408;border-color:var(--you)}
+  #turn.cpu{background:linear-gradient(90deg,var(--cpu),#5a0d10);color:#fff;border-color:var(--cpu)}
+  #board{background:linear-gradient(180deg,var(--bg-2),var(--bg-1));border:3px solid var(--line);border-radius:18px;padding:14px;display:grid;grid-template-columns:auto repeat(6,1fr) auto;gap:10px;align-items:center;width:min(96vw,460px);box-shadow:0 12px 36px rgba(0,0,0,.5)}
+  .pit{aspect-ratio:1/1;background:radial-gradient(circle at 35% 30%,var(--pit-2),var(--pit));border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;font-weight:900;color:var(--gold-2);box-shadow:inset 0 3px 8px rgba(0,0,0,.7),inset 0 -2px 4px rgba(255,255,255,.1);position:relative}
+  .pit.dim{opacity:.55;cursor:not-allowed}
+  .pit.empty{color:rgba(245,197,66,0.3)}
+  .pit.last{box-shadow:inset 0 3px 8px rgba(0,0,0,.7),0 0 18px var(--gold)}
+  .mancala{background:radial-gradient(ellipse at 35% 30%,var(--pit-2),var(--pit));border-radius:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;font-weight:900;color:var(--gold);box-shadow:inset 0 4px 12px rgba(0,0,0,.7);padding:14px 8px;grid-row:span 2;min-height:140px}
+  .mancala .l{font-size:10px;color:var(--soft);letter-spacing:1.5px;margin-bottom:6px;opacity:.7}
+  .mancala .v{font-size:32px;color:var(--gold)}
+  .row-l{font-size:10px;color:var(--muted);letter-spacing:1.5px;font-weight:800}
+  #ctrls{padding:6px 14px max(14px,env(safe-area-inset-bottom));max-width:520px;width:100%}
+  #status{font-size:12px;text-align:center;color:var(--soft);min-height:18px;letter-spacing:1px;padding:6px 0}
+  #status.hot{color:var(--gold)}
+  #btns{display:flex;gap:8px}
+  .gbtn{flex:1;background:var(--bg-1);border:1px solid var(--line);color:var(--cream);padding:11px;border-radius:10px;font-weight:800;font-size:12px;letter-spacing:1px;cursor:pointer}
+  .gbtn.primary{background:linear-gradient(180deg,var(--gold),#b8860b);color:#1f1408;border-color:var(--gold)}
+  .ov{position:fixed;inset:0;background:rgba(20,10,2,.92);display:none;align-items:center;justify-content:center;padding:24px;z-index:50;backdrop-filter:blur(8px)}
+  .ov.on{display:flex}
+  .modal{background:linear-gradient(180deg,var(--bg-2),var(--bg-1));border:1px solid var(--line);border-radius:16px;padding:22px;max-width:380px;width:100%;text-align:center}
+  .modal h1{font-size:24px;color:var(--gold);letter-spacing:3px;margin-bottom:8px}
+  .modal .sub{font-size:11px;color:var(--soft);letter-spacing:1.5px;margin-bottom:14px}
+  .modal .v{font-size:13px;line-height:1.6;color:var(--cream);padding:12px;background:rgba(0,0,0,.4);border-radius:10px;margin-bottom:14px;border-left:3px solid var(--gold);font-style:italic}
+  .modal .v b{color:var(--gold-2);font-style:normal;display:block;margin-top:8px;font-size:11px;letter-spacing:1px}
+  .modal .stats{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+  .modal .stat{background:rgba(0,0,0,.4);padding:8px 14px;border-radius:8px;min-width:64px}
+  .modal .stat-v{font-size:20px;font-weight:900;color:var(--gold)}
+  .modal .stat-l{font-size:10px;color:var(--muted);letter-spacing:1px}
+</style>
+</head>
+<body>
+<a id="back" href="/PeakArcade/">← arcade</a>
+<div id="hdr">
+  <div id="title">🪨 <b>MANCALA</b></div>
+  <div id="hud"><div class="chip">YOU <b id="sc-you">0</b></div><div class="chip">CPU <b id="sc-cpu">0</b></div></div>
+</div>
+<div id="stage">
+  <div id="turn">YOUR TURN</div>
+  <div id="board"></div>
+  <div id="status">tap your pits (bottom row) — sow counterclockwise</div>
+</div>
+<div id="ctrls">
+  <div id="btns">
+    <button class="gbtn" id="btn-help">? HOW</button>
+    <button class="gbtn primary" id="btn-new">⟳ NEW GAME</button>
+  </div>
+</div>
+<div class="ov on" id="ov-intro">
+  <div class="modal">
+    <h1>🪨 MANCALA</h1>
+    <div class="sub">the ancient sowing game · vs CPU</div>
+    <div class="v">Tap one of YOUR 6 pits (bottom row). All stones sow counterclockwise — one per pit + your STORE (right side). If your last stone lands in YOUR STORE → bonus turn. If it lands in YOUR EMPTY pit AND opposite has stones → capture both into your store.<b>— a wise man stores up knowledge · Prov 10:14</b></div>
+    <button class="gbtn primary" id="btn-begin" style="width:100%">▶ PLAY</button>
+  </div>
+</div>
+<div class="ov" id="ov-end">
+  <div class="modal">
+    <h1 id="end-title">YOU WIN</h1>
+    <div class="sub" id="end-sub">all stones home</div>
+    <div class="v" id="end-verse"></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-v" id="end-you">0</div><div class="stat-l">YOU</div></div>
+      <div class="stat"><div class="stat-v" id="end-cpu">0</div><div class="stat-l">CPU</div></div>
+    </div>
+    <button class="gbtn primary" id="btn-again" style="width:100%">▶ AGAIN</button>
+  </div>
+</div>
+<script>
+'use strict';
+const KEY = 'mancala-v1';
+// indices 0-5 = your pits (left→right visually it'll render reverse), 6 = your store, 7-12 = cpu pits, 13 = cpu store
+// counterclockwise: 0→1→2→3→4→5→6(your store)→7→8→9→10→11→12→[skip 13]→0...
+// We'll show pits visually: top row = CPU pits 12→11→10→9→8→7 (left to right), left store = CPU (13), right store = YOU (6), bottom row = YOU pits 0→1→2→3→4→5 (left to right).
+const VERSES = [
+  ['"A wise man stores up knowledge."', 'Prov 10:14'],
+  ['"In all thy ways acknowledge him."', 'Prov 3:6'],
+  ['"…patience worketh experience; and experience, hope."', 'Romans 5:4'],
+  ['"…the joy of the Lord is your strength."', 'Neh 8:10']
+];
+let save = (function(){try{return Object.assign({you:0,cpu:0},JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){return {you:0,cpu:0};}})();
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){}}
+let aCtx;
+function ensureAudio(){if(!aCtx)try{aCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+function tone(f,d,t,g){if(!aCtx)return;const o=aCtx.createOscillator(),gn=aCtx.createGain();o.type=t||'sine';o.frequency.value=f;gn.gain.setValueAtTime(g||0.05,aCtx.currentTime);gn.gain.exponentialRampToValueAtTime(0.001,aCtx.currentTime+(d||0.1));o.connect(gn);gn.connect(aCtx.destination);o.start();o.stop(aCtx.currentTime+(d||0.1)+0.02);}
+function sfxPlace(){tone(540,0.04,'sine',0.04);}
+function sfxBonus(){[0,80].forEach((d,i)=>setTimeout(()=>tone(660*(1+i*0.3),0.12,'triangle',0.06),d));}
+function sfxCap(){[0,80,160].forEach((d,i)=>setTimeout(()=>tone(523*(1+i*0.25),0.18,'triangle',0.08),d));}
+
+let state;
+
+function newGame(){
+  const pits = Array(14).fill(4);
+  pits[6] = 0; pits[13] = 0;
+  state = { pits, turn: 'you', over: false, lastIdx: -1 };
+  render(); syncTurn();
+}
+
+function sow(startIdx, player){
+  let stones = state.pits[startIdx];
+  state.pits[startIdx] = 0;
+  let idx = startIdx;
+  while (stones > 0){
+    idx = (idx + 1) % 14;
+    if (player === 'you' && idx === 13) continue;
+    if (player === 'cpu' && idx === 6) continue;
+    state.pits[idx]++;
+    stones--;
+  }
+  state.lastIdx = idx;
+  return idx;
+}
+
+function tryYou(idx){
+  if (state.over || state.turn !== 'you') return;
+  if (idx < 0 || idx > 5) return;
+  if (state.pits[idx] === 0) return;
+  ensureAudio();
+  const last = sow(idx, 'you');
+  sfxPlace(); render();
+  // bonus turn?
+  let bonus = (last === 6);
+  // capture?
+  if (last >= 0 && last <= 5 && state.pits[last] === 1){
+    const opp = 12 - last;
+    if (state.pits[opp] > 0){
+      state.pits[6] += state.pits[opp] + 1;
+      state.pits[opp] = 0; state.pits[last] = 0;
+      sfxCap(); render();
+    }
+  }
+  if (checkEmpty()) return endGame();
+  if (bonus){ setStatus('🎁 BONUS TURN — go again', 'hot'); return; }
+  state.turn = 'cpu'; syncTurn(); setStatus('CPU thinking…', '');
+  setTimeout(cpuTurn, 700);
+}
+
+function cpuTurn(){
+  if (state.over || state.turn !== 'cpu') return;
+  // pick best move: prefer landing in own store (bonus), then capturing
+  let bestI = -1, bestScore = -1;
+  for (let i = 7; i <= 12; i++){
+    if (state.pits[i] === 0) continue;
+    // simulate
+    let s = 0;
+    const stones = state.pits[i];
+    let end = i + stones;
+    if (end > 12) end = end + 1; // skip your store
+    end = end % 14;
+    if (end === 13) s += 100;  // CPU store
+    // capture potential
+    if (end >= 7 && end <= 12 && state.pits[end] === 0){
+      const opp = 12 - end;
+      if (state.pits[opp] > 0) s += 50 + state.pits[opp]*5;
+    }
+    // baseline: bigger pit = more flexibility
+    s += stones * 0.5;
+    if (s > bestScore){ bestScore = s; bestI = i; }
+  }
+  if (bestI === -1){ // shouldn't happen if not empty
+    for (let i = 7; i <= 12; i++) if (state.pits[i] > 0){ bestI = i; break; }
+  }
+  const last = sow(bestI, 'cpu');
+  sfxPlace(); render();
+  let bonus = (last === 13);
+  if (last >= 7 && last <= 12 && state.pits[last] === 1){
+    const opp = 12 - last;
+    if (state.pits[opp] > 0){
+      state.pits[13] += state.pits[opp] + 1;
+      state.pits[opp] = 0; state.pits[last] = 0;
+      sfxCap(); render();
+    }
+  }
+  if (checkEmpty()) return endGame();
+  if (bonus){ setStatus('CPU bonus turn…', '');  setTimeout(cpuTurn, 600); return; }
+  state.turn = 'you'; syncTurn(); setStatus('Your move', 'hot');
+}
+
+function checkEmpty(){
+  const youEmpty = state.pits.slice(0,6).every(v => v === 0);
+  const cpuEmpty = state.pits.slice(7,13).every(v => v === 0);
+  if (youEmpty){ for (let i = 7; i <= 12; i++){ state.pits[13] += state.pits[i]; state.pits[i] = 0; } return true; }
+  if (cpuEmpty){ for (let i = 0; i <= 5; i++){ state.pits[6] += state.pits[i]; state.pits[i] = 0; } return true; }
+  return false;
+}
+
+function endGame(){
+  state.over = true;
+  render();
+  const you = state.pits[6], cpu = state.pits[13];
+  const win = you > cpu ? 'you' : cpu > you ? 'cpu' : 'tie';
+  if (win === 'you') save.you++;
+  else if (win === 'cpu') save.cpu++;
+  persist();
+  setTimeout(()=>{
+    document.getElementById('end-title').textContent = win === 'you' ? '🏆 YOU WIN' : win === 'cpu' ? '💀 CPU WINS' : '⚖ TIE';
+    document.getElementById('end-sub').textContent = you + ' to ' + cpu;
+    const v = VERSES[(save.you+save.cpu) % VERSES.length];
+    document.getElementById('end-verse').innerHTML = v[0] + ' <b>— ' + v[1] + '</b>';
+    document.getElementById('end-you').textContent = you;
+    document.getElementById('end-cpu').textContent = cpu;
+    document.getElementById('ov-end').classList.add('on');
+  }, 600);
+}
+
+function render(){
+  const b = document.getElementById('board');
+  b.innerHTML = '';
+  // CPU store (left)
+  const cs = document.createElement('div'); cs.className = 'mancala';
+  cs.innerHTML = '<div class="l">CPU</div><div class="v">' + state.pits[13] + '</div>'; b.appendChild(cs);
+  // CPU pits 12→7 (visually left to right top row)
+  for (let i = 12; i >= 7; i--){
+    const p = document.createElement('div'); p.className = 'pit dim' + (state.pits[i] === 0 ? ' empty' : '') + (state.lastIdx === i ? ' last' : '');
+    p.textContent = state.pits[i];
+    b.appendChild(p);
+  }
+  // YOU store (right)
+  const ys = document.createElement('div'); ys.className = 'mancala';
+  ys.innerHTML = '<div class="l">YOU</div><div class="v">' + state.pits[6] + '</div>'; b.appendChild(ys);
+  // YOU pits 0→5 (bottom row left to right)
+  for (let i = 0; i <= 5; i++){
+    const p = document.createElement('div'); p.className = 'pit' + (state.pits[i] === 0 ? ' empty' : '') + (state.lastIdx === i ? ' last' : '');
+    p.textContent = state.pits[i];
+    p.addEventListener('click', () => tryYou(i));
+    b.appendChild(p);
+  }
+  document.getElementById('sc-you').textContent = save.you;
+  document.getElementById('sc-cpu').textContent = save.cpu;
+}
+
+function syncTurn(){
+  const el = document.getElementById('turn');
+  if (state.over){ el.className=''; el.textContent='GAME OVER'; }
+  else if (state.turn === 'you'){ el.className='you'; el.textContent='🟡 YOUR TURN'; }
+  else { el.className='cpu'; el.textContent='🔴 CPU THINKING'; }
+}
+function setStatus(t,c){ const el = document.getElementById('status'); el.textContent = t; el.className = c||''; }
+
+document.getElementById('btn-begin').addEventListener('click', () => { ensureAudio(); newGame(); document.getElementById('ov-intro').classList.remove('on'); });
+document.getElementById('btn-new').addEventListener('click', () => { document.getElementById('ov-end').classList.remove('on'); newGame(); });
+document.getElementById('btn-again').addEventListener('click', () => { document.getElementById('ov-end').classList.remove('on'); newGame(); });
+document.getElementById('btn-help').addEventListener('click', () => document.getElementById('ov-intro').classList.add('on'));
+
+if ('serviceWorker' in navigator){
+  const had = !!navigator.serviceWorker.controller; let r = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (r) return; r = true; if (had) location.reload(); });
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(reg => { reg.update(); setInterval(()=>reg.update(), 60000); }).catch(()=>{}));
+}
+</script>
+</body>
+</html>
