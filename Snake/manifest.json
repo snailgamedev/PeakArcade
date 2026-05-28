@@ -1,0 +1,12 @@
+{
+  "name": "Holy Pursuit · the snake of light",
+  "short_name": "Holy Pursuit",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a1e14",
+  "theme_color": "#0f4d2a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

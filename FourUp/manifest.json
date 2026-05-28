@@ -1,0 +1,10 @@
+{
+  "name": "Four Up · drop 4 in a row",
+  "short_name": "Four Up",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#08172e",
+  "theme_color": "#0e3a6b",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
