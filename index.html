@@ -460,11 +460,14 @@
       <span id="tsCountdown" style="color:var(--hot);font-weight:900;font-size:.88rem">—h —m</span>
     </div>
   </section>
-  <!-- 🌅 DAILY PULSE · greeting + day-vibe in ONE line · pick lives in GOTD below to avoid duplicate CTAs -->
+  <!-- 🌅 DAILY PULSE + 🎁 BLESSING CLAIM · greeting · vibe · daily-blessing button (claim once/day for a Faith Star) -->
   <section class="reveal" style="margin:8px 0 14px">
-    <div id="pulse" style="background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(255,77,141,.08),rgba(245,197,66,.10));border:1px solid var(--line);border-radius:16px;padding:14px 20px;box-shadow:0 12px 36px -22px rgba(124,92,255,.4)">
-      <div id="pulseGreet" style="font-size:1.05rem;font-weight:900;letter-spacing:.5px;background:linear-gradient(90deg,var(--neon2),var(--hot));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:3px"></div>
-      <div id="pulseSub" style="font-size:.84rem;color:var(--muted);line-height:1.45"></div>
+    <div id="pulse" style="background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(255,77,141,.08),rgba(245,197,66,.10));border:1px solid var(--line);border-radius:16px;padding:14px 20px;box-shadow:0 12px 36px -22px rgba(124,92,255,.4);display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+      <div style="flex:1;min-width:200px">
+        <div id="pulseGreet" style="font-size:1.05rem;font-weight:900;letter-spacing:.5px;background:linear-gradient(90deg,var(--neon2),var(--hot));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:3px"></div>
+        <div id="pulseSub" style="font-size:.84rem;color:var(--muted);line-height:1.45"></div>
+      </div>
+      <button id="claimBlessing" style="background:linear-gradient(180deg,var(--gold),#b8860b);color:#0a0a0e;border:none;padding:9px 16px;border-radius:11px;font-weight:900;font-size:.82rem;letter-spacing:.5px;cursor:pointer;box-shadow:0 8px 20px -8px rgba(245,197,66,.55);transition:transform .15s,filter .15s;white-space:nowrap">⭐ Claim today</button>
     </div>
   </section>
   <!-- 🎁 WIDGET GRID · COLLAPSED BY DEFAULT ON MOBILE so games appear sooner · power users tap to expand -->
@@ -510,6 +513,17 @@
           <b style="font-size:.74rem;letter-spacing:1.5px;color:var(--gold)">YOUR JOURNEY</b>
         </div>
         <div id="wgJourneyStats" style="display:flex;gap:14px;flex-wrap:wrap;font-size:.75rem;color:var(--muted)"></div>
+      </div>
+      <!-- 🏆 TROPHY CASE -->
+      <div id="wgTrophies" style="background:linear-gradient(160deg,rgba(34,211,238,.10),rgba(245,197,66,.06));border:1px solid var(--line);border-radius:14px;padding:14px 16px;grid-column:1/-1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:1.6rem">🏆</span>
+            <b style="font-size:.74rem;letter-spacing:1.5px;color:var(--gold)">TROPHY CASE</b>
+          </div>
+          <span id="trophyCount" style="font-size:.7rem;color:var(--muted);font-weight:800"></span>
+        </div>
+        <div id="trophyGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px"></div>
       </div>
     </div>
   </section>
@@ -823,6 +837,71 @@ function buildGOTD(){
 
 /* ===== 🎁 HUB WIDGETS — 4 mini-cards: Spin · Daily Challenge · Scripture · Your Journey ===== */
 
+/* ===== 🏆 TROPHY CASE + ⭐ DAILY BLESSING — hub-level achievements driving daily return =====
+   12 trophies tied to real verifiable actions (visit streak, time-of-day, game-tries, faith taps).
+   All checks read from existing LS keys + the play history. Unlocks persist forever. */
+const TROPHIES = [
+  { id:'first-light', name:'First Light', emoji:'🌅', desc:'Welcome to Peak Arcade · first visit', check: () => true },
+  { id:'streak-3',    name:'Iron · Day 3', emoji:'🔥', desc:'3-day visit streak',        check: () => +(LS.get('streak')||0) >= 3 },
+  { id:'streak-7',    name:'Steel · Day 7', emoji:'🔥', desc:'7-day visit streak',       check: () => +(LS.get('streak')||0) >= 7 },
+  { id:'streak-14',   name:'Forged · Day 14', emoji:'🔥', desc:'14-day visit streak',    check: () => +(LS.get('streak')||0) >= 14 },
+  { id:'streak-30',   name:'Tempered · Day 30', emoji:'🔥', desc:'30-day visit streak',  check: () => +(LS.get('streak')||0) >= 30 },
+  { id:'first-game',  name:'First Round', emoji:'🎮', desc:'Played your first game',     check: () => (LS.get('recent')||[]).length >= 1 },
+  { id:'try-half',    name:'Adventurer', emoji:'🗺️', desc:'Tried half the arcade (4+ games)', check: () => (LS.get('recent')||[]).length >= 4 },
+  { id:'try-all',     name:'Completionist', emoji:'🏅', desc:'Tried every live game',    check: () => { const live=GAMES.filter(g=>g.live).map(g=>g.id); const rec=LS.get('recent')||[]; return live.every(id=>rec.includes(id)); } },
+  { id:'sunday-rest', name:'Sabbath Visitor', emoji:'🙏', desc:'Visited on a Sunday',     check: () => new Date().getDay() === 0 },
+  { id:'night-owl',   name:'Night Owl', emoji:'🌙', desc:'Visited after 10pm',           check: () => new Date().getHours() >= 22 },
+  { id:'early-bird',  name:'Early Bird', emoji:'☀️', desc:'Visited before 7am',           check: () => { const h=new Date().getHours(); return h < 7; } },
+  { id:'word-reader', name:'Word Reader', emoji:'✝️', desc:'Opened The Word at least once', check: () => (LS.get('recent')||[]).includes('word') }
+];
+function checkTrophies(silent){
+  const unlocked = new Set(LS.get('trophies') || []);
+  const newOnes = [];
+  for (const t of TROPHIES){
+    if (unlocked.has(t.id)) continue;
+    try{ if (t.check()){ unlocked.add(t.id); newOnes.push(t); } }catch(e){}
+  }
+  if (newOnes.length){
+    LS.set('trophies', Array.from(unlocked));
+    if (!silent) newOnes.forEach((t,i) => setTimeout(()=>{ toast('🏆 New trophy: '+t.emoji+' '+t.name); }, i*1400));
+  }
+  return Array.from(unlocked);
+}
+function renderTrophies(){
+  const unlocked = new Set(checkTrophies(true));
+  document.getElementById('trophyCount').textContent = unlocked.size + ' / ' + TROPHIES.length + ' unlocked';
+  const grid = document.getElementById('trophyGrid');
+  grid.innerHTML = TROPHIES.map(t => {
+    const got = unlocked.has(t.id);
+    return `<div title="${t.name} — ${t.desc}" style="aspect-ratio:1;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:${got?'linear-gradient(160deg,rgba(245,197,66,.18),rgba(255,77,141,.08))':'rgba(0,0,0,.35)'};${got?'':'filter:grayscale(1) opacity(.35)'};transition:transform .15s">${t.emoji}</div>`;
+  }).join('');
+}
+/* ⭐ DAILY BLESSING — once per local day, gives a Faith Star + a verse pop */
+function buildBlessing(){
+  const btn = document.getElementById('claimBlessing');
+  if (!btn) return;
+  const day = localDay();
+  const already = (LS.get('blessing_'+day) === true);
+  if (already){
+    btn.textContent = '✅ Claimed today';
+    btn.style.filter = 'grayscale(.7) brightness(.85)';
+    btn.style.cursor = 'default';
+  }
+  btn.onclick = () => {
+    if (LS.get('blessing_'+day) === true) return;
+    LS.set('blessing_'+day, true);
+    const stars = +(LS.get('faithStars')||0) + 1;
+    LS.set('faithStars', stars);
+    btn.textContent = '✅ +1 ⭐';
+    btn.style.filter = 'grayscale(.7) brightness(.85)';
+    btn.style.cursor = 'default';
+    confetti();
+    toast('⭐ Daily blessing claimed · '+stars+' Faith Stars total');
+    // refresh journey + trophies (in case daily streak just unlocked a trophy)
+    buildJourney(); renderTrophies();
+  };
+}
+
 /* 📲 Mobile widget-collapse toggle + sticky Jump-to-games behavior */
 function buildMobileFlow(){
   // Widgets toggle — collapsed by default on mobile; tap to expand
@@ -926,18 +1005,19 @@ function buildVerseWidget(){
   document.getElementById('wgVerse').onclick = () => playGame('word');
 }
 
-/* 📊 YOUR JOURNEY — hub-level personal stats (streak, sessions, games tried, plays) */
+/* 📊 YOUR JOURNEY — hub-level personal stats (streak, sessions, games tried, plays, ⭐ stars) */
 function buildJourney(){
   const streak = +(LS.get('streak') || 0);
   const sessions = +(LS.get('sessions') || 1);
   const recent = LS.get('recent') || [];
   const recentCount = Array.isArray(recent) ? recent.length : 0;
   const totalPlays = (LS.get('totalPlays') || 0);
+  const stars = +(LS.get('faithStars') || 0);
   const stats = [
     { label: '🔥 streak', val: streak ? streak + 'd' : '—' },
     { label: '🎮 played', val: totalPlays || '0' },
     { label: '✦ games tried', val: recentCount },
-    { label: '🌅 sessions', val: sessions }
+    { label: '⭐ stars', val: stars }
   ];
   document.getElementById('wgJourneyStats').innerHTML = stats.map(s =>
     `<div><b style="display:block;color:var(--gold);font-size:.95rem;font-weight:900">${s.val}</b><span style="font-size:.7rem">${s.label}</span></div>`
@@ -1252,7 +1332,9 @@ addEventListener('keydown',e=>{
 
 /* ===== boot ===== */
 document.querySelector('.stat b[data-count]').dataset.count=GAMES.filter(g=>g.live).length;
-buildChips();buildCarousel();buildToday();buildGOTD();buildPulse();buildSpin();buildChallenge();buildVerseWidget();buildJourney();buildMobileFlow();render();renderRecent();animCounters();
+buildChips();buildCarousel();buildToday();buildGOTD();buildPulse();buildBlessing();buildSpin();buildChallenge();buildVerseWidget();buildJourney();renderTrophies();buildMobileFlow();render();renderRecent();animCounters();
+/* On first paint, check for any new trophies the user qualifies for + toast them (1 per round of opening the page) */
+setTimeout(()=>checkTrophies(false), 1200);
 /* deep-link launch (app shortcuts / shared game links) + ?q= search (SearchAction) — then clean the URL */
 (function(){try{const sp=new URLSearchParams(location.search);
   const q=sp.get('q');
