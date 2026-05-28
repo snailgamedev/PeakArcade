@@ -1,6 +1,6 @@
 /* Peak Arcade service worker — network-first for pages (so updates ALWAYS show),
    cache-first for static assets. Versioned; old caches wiped on activate. */
-const CACHE = 'peak-arcade-v41';
+const CACHE = 'peak-arcade-v42';
 const SHELL = ['./', './index.html', './word.html', './privacy.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {

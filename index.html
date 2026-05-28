@@ -434,8 +434,21 @@
     </div>
   </section>
 
+  <!-- 🕐 TODAY STRIP · live clock · date · day-of-year · countdown to daily reset (when GOTD/daily-pick flip) -->
+  <section class="reveal" style="margin:18px 0 8px">
+    <div id="todayStrip" style="background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:14px;padding:10px 16px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-family:'Menlo','SF Mono',Consolas,monospace;font-size:.82rem;letter-spacing:.5px;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)">
+      <span id="tsClock" style="font-weight:900;color:var(--neon2);font-size:.95rem">—:—</span>
+      <span style="opacity:.4">|</span>
+      <span id="tsDate" style="color:var(--ink);font-weight:700"></span>
+      <span style="opacity:.4">|</span>
+      <span id="tsDoy" style="color:var(--gold);font-weight:700"></span>
+      <span style="opacity:.4;flex:1"></span>
+      <span style="color:var(--muted);font-size:.75rem">⏳ daily reset</span>
+      <span id="tsCountdown" style="color:var(--hot);font-weight:900;font-size:.88rem">—h —m</span>
+    </div>
+  </section>
   <!-- 🌅 DAILY PULSE · greets you by time-of-day, shows Sunday vibes, references your visit history -->
-  <section class="reveal" style="margin:18px 0">
+  <section class="reveal" style="margin:8px 0 18px">
     <div id="pulse" style="background:linear-gradient(135deg,rgba(124,92,255,.10),rgba(255,77,141,.08),rgba(245,197,66,.10));border:1px solid var(--line);border-radius:18px;padding:18px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:18px;box-shadow:0 12px 36px -18px rgba(124,92,255,.4)">
       <div style="flex:1;min-width:220px">
         <div id="pulseGreet" style="font-size:1.1rem;font-weight:900;letter-spacing:.5px;background:linear-gradient(90deg,var(--neon2),var(--hot));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:4px"></div>
@@ -753,6 +766,36 @@ function buildGOTD(){
   $('#gotd .gotd-play').onclick=()=>playGame(g.id);
 }
 
+/* ===== 🕐 TODAY STRIP — live clock · date · day-of-year · countdown to local-midnight reset.
+   Updates every 30s (clock = minute precision, countdown = minute precision · zero RAF, zero lag). ===== */
+function buildToday(){
+  function tick(){
+    const d = new Date();
+    const h = d.getHours(), m = d.getMinutes();
+    // 12h clock with am/pm
+    const h12 = ((h + 11) % 12) + 1;
+    const ampm = h < 12 ? 'am' : 'pm';
+    const clock = h12 + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+    $('#tsClock').textContent = clock;
+    // Date — Thu · May 28
+    const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+    const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+    $('#tsDate').textContent = dow + ' · ' + mo + ' ' + d.getDate();
+    // Day of year
+    const start = new Date(d.getFullYear(), 0, 1);
+    const doy = Math.floor((d - start) / 86400000) + 1;
+    $('#tsDoy').textContent = 'day ' + doy + '/365';
+    // Countdown to local midnight (when daily features flip — GOTD, Pulse, daily verse)
+    const midnight = new Date(d); midnight.setHours(24, 0, 0, 0);
+    const msLeft = midnight - d;
+    const hL = Math.floor(msLeft / 3600000);
+    const mL = Math.floor((msLeft % 3600000) / 60000);
+    $('#tsCountdown').textContent = hL + 'h ' + (mL < 10 ? '0' + mL : mL) + 'm';
+  }
+  tick();
+  setInterval(tick, 30 * 1000);   // 30s = minute-accurate w/o burning the main thread
+}
+
 /* ===== 🌅 DAILY PULSE — time-of-day greeting · Sunday vibes · returning-user awareness · time-curated game pick ===== */
 function buildPulse(){
   const d = new Date();
@@ -1049,7 +1092,7 @@ addEventListener('keydown',e=>{
 
 /* ===== boot ===== */
 document.querySelector('.stat b[data-count]').dataset.count=GAMES.filter(g=>g.live).length;
-buildChips();buildCarousel();buildGOTD();buildPulse();render();renderRecent();animCounters();
+buildChips();buildCarousel();buildToday();buildGOTD();buildPulse();render();renderRecent();animCounters();
 /* deep-link launch (app shortcuts / shared game links) + ?q= search (SearchAction) — then clean the URL */
 (function(){try{const sp=new URLSearchParams(location.search);
   const q=sp.get('q');
