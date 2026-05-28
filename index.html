@@ -159,31 +159,39 @@
   .search input{flex:1;background:none;border:none;color:var(--ink);font-size:.95rem;outline:none}
   .search input::placeholder{color:var(--muted)}
   .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);font-size:.85rem;font-weight:700;color:var(--muted);transition:all .15s;white-space:nowrap}
-  .chip:hover{color:var(--ink);border-color:var(--neon)}
-  .chip.on{background:linear-gradient(90deg,var(--neon),var(--hot));color:#fff;border-color:transparent}
+  .chip{padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);font-size:.85rem;font-weight:700;color:var(--muted);transition:all .22s cubic-bezier(.2,.9,.3,1);white-space:nowrap;cursor:pointer}
+  .chip:hover{color:var(--ink);border-color:var(--neon);transform:translateY(-1px)}
+  .chip.on{background:linear-gradient(90deg,var(--neon),var(--hot));color:#fff;border-color:transparent;box-shadow:0 6px 16px -6px var(--neon)}
 
   /* grid + cards */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(256px,1fr));gap:18px}
-  .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;transform-style:preserve-3d;will-change:transform;backdrop-filter:blur(6px)}
-  .card:hover{border-color:var(--ac);box-shadow:0 24px 54px -18px var(--ac)}
+  .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.2,.9,.3,1.1),box-shadow .3s ease,border-color .25s ease;transform-style:preserve-3d;will-change:transform;backdrop-filter:blur(6px)}
+  .card:hover,.card:focus-within{border-color:var(--ac);box-shadow:0 28px 60px -18px var(--ac),0 0 0 1px var(--ac);transform:translateY(-6px) scale(1.012)}
+  .card:focus-within{outline:none}
   .thumb{height:158px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;perspective:700px;background:var(--tg)}
   .thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 42%,rgba(0,0,0,.42))}
-  .thumb::before{content:"";position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.07),transparent 28%);animation:spin 8s linear infinite}
-  .ic{font-size:4.4rem;z-index:2;filter:drop-shadow(0 6px 16px rgba(0,0,0,.45))}
-  /* live animated previews */
-  .a-bounce{animation:aBounce 1.5s ease-in-out infinite}
-  @keyframes aBounce{0%,100%{transform:translateY(-14px)}50%{transform:translateY(16px) scaleY(.9) scaleX(1.05)}}
-  .a-flip{animation:aFlip 2.2s cubic-bezier(.5,0,.5,1) infinite}
+  .thumb::before{content:"";position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.07),transparent 28%);animation:spin 8s linear infinite;animation-play-state:paused}
+  .card:hover .thumb::before,.card:focus-within .thumb::before{animation-play-state:running}
+  .ic{font-size:4.4rem;z-index:2;filter:drop-shadow(0 6px 16px rgba(0,0,0,.45));transition:transform .35s ease,filter .35s ease}
+  /* PERF/POLISH FIX (2026-05-28): live card previews now ONLY animate on hover/focus — idle = static.
+     This kills the constant CPU load (8+ cards spinning/bouncing 24/7 was the source of mid-scroll lag)
+     while keeping the playful "alive" feel when the user actually engages a card. */
+  .a-bounce,.a-flip,.a-pulse,.a-swing,.a-shake,.a-arc{animation:none}
+  .card:hover .a-bounce,.card:focus-within .a-bounce{animation:aBounce 1.5s ease-in-out infinite}
+  @keyframes aBounce{0%,100%{transform:translateY(-12px)}50%{transform:translateY(14px) scaleY(.92) scaleX(1.04)}}
+  .card:hover .a-flip,.card:focus-within .a-flip{animation:aFlip 2.2s cubic-bezier(.5,0,.5,1) infinite}
   @keyframes aFlip{to{transform:rotateY(720deg)}}
-  .a-pulse{animation:aPulse 1.8s ease-in-out infinite}
+  .card:hover .a-pulse,.card:focus-within .a-pulse{animation:aPulse 1.8s ease-in-out infinite}
   @keyframes aPulse{50%{transform:scale(1.16);filter:drop-shadow(0 0 20px var(--ac))}}
-  .a-swing{animation:aSwing 1.5s ease-in-out infinite;transform-origin:72% 26%}
-  @keyframes aSwing{0%,100%{transform:rotate(-24deg)}50%{transform:rotate(16deg)}}
-  .a-shake{animation:aShake 1.3s ease-in-out infinite}
-  @keyframes aShake{0%,100%{transform:translateX(-7px) rotate(-7deg)}50%{transform:translateX(7px) rotate(7deg)}}
-  .a-arc{animation:aArc 2.6s ease-in-out infinite}
+  .card:hover .a-swing,.card:focus-within .a-swing{animation:aSwing 1.5s ease-in-out infinite}
+  .a-swing{transform-origin:72% 26%}
+  @keyframes aSwing{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(14deg)}}
+  .card:hover .a-shake,.card:focus-within .a-shake{animation:aShake 1.3s ease-in-out infinite}
+  @keyframes aShake{0%,100%{transform:translateX(-6px) rotate(-6deg)}50%{transform:translateX(6px) rotate(6deg)}}
+  .card:hover .a-arc,.card:focus-within .a-arc{animation:aArc 2.6s ease-in-out infinite}
   @keyframes aArc{0%,100%{transform:translate(-44px,10px) rotate(0)}50%{transform:translate(44px,-26px) rotate(220deg)}}
+  /* Idle icon = subtle settled state instead of fully static */
+  .card:not(:hover):not(:focus-within) .ic{transform:translateY(0) scale(1)}
 
   .body{padding:15px 16px 17px;flex:1;display:flex;flex-direction:column;gap:6px}
   .body h3{font-size:1.16rem;font-weight:800;display:flex;align-items:center;gap:8px}
@@ -310,6 +318,9 @@
   #toTop.show{opacity:1;visibility:visible;transform:none}
   #toTop:hover{filter:brightness(1.12)}
   :focus-visible{outline:2px solid var(--neon);outline-offset:2px;border-radius:6px}
+  /* smoother scroll feel for in-page nav (Vault button, anchor links) */
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
   /* daily word */
   .word{margin-top:48px}
   .word-card{max-width:700px;margin-inline:auto;text-align:center;padding:36px 30px;border-radius:24px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(124,92,255,.14),rgba(34,211,238,.05));position:relative;overflow:hidden}
