@@ -714,7 +714,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gospel.classList.co
 /* ===== misc ===== */
 $('#randomBtn').onclick=()=>{const l=GAMES.filter(g=>g.live);playGame(l[Math.floor(Math.random()*l.length)].id);};
 $('#yr').textContent=new Date().getFullYear();
-{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·2034 · sw v21';}
+{const bs=$('#buildStamp'); if(bs) bs.textContent='build 2026-05-27·2108 · sw v22';}
 initAds();
 /* cookie consent — shows once, remembers your choice (covers ads + transparency for AdSense) */
 function initCookieBar(){
@@ -817,13 +817,14 @@ function showUpdateBar(worker){
 }
 if('serviceWorker'in navigator){
   let refreshing=false;
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(refreshing)return; refreshing=true; location.reload(); });
+  const hadController = !!navigator.serviceWorker.controller;   // only auto-reload on a REAL update, not the first-ever install
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(refreshing)return; refreshing=true; if(hadController) location.reload(); });
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('sw.js').then(reg=>{
-      if(reg.waiting && navigator.serviceWorker.controller) showUpdateBar(reg.waiting);  // an update was already waiting
+      if(reg.waiting){ try{reg.waiting.postMessage('SKIP_WAITING');}catch(e){} }   // 🆕 FORCE: never leave an update waiting
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;
-        nw.addEventListener('statechange',()=>{ if(nw.state==='installed' && navigator.serviceWorker.controller) showUpdateBar(nw); }); });
-      reg.update(); setInterval(()=>reg.update(), 15*60*1000);   // check now + every 15 min
+        nw.addEventListener('statechange',()=>{ if(nw.state==='installed' && navigator.serviceWorker.controller){ toast('✨ Updating Peak Arcade to the latest…'); /* SW auto-activates (skipWaiting) → controllerchange → reload */ } }); });
+      reg.update(); setInterval(()=>reg.update(), 60*1000);   // 🆕 check every minute so updates land fast
     }).catch(()=>{});
   });
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}); });

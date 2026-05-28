@@ -1,12 +1,11 @@
 /* Peak Arcade service worker — network-first for pages (so updates ALWAYS show),
    cache-first for static assets. Versioned; old caches wiped on activate. */
-const CACHE = 'peak-arcade-v21';
+const CACHE = 'peak-arcade-v22';
 const SHELL = ['./', './index.html', './word.html', './privacy.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
+  self.skipWaiting();   // 🆕 FORCE updates — new SW activates IMMEDIATELY (no waiting for a tap); page auto-reloads on controllerchange
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(()=>{}));
-  // NOTE: no auto skipWaiting — the new SW WAITS so the hub can show an "update ready" prompt;
-  // it activates when the user taps Update (page posts 'SKIP_WAITING').
 });
 self.addEventListener('message', e => { if (e.data === 'SKIP_WAITING') self.skipWaiting(); });
 self.addEventListener('activate', e => {
