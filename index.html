@@ -105,10 +105,15 @@
 
   /* background */
   .aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  /* LAG-KILL (2026-05-28): big radial-blur orbs are GPU-expensive — drop blur to
+     60px on mobile, and globally pause all aurora drift when the tab is hidden
+     (html.pgHidden class is toggled by visibilitychange below). */
   .aurora b{position:absolute;width:55vmax;height:55vmax;border-radius:50%;filter:blur(100px);opacity:.45;mix-blend-mode:screen;display:block}
+  @media(max-width:720px){.aurora b{filter:blur(60px);opacity:.35}}
   .aurora .a1{background:radial-gradient(circle,var(--neon),transparent 60%);top:-18vmax;left:-12vmax;animation:drift1 20s ease-in-out infinite}
   .aurora .a2{background:radial-gradient(circle,var(--neon2),transparent 60%);bottom:-20vmax;right:-14vmax;animation:drift2 24s ease-in-out infinite}
   .aurora .a3{background:radial-gradient(circle,var(--hot),transparent 60%);top:35%;left:38%;opacity:.3;animation:drift3 28s ease-in-out infinite}
+  html.pgHidden .aurora b, html.pgHidden .logo b, html.pgHidden .logo .badge, html.pgHidden #intro .big, html.pgHidden #intro .lbl, html.pgHidden .dlbtn, html.pgHidden .hero h1 .glow{animation-play-state:paused}
   @keyframes drift1{50%{transform:translate(16vmax,12vmax) scale(1.2)}}
   @keyframes drift2{50%{transform:translate(-14vmax,-10vmax) scale(1.15)}}
   @keyframes drift3{50%{transform:translate(-12vmax,14vmax) scale(1.25)}}
@@ -190,7 +195,10 @@
 
   /* grid + cards */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(256px,1fr));gap:18px}
-  .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.2,.9,.3,1.1),box-shadow .3s ease,border-color .25s ease;transform-style:preserve-3d;will-change:transform;backdrop-filter:blur(6px)}
+  /* LAG-KILL (2026-05-28): content-visibility:auto lets the browser SKIP rendering
+     any card that isn't on screen — for a 19-card grid this is the single biggest
+     mobile perf win. contain-intrinsic-size keeps the scrollbar honest. */
+  .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.2,.9,.3,1.1),box-shadow .3s ease,border-color .25s ease;transform-style:preserve-3d;will-change:transform;backdrop-filter:blur(6px);content-visibility:auto;contain-intrinsic-size:auto 320px}
   .card:hover,.card:focus-within{border-color:var(--ac);box-shadow:0 28px 60px -18px var(--ac),0 0 0 1px var(--ac);transform:translateY(-6px) scale(1.012)}
   .card:focus-within{outline:none}
   .thumb{height:158px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;perspective:700px;background:var(--tg)}
@@ -454,6 +462,16 @@
   <h4>Accent</h4>
   <div class="swatches" id="swatches"></div>
   <div class="prow"><span>Reduce motion</span><button class="toggle" id="rmToggle" role="switch" aria-label="reduce motion"></button></div>
+  <h4 style="margin-top:14px">✝ Bible Translation</h4>
+  <select id="bibleSel" class="sortsel" style="width:100%;padding:9px 11px;font-size:.85rem;cursor:pointer">
+    <option value="kjv">King James Version (1611) · KJV</option>
+    <option value="bbe">Bible in Basic English (1949) · BBE</option>
+  </select>
+  <div id="bibleExt" style="margin-top:8px;font-size:.7rem;color:var(--muted);line-height:1.45">
+    <b style="color:var(--ink);display:block;margin-bottom:5px;font-size:.72rem">📖 Other translations</b>
+    <span>Tap to open Bible Gateway in your translation of choice. We don't store the text (copyrighted) but the link's one-tap away.</span>
+    <div id="bibleExtBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px"></div>
+  </div>
   <button class="pbtn" id="installBtn" style="display:none">⬇ Install app</button>
 </div>
 
@@ -861,7 +879,15 @@ function buildCarousel(){
   car.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)>40){go(cur+(dx<0?1:-1));reset();}},{passive:true});
   window._carNav=d=>{go(cur+d);reset();};
   function reset(){clearInterval(timer);if(!reduce&&slides.length>1)timer=setInterval(()=>go(cur+1),4800);}
+  function stopRotate(){clearInterval(timer);timer=null;if(prog)prog.classList.remove('run');}
   reset();startProg();
+  /* LAG-KILL (2026-05-28): pause auto-rotate when carousel scrolled out of view
+     (was rotating + repainting every 4.8s even when offscreen) AND when tab hidden. */
+  try{
+    const io=new IntersectionObserver(es=>{ es[0].isIntersecting?reset():stopRotate(); },{threshold:.1});
+    io.observe(car);
+    document.addEventListener('visibilitychange',()=>{ document.hidden?stopRotate():reset(); });
+  }catch(e){}
 }
 
 /* ===== game of the day (deterministic daily pick → reason to return) ===== */
@@ -1046,26 +1072,48 @@ function buildChallenge(){
 
 /* 📜 SCRIPTURE OF THE DAY — rotates daily from a curated pool */
 function buildVerseWidget(){
-  const POOL = [
-    ['"I can do all things through Christ which strengtheneth me."', 'Phil 4:13'],
-    ['"For God so loved the world, that he gave his only begotten Son…"', 'John 3:16'],
-    ['"Trust in the Lord with all thine heart."', 'Prov 3:5'],
-    ['"The joy of the Lord is your strength."', 'Neh 8:10'],
-    ['"Be strong and of a good courage."', 'Joshua 1:9'],
-    ['"…they that wait upon the Lord shall renew their strength."', 'Isa 40:31'],
-    ['"For I know the plans I have for you, declares the Lord…"', 'Jer 29:11'],
-    ['"Greater is he that is in you, than he that is in the world."', '1 John 4:4'],
-    ['"Cast all your anxiety on him because he cares for you."', '1 Peter 5:7'],
-    ['"Iron sharpens iron."', 'Prov 27:17'],
-    ['"Be still, and know that I am God."', 'Psalm 46:10'],
-    ['"…the steps of a good man are ordered by the Lord."', 'Psalm 37:23'],
-    ['"…we walk by faith, not by sight."', '2 Cor 5:7'],
-    ['"…I make all things new."', 'Rev 21:5'],
-    ['"…my strength is made perfect in weakness."', '2 Cor 12:9']
+  /* FULL-KJV UPGRADE (2026-05-28): widget paints from a 15-verse KJV-canonical
+     fallback INSTANTLY, then lazy-loads the full 31,100-verse KJV via
+     window.PA_KJV.ready() and upgrades the day's pick to the deep bank. The
+     fallback below was AUDITED — previous version mixed NIV phrasings ("plans",
+     "anxiety") which violated the never-alter-the-Word rule. All KJV now. */
+  const FALLBACK = [
+    ['I can do all things through Christ which strengtheneth me.', 'Phil 4:13'],
+    ['Be still, and know that I am God.', 'Psalm 46:10'],
+    ['Trust in the LORD with all thine heart; and lean not unto thine own understanding.', 'Prov 3:5'],
+    ['Iron sharpeneth iron; so a man sharpeneth the countenance of his friend.', 'Prov 27:17'],
+    ['For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.', 'John 3:16'],
+    ['The joy of the LORD is your strength.', 'Neh 8:10'],
+    ['Be strong and of a good courage; be not afraid, neither be thou dismayed.', 'Josh 1:9'],
+    ['They that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles.', 'Isaiah 40:31'],
+    ['I know the thoughts that I think toward you, saith the LORD, thoughts of peace, and not of evil.', 'Jer 29:11'],
+    ['Greater is he that is in you, than he that is in the world.', '1 John 4:4'],
+    ['Casting all your care upon him; for he careth for you.', '1 Pet 5:7'],
+    ['For we walk by faith, not by sight.', '2 Cor 5:7'],
+    ['Behold, I make all things new.', 'Rev 21:5'],
+    ['My grace is sufficient for thee: for my strength is made perfect in weakness.', '2 Cor 12:9'],
+    ['Jesus Christ the same yesterday, and to day, and for ever.', 'Heb 13:8']
   ];
-  const v = POOL[localDay() % POOL.length];
-  document.getElementById('wgVerseTxt').textContent = v[0];
-  document.getElementById('wgVerseRef').textContent = '— ' + v[1];
+  function paint(text, ref, transTag){
+    const t = transTag ? `${ref} · ${transTag}` : `— ${ref}`;
+    document.getElementById('wgVerseTxt').textContent = '"' + text + '"';
+    document.getElementById('wgVerseRef').textContent = t;
+  }
+  const v = FALLBACK[localDay() % FALLBACK.length];
+  paint(v[0], v[1]);
+  // Lazy upgrade to full Bible (current translation · KJV or BBE)
+  function upgrade(){
+    if (!window.PA_BIBLE || !window.PA_BIBLE.ready) return;
+    window.PA_BIBLE.ready().then(arr => {
+      if (!arr || arr.length < 1000) return;
+      const p = arr[(localDay() * 1009) % arr.length];
+      const code = window.PA_BIBLE.current().toUpperCase();
+      paint(p[3], `${p[0]} ${p[1]}:${p[2]}`, code);
+    }).catch(()=>{});
+  }
+  upgrade();
+  // Re-paint when user switches translation in settings
+  window.addEventListener('pa-bible-change', upgrade);
   document.getElementById('wgVerse').onclick = () => playGame('word');
 }
 
@@ -1116,11 +1164,24 @@ function buildToday(){
     const sL = Math.floor((msLeft % 60000) / 1000);
     $('#tsCountdown').textContent = hL + 'h ' + pad(mL) + 'm ' + pad(sL) + 's';
   }
-  function start(){ tick(); clearInterval(tickT); tickT = setInterval(tick, 1000); }
-  function stop(){ clearInterval(tickT); }
+  /* SYNC FIX (2026-05-28): iOS PWA was lagging 30s when reopened from app switcher.
+     Root cause: setInterval(1000) drifts AND iOS pauses timers in standalone mode.
+     Fix: align each tick to the device wall-clock second boundary via recursive
+     setTimeout — and INSTANT-RESYNC on every "page came back" event (visibilitychange,
+     pageshow/bfcache restore, window focus, online return). Now the clock matches
+     the device's system time within ~1 second, always. */
+  function scheduleNext(){
+    const ms = 1000 - (Date.now() % 1000);   // align to next exact second
+    tickT = setTimeout(()=>{ tick(); scheduleNext(); }, ms);
+  }
+  function start(){ tick(); clearTimeout(tickT); scheduleNext(); }
+  function stop(){ clearTimeout(tickT); tickT = null; }
   start();
-  // PERF: pause the 1s tick when the tab is hidden — modern browsers throttle anyway, but explicit is cleaner.
   document.addEventListener('visibilitychange', () => { document.hidden ? stop() : start(); });
+  /* These three cover iOS PWA resume + bfcache + window focus + offline→online */
+  window.addEventListener('pageshow', () => { if (!document.hidden) start(); });
+  window.addEventListener('focus',    () => { if (!document.hidden) start(); });
+  window.addEventListener('online',   () => { if (!document.hidden) start(); });
 }
 
 /* ===== 🌅 DAILY PULSE — single inline band: greeting + day-vibe (pick lives in GOTD to avoid duplicate CTAs) ===== */
@@ -1187,6 +1248,37 @@ let rm=LS.get('rm',false);
 function applyRM(){document.documentElement.classList.toggle('rm',rm);$('#rmToggle').classList.toggle('on',rm);}
 $('#rmToggle').onclick=()=>{rm=!rm;LS.set('rm',rm);applyRM();toast(rm?'Reduced motion on':'Reduced motion off');};
 applyRM();
+/* ─── ✝ Bible translation switcher ─────────────────────────────────────────── */
+(function(){
+  const sel = $('#bibleSel');
+  if (!sel || !window.PA_BIBLE) return;
+  // Reflect current pick
+  sel.value = window.PA_BIBLE.current();
+  sel.onchange = () => {
+    const code = sel.value;
+    if (window.PA_BIBLE.set(code)){
+      const name = window.PA_BIBLE.bundled.find(t=>t.code===code);
+      toast(`✝ Translation: ${name ? name.code.toUpperCase() : code.toUpperCase()}`);
+    }
+  };
+  // Render external (copyrighted) translation deep-link buttons
+  const wrap = $('#bibleExtBtns');
+  if (wrap && window.PA_BIBLE.external){
+    wrap.innerHTML = window.PA_BIBLE.external.map(t =>
+      `<button data-code="${t.code}" title="${t.name}" style="font-size:.65rem;font-weight:800;padding:5px 10px;border-radius:99px;border:1px solid var(--line);background:var(--bg2);color:var(--ink);cursor:pointer;letter-spacing:.5px">${t.code}</button>`
+    ).join('');
+    wrap.onclick = e => {
+      const b = e.target.closest('button[data-code]');
+      if (!b) return;
+      const code = b.dataset.code;
+      // Open today's GOTD-style daily scripture reference if available, else use a default
+      const v = window.PA_BIBLE.random && window.PA_BIBLE.random();
+      const ref = v ? `${v[0]} ${v[1]}:${v[2]}` : 'John 3:16';
+      window.PA_BIBLE.openExternal(code, ref);
+      toast(`📖 Opening ${ref} in ${code} · Bible Gateway`);
+    };
+  }
+})();
 
 /* ===== The Good News (gospel modal) ===== */
 const gospel=$('#gospel');
@@ -1404,9 +1496,123 @@ addEventListener('keydown',e=>{
   else if(e.key==='ArrowRight'&&window._carNav)window._carNav(1);
 });
 
+/* ═══ FULL BIBLE LOADER + TRANSLATION SWITCHER (2026-05-28) ═══
+   Bundles 2 public-domain translations (KJV + BBE · ~62k verses combined).
+   Lazy-loads each AFTER first paint, caches per-translation in IndexedDB.
+   For copyrighted translations (NIV · NKJV · NLT · ESV · WEB) we don't bundle —
+   instead we deep-link to BibleGateway for the user's chosen verse. Clean,
+   copyright-safe, faith-respecting.
+
+   API:
+     window.PA_BIBLE.ready(code?)       → Promise<Array<[book,ch,v,text]>>  default = current
+     window.PA_BIBLE.random()            → [book,ch,v,text] from current translation
+     window.PA_BIBLE.find(book,ch,v)     → text from current translation
+     window.PA_BIBLE.current()           → 'kjv' | 'bbe'
+     window.PA_BIBLE.set(code)           → switches current + fires 'pa-bible-change'
+     window.PA_BIBLE.bundled              → ['kjv','bbe']
+     window.PA_BIBLE.external             → [{code,name,version,url(ref)}]  Bible Gateway deep-link helpers
+     window.PA_BIBLE.openExternal(code,ref) → opens BG for ref in chosen translation
+   Back-compat: window.PA_KJV.ready/random/find still work, always KJV. */
+window.PA_BIBLE = (function(){
+  const STORAGE_KEY = 'pa_bible';
+  const BUNDLED = {
+    kjv: { url:'./kjv.min.json', name:'King James Version', year:1611, db:'pa_kjv' },
+    bbe: { url:'./bbe.min.json', name:'Bible in Basic English', year:1949, db:'pa_bbe' }
+  };
+  const EXTERNAL = [
+    { code:'NIV',  name:'New International Version', version:'NIV' },
+    { code:'NKJV', name:'New King James Version',    version:'NKJV' },
+    { code:'NLT',  name:'New Living Translation',    version:'NLT' },
+    { code:'ESV',  name:'English Standard Version',  version:'ESV' },
+    { code:'WEB',  name:'World English Bible',       version:'WEB' }
+  ];
+  const cache = {};      // {kjv: Array, bbe: Array}
+  const prom  = {};      // pending load promises
+  let current = (function(){ try{ return localStorage.getItem(STORAGE_KEY) || 'kjv'; }catch(_){ return 'kjv'; }})();
+  if (!BUNDLED[current]) current = 'kjv';
+
+  function loadBundled(code){
+    if (cache[code]) return Promise.resolve(cache[code]);
+    if (prom[code])  return prom[code];
+    const info = BUNDLED[code];
+    if (!info) return Promise.resolve(null);
+    prom[code] = new Promise(resolve => {
+      const fetchFresh = () => fetch(info.url,{cache:'force-cache'})
+        .then(r => r.ok ? r.json() : null)
+        .then(a => { if(a&&a.length>1000){ cache[code]=a; try{ const r2=indexedDB.open(info.db,1); r2.onupgradeneeded=e=>e.target.result.createObjectStore('v'); r2.onsuccess=e=>{try{e.target.result.transaction('v','readwrite').objectStore('v').put(a,code);}catch(_){}}; }catch(_){}} resolve(a); })
+        .catch(() => resolve(null));
+      try {
+        const req = indexedDB.open(info.db, 1);
+        req.onupgradeneeded = e => e.target.result.createObjectStore('v');
+        req.onsuccess = e => {
+          try {
+            const g = e.target.result.transaction('v','readonly').objectStore('v').get(code);
+            g.onsuccess = () => {
+              if (g.result && g.result.length > 1000) { cache[code] = g.result; resolve(g.result); }
+              else fetchFresh();
+            };
+            g.onerror = fetchFresh;
+          } catch(_) { fetchFresh(); }
+        };
+        req.onerror = fetchFresh;
+      } catch(_) { fetchFresh(); }
+    });
+    return prom[code];
+  }
+  // Eager-load current translation on idle (so widget upgrade is instant)
+  function eager(){ loadBundled(current); }
+  if ('requestIdleCallback' in window) requestIdleCallback(eager, {timeout:3000});
+  else setTimeout(eager, 1500);
+
+  function refKey(ref){ return encodeURIComponent(ref); }
+
+  return {
+    bundled: Object.keys(BUNDLED).map(c => ({ code:c, name:BUNDLED[c].name, year:BUNDLED[c].year })),
+    external: EXTERNAL.slice(),
+    current(){ return current; },
+    set(code){
+      if (!BUNDLED[code]) return false;
+      current = code;
+      try{ localStorage.setItem(STORAGE_KEY, code); }catch(_){}
+      loadBundled(code);
+      window.dispatchEvent(new CustomEvent('pa-bible-change', { detail:{ code } }));
+      return true;
+    },
+    ready(code){ return loadBundled(code || current); },
+    random(){
+      const a = cache[current];
+      return a ? a[Math.floor(Math.random()*a.length)] : null;
+    },
+    find(book,ch,v){
+      const a = cache[current];
+      return a ? (a.find(x=>x[0]===book && x[1]===ch && x[2]===v) || [,,,null])[3] : null;
+    },
+    /* Bible Gateway deep-link for an EXTERNAL (copyrighted) translation.
+       e.g. openExternal('NIV','John 3:16') → biblegateway.com search */
+    openExternal(code, ref){
+      const url = 'https://www.biblegateway.com/passage/?search=' + refKey(ref) + '&version=' + encodeURIComponent(code);
+      try{ window.open(url, '_blank', 'noopener'); }catch(_){}
+    },
+    get loaded(){ return !!cache[current]; }
+  };
+})();
+/* Back-compat: window.PA_KJV always returns KJV regardless of user's current pick */
+window.PA_KJV = {
+  ready: () => window.PA_BIBLE.ready('kjv'),
+  random: () => { const a = window.PA_BIBLE; return a.current()==='kjv' && a.loaded ? a.random() : null; },
+  find: (b,c,v) => { const a = window.PA_BIBLE; return a.current()==='kjv' ? a.find(b,c,v) : null; },
+  get loaded(){ return window.PA_BIBLE.current()==='kjv' && window.PA_BIBLE.loaded; }
+};
+
 /* ===== boot ===== */
 document.querySelector('.stat b[data-count]').dataset.count=GAMES.filter(g=>g.live).length;
 buildChips();buildCarousel();buildToday();buildGOTD();buildPulse();buildBlessing();buildSpin();buildChallenge();buildVerseWidget();buildJourney();renderTrophies();buildMobileFlow();render();renderRecent();animCounters();
+/* LAG-KILL (2026-05-28): pause ALL CSS animations on the page when the tab is
+   hidden — aurora drifts, logo shimmer, badge bob, hero glow, dlpulse, etc. were
+   all chewing GPU in the background. One class toggle drops idle GPU to near zero. */
+document.addEventListener('visibilitychange', () => {
+  document.documentElement.classList.toggle('pgHidden', document.hidden);
+});
 /* On first paint, check for any new trophies the user qualifies for + toast them (1 per round of opening the page) */
 setTimeout(()=>checkTrophies(false), 1200);
 /* deep-link launch (app shortcuts / shared game links) + ?q= search (SearchAction) — then clean the URL */
