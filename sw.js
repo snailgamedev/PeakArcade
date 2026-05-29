@@ -1,8 +1,12 @@
 /* Peak Arcade service worker — network-first for pages (so updates ALWAYS show),
    cache-first for static assets. Versioned; old caches wiped on activate. */
-const CACHE = 'peak-arcade-v53';
-/* SHELL: pages + ✝ full Bible bundles (KJV + BBE · ~9.2MB total · shared across origin) */
-const SHELL = ['./', './index.html', './word.html', './privacy.html', './manifest.json', './icon.svg', './kjv.min.json', './bbe.min.json'];
+const CACHE = 'peak-arcade-v54';
+/* SHELL: PAGES ONLY (tiny · installs fast even on cellular).
+   The 9.2MB KJV/BBE bundles were pulled OUT of SHELL — they were making SW
+   install download nearly 10MB before the page felt ready. Now they cache
+   ONLY when the user actually requests a translation (fetch on demand · still
+   gets cached by the cache-first handler below for the second visit). */
+const SHELL = ['./', './index.html', './word.html', './privacy.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();   // 🆕 FORCE updates — new SW activates IMMEDIATELY (no waiting for a tap); page auto-reloads on controllerchange

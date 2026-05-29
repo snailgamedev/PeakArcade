@@ -1094,26 +1094,72 @@ function buildVerseWidget(){
     ['My grace is sufficient for thee: for my strength is made perfect in weakness.', '2 Cor 12:9'],
     ['Jesus Christ the same yesterday, and to day, and for ever.', 'Heb 13:8']
   ];
+  /* 💭 Tiny inline perception fallback — covers the 15 FALLBACK verses
+     so the perception line is INSTANT even before perceptions.json loads. */
+  const PERC_FALLBACK = {
+    'Phil 4:13': 'Not what YOU can do · what HE can do THROUGH you',
+    'Psalm 46:10': 'Stop striving · He’s already God · be still',
+    'Prov 3:5': 'Your understanding has limits · His doesn’t · lean back · He’s got it',
+    'Prov 27:17': 'Iron-on-iron hurts before it sharpens · the friction’s the gift',
+    'John 3:16': 'Love so deep · He gave His only · YOU were on His mind',
+    'Neh 8:10': 'Joy ain’t the prize · it’s the FUEL · drink deep',
+    'Josh 1:9': 'Courage ain’t no-fear · it’s moving WITH fear · knowing He’s there',
+    'Isaiah 40:31': 'Waiting isn’t passive · it’s the fuel that grows wings',
+    'Jer 29:11': 'He’s thinking about you · thoughts of PEACE · not panic',
+    '1 John 4:4': 'Greater · in you · than the one in the world · battle’s already won',
+    '1 Pet 5:7': 'He WANTS your worry · drop it on Him · He cares',
+    '2 Cor 5:7': 'Sight is loud · faith is the quiet next step · take it anyway',
+    'Rev 21:5': 'He makes ALL things new · including this season',
+    '2 Cor 12:9': 'Your weakness is the canvas for His strength · let Him work',
+    'Heb 13:8': 'He doesn’t change · anchor here'
+  };
+  // Live perception bank — loaded lazily on first user interaction
+  let PERC = PERC_FALLBACK;
+  let percLoaded = false;
   function paint(text, ref, transTag){
     const t = transTag ? `${ref} · ${transTag}` : `— ${ref}`;
-    document.getElementById('wgVerseTxt').textContent = '"' + text + '"';
+    document.getElementById('wgVerseTxt').textContent = '“' + text + '”';
     document.getElementById('wgVerseRef').textContent = t;
+    // 💭 perception line · word-wraps so NOTHING gets cut off
+    let perc = document.getElementById('wgVersePerc');
+    if (!perc){
+      perc = document.createElement('div');
+      perc.id = 'wgVersePerc';
+      perc.style.cssText = 'font-size:.74rem;color:var(--ac);margin-top:6px;line-height:1.5;font-style:italic;word-wrap:break-word;overflow-wrap:anywhere';
+      const refEl = document.getElementById('wgVerseRef');
+      if (refEl && refEl.parentNode) refEl.parentNode.appendChild(perc);
+    }
+    const p = PERC[ref];
+    perc.textContent = p ? ('💭 ' + p) : '';
+    perc.style.display = p ? 'block' : 'none';
   }
   const v = FALLBACK[localDay() % FALLBACK.length];
   paint(v[0], v[1]);
-  // Lazy upgrade to full Bible (current translation · KJV or BBE)
+  // Upgrade to full Bible ONLY after user signals interest (perf-friendly):
+  // - opens Settings panel · - changes translation · - opens The Word page
+  function loadPerc(){
+    if (percLoaded) return Promise.resolve();
+    percLoaded = true;
+    return fetch('./perceptions.json',{cache:'force-cache'})
+      .then(r=>r.ok?r.json():null)
+      .then(o=>{ if(o && typeof o==='object'){ PERC = Object.assign({}, PERC_FALLBACK, o); } })
+      .catch(()=>{});
+  }
   function upgrade(){
     if (!window.PA_BIBLE || !window.PA_BIBLE.ready) return;
-    window.PA_BIBLE.ready().then(arr => {
+    Promise.all([window.PA_BIBLE.ready(), loadPerc()]).then(([arr]) => {
       if (!arr || arr.length < 1000) return;
       const p = arr[(localDay() * 1009) % arr.length];
       const code = window.PA_BIBLE.current().toUpperCase();
       paint(p[3], `${p[0]} ${p[1]}:${p[2]}`, code);
     }).catch(()=>{});
   }
-  upgrade();
-  // Re-paint when user switches translation in settings
+  // Re-paint on translation change (user already interested at this point)
   window.addEventListener('pa-bible-change', upgrade);
+  // Lazy upgrade ONCE when user first opens Settings (where the translation lives)
+  let upgraded = false;
+  const sb = document.getElementById('settingsBtn');
+  if (sb) sb.addEventListener('click', () => { if (!upgraded){ upgraded=true; upgrade(); } }, { once:true });
   document.getElementById('wgVerse').onclick = () => playGame('word');
 }
 
@@ -1573,10 +1619,13 @@ window.PA_BIBLE = (function(){
     });
     return prom[code];
   }
-  // Eager-load current translation on idle (so widget upgrade is instant)
-  function eager(){ loadBundled(current); }
-  if ('requestIdleCallback' in window) requestIdleCallback(eager, {timeout:3000});
-  else setTimeout(eager, 1500);
+  /* LAG-KILL (2026-05-28 v2): no eager-load. The 4.7MB KJV used to fetch on
+     every page idle even when the user wasn't engaging the scripture widget,
+     making the hub feel sluggish on first install. Now loadBundled() ONLY
+     fires when something actually calls ready/random/find. The widget paints
+     from a small KJV-canonical inline fallback INSTANTLY; the deep bank arrives
+     in the background ONLY after the user shows interest (taps Settings, opens
+     The Word, etc). Zero idle fetches. */
 
   function refKey(ref){ return encodeURIComponent(ref); }
 
