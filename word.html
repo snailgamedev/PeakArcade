@@ -241,11 +241,76 @@ function shareVerse(t, r){
 }
 
 /* ── verse-card HTML helper · use everywhere a verse renders ── */
+/* 💭 PERCEPTION LOOKUP — normalizes long book names to short ones (the bank uses
+   "Phil 4:13" but word.html stores "Philippians 4:13"), tries both forms.
+   Bank loads lazily from ./perceptions.json on first verse render. */
+const PERC_NORM = {
+  'Genesis':'Gen','Exodus':'Exo','Leviticus':'Lev','Numbers':'Num','Deuteronomy':'Deut',
+  'Joshua':'Josh','Judges':'Judg','Nehemiah':'Neh','Psalms':'Psalm','Psalm':'Psalm','Proverbs':'Prov',
+  'Ecclesiastes':'Eccl','Isaiah':'Isaiah','Jeremiah':'Jer','Lamentations':'Lam','Ezekiel':'Ezek','Daniel':'Dan',
+  'Matthew':'Matt','Mark':'Mark','Luke':'Luke','John':'John','Acts':'Acts','Romans':'Rom',
+  '1 Corinthians':'1 Cor','2 Corinthians':'2 Cor','Galatians':'Gal','Ephesians':'Eph','Philippians':'Phil',
+  'Colossians':'Col','1 Thessalonians':'1 Thess','2 Thessalonians':'2 Thess','1 Timothy':'1 Tim','2 Timothy':'2 Tim',
+  'Hebrews':'Heb','James':'Jas','1 Peter':'1 Pet','2 Peter':'2 Pet','1 John':'1 John','2 John':'2 John',
+  '3 John':'3 John','Revelation':'Rev','Habakkuk':'Hab','Malachi':'Mal'
+};
+function shortenRef(r){
+  // e.g. "Philippians 4:13" → "Phil 4:13"
+  const m = r.match(/^((?:[123]\s)?[A-Za-z]+)\s+(.+)$/);
+  if (!m) return r;
+  const book = m[1].trim();
+  return (PERC_NORM[book] || book) + ' ' + m[2];
+}
+let PERC = {};
+let _percProm = null;
+function loadPerc(){
+  if (_percProm) return _percProm;
+  _percProm = fetch('./perceptions.json',{cache:'force-cache'})
+    .then(r=>r.ok?r.json():null)
+    .then(o=>{ if(o && typeof o==='object'){ PERC = o; }})
+    .catch(()=>{});
+  return _percProm;
+}
+function getPerception(r){
+  return PERC[r] || PERC[shortenRef(r)] || null;
+}
+/* After perceptions.json arrives, walk every .verse card already painted +
+   the votd hero and append the 💭 line in-place. No re-render needed. */
+function refreshPerceptions(){
+  document.querySelectorAll('.verse').forEach(card => {
+    const r = card.querySelector('.r');
+    if (!r || card.querySelector('.vperc')) return;
+    const refText = r.textContent.replace(/^—\s*/, '').trim();
+    const p = getPerception(refText);
+    if (!p) return;
+    const div = document.createElement('div');
+    div.className = 'vperc';
+    div.style.cssText = 'margin-top:8px;padding:9px 12px;border-radius:10px;background:rgba(185,140,255,.08);border:1px solid var(--bg-3);color:var(--ac);font-family:var(--ui);font-size:12.5px;line-height:1.55;font-style:italic;word-wrap:break-word;overflow-wrap:anywhere';
+    div.textContent = '💭 ' + p;
+    card.appendChild(div);
+  });
+  const votd = document.querySelector('.votd');
+  if (votd && !votd.querySelector('.vperc')){
+    const vt = document.getElementById('votdText');
+    const r = vt && vt.dataset && vt.dataset.r;
+    if (r){
+      const p = getPerception(r);
+      if (p){
+        const div = document.createElement('div');
+        div.className = 'vperc';
+        div.style.cssText = 'margin-top:10px;padding:10px 13px;border-radius:11px;background:rgba(185,140,255,.10);border:1px solid var(--bg-3);color:var(--ac);font-family:var(--ui);font-size:13px;line-height:1.6;font-style:italic;word-wrap:break-word;overflow-wrap:anywhere';
+        div.textContent = '💭 ' + p;
+        votd.appendChild(div);
+      }
+    }
+  }
+}
 function verseCard(t, r, opts){
   opts = opts || {};
   const saved = isVerseSaved(t, r);
   const tEsc = t.replace(/"/g,'&quot;').replace(/'/g,"\\'");
   const rEsc = r.replace(/'/g,"\\'");
+  const perc = getPerception(r);
   return '<div class="verse">' +
     (opts.pre ? '<div style="color:var(--soft);font-size:13.5px;margin-bottom:9px">' + opts.pre + '</div>' : '') +
     '<div class="t">"' + t + '"</div>' +
@@ -256,8 +321,17 @@ function verseCard(t, r, opts){
         '<button class="vb" onclick="shareVerse(\'' + tEsc + '\', \'' + rEsc + '\')" aria-label="Share verse">📤</button>' +
       '</div>' +
     '</div>' +
+    (perc ? '<div class="vperc" style="margin-top:8px;padding:9px 12px;border-radius:10px;background:rgba(185,140,255,.08);border:1px solid var(--bg-3);color:var(--ac);font-family:var(--ui);font-size:12.5px;line-height:1.55;font-style:italic;word-wrap:break-word;overflow-wrap:anywhere">💭 ' + perc + '</div>' : '') +
   '</div>';
 }
+/* Kick off perception fetch immediately — file is tiny (~10KB), arrives fast */
+loadPerc().then(refreshPerceptions);
+/* Also refresh whenever the user changes tabs (themes/books/needs panels)
+   since verseCard runs INSIDE these and may have rendered before PERC loaded */
+document.addEventListener('click', e => {
+  if (e.target.closest('.tab') || e.target.closest('.chip') || e.target.id === 'randBtn')
+    setTimeout(refreshPerceptions, 50);
+});
 function onCardSave(btn, t, r){
   const nowSaved = toggleSaveVerse(t, r);
   btn.classList.toggle('on', nowSaved);
@@ -610,7 +684,7 @@ try{ if(window.top===window.self){ document.getElementById('pa-hub').style.displ
 }catch(e){}})();
 /* ✝ FULL-KJV LOADER (2026-05-28) — lazy fetch from same origin, IndexedDB cache,
    exposes window.PA_KJV.{ready,random,find,loaded}. Idle-deferred · zero blocking. */
-window.PA_KJV=window.PA_KJV||(function(){let arr=null,prom=null;const URL='https://snailgamedev.github.io/PeakArcade/kjv.min.json';function load(){if(prom)return prom;prom=new Promise(resolve=>{const ff=()=>fetch(URL,{cache:'force-cache'}).then(r=>r.ok?r.json():null).then(a=>{if(a&&a.length>1000){arr=a;try{const r2=indexedDB.open('pa_kjv',1);r2.onupgradeneeded=e=>e.target.result.createObjectStore('v');r2.onsuccess=e=>{try{e.target.result.transaction('v','readwrite').objectStore('v').put(a,'kjv');}catch(_){}}}catch(_){}}resolve(a);}).catch(()=>resolve(null));try{const req=indexedDB.open('pa_kjv',1);req.onupgradeneeded=e=>e.target.result.createObjectStore('v');req.onsuccess=e=>{try{const g=e.target.result.transaction('v','readonly').objectStore('v').get('kjv');g.onsuccess=()=>{if(g.result&&g.result.length>1000){arr=g.result;resolve(g.result);}else ff();};g.onerror=ff;}catch(_){ff();}};req.onerror=ff;}catch(_){ff();}});return prom;}if('requestIdleCallback'in window)requestIdleCallback(load,{timeout:5000});else setTimeout(load,2500);return{ready:load,random:()=>arr?arr[Math.floor(Math.random()*arr.length)]:null,find:(b,c,v)=>arr?(arr.find(x=>x[0]===b&&x[1]===c&&x[2]===v)||[,,,null])[3]:null,get loaded(){return !!arr;}};})();
+window.PA_KJV=window.PA_KJV||(function(){let arr=null,prom=null;const URL='https://snailgamedev.github.io/PeakArcade/kjv.min.json';function load(){if(prom)return prom;prom=new Promise(resolve=>{const ff=()=>fetch(URL,{cache:'force-cache'}).then(r=>r.ok?r.json():null).then(a=>{if(a&&a.length>1000){arr=a;try{const r2=indexedDB.open('pa_kjv',1);r2.onupgradeneeded=e=>e.target.result.createObjectStore('v');r2.onsuccess=e=>{try{e.target.result.transaction('v','readwrite').objectStore('v').put(a,'kjv');}catch(_){}}}catch(_){}}resolve(a);}).catch(()=>resolve(null));try{const req=indexedDB.open('pa_kjv',1);req.onupgradeneeded=e=>e.target.result.createObjectStore('v');req.onsuccess=e=>{try{const g=e.target.result.transaction('v','readonly').objectStore('v').get('kjv');g.onsuccess=()=>{if(g.result&&g.result.length>1000){arr=g.result;resolve(g.result);}else ff();};g.onerror=ff;}catch(_){ff();}};req.onerror=ff;}catch(_){ff();}});return prom;}/* no eager load · only fetches on first .ready()/.random()/.find() call */return{ready:load,random:()=>arr?arr[Math.floor(Math.random()*arr.length)]:null,find:(b,c,v)=>arr?(arr.find(x=>x[0]===b&&x[1]===c&&x[2]===v)||[,,,null])[3]:null,get loaded(){return !!arr;}};})();
 </script>
 </body>
 </html>
