@@ -1469,11 +1469,25 @@ function showGame(g){
   clearTimeout(showGame._s);showGame._s=setTimeout(()=>{if(!pLoad.classList.contains('gone'))slow.style.display='inline-block';},6000);
   pFrame.src=g.url;pTitle.innerHTML=`${g.emoji} ${g.title}`;player.classList.add('open');document.body.style.overflow='hidden';
 }
-function hideGame(){player.classList.remove('open');pFrame.src='about:blank';curGame=null;document.body.style.overflow='';}
+/* CLOSE-BUTTON FIX (2026-05-28): on iOS PWA, history.back() sometimes didn't fire
+   popstate cleanly, leaving the iframe rendered after the player overlay started
+   fading — looked like "game still on screen, moving up/down" as the page scrolled
+   underneath. Fix: ALWAYS blank the iframe + remove .open immediately, THEN do the
+   history cleanup as a separate best-effort step. Idempotent if popstate also fires. */
+function hideGame(){
+  if(!player) return;
+  player.classList.remove('open');
+  try{ pFrame.src='about:blank'; }catch(e){}
+  curGame=null;
+  document.body.style.overflow='';
+}
 function playGame(id){const g=GAMES.find(x=>x.id===id&&x.live);if(!g)return;
   recent=[id,...recent.filter(x=>x!==id)].slice(0,6);LS.set('recent',recent);renderRecent();
   showGame(g);try{history.pushState({paGame:id},'');}catch(e){}}
-function closeGame(){if(history.state&&history.state.paGame){history.back();}else{hideGame();}}
+function closeGame(){
+  hideGame();   // ← IMMEDIATE close, no longer waits on popstate
+  try{ if(history.state&&history.state.paGame){ history.back(); } }catch(e){}
+}
 window.addEventListener('popstate',()=>{if(!(history.state&&history.state.paGame))hideGame();});
 $('#pClose').onclick=closeGame;
 $('#pShare').onclick=()=>{if(curGame)shareThing(curGame.title,curGame.url);};
