@@ -1113,7 +1113,7 @@ function buildVerseWidget(){
     '2 Cor 12:9': 'Your weakness is the canvas for His strength · let Him work',
     'Heb 13:8': 'He doesn’t change · anchor here'
   };
-  // Live perception bank — loaded lazily on first user interaction
+  // Live perception bank — eager-loaded (file is tiny ~22KB · no perf cost)
   let PERC = PERC_FALLBACK;
   let percLoaded = false;
   function paint(text, ref, transTag){
@@ -1135,6 +1135,26 @@ function buildVerseWidget(){
   }
   const v = FALLBACK[localDay() % FALLBACK.length];
   paint(v[0], v[1]);
+  // Eager-fetch perception bank (tiny ~22KB · no perf hit) so the 💭 line
+  // appears INSTANTLY for any verse in the 265-entry bank, no Settings tap needed.
+  fetch('./perceptions.json', {cache:'force-cache'})
+    .then(r => r.ok ? r.json() : null)
+    .then(o => {
+      if (!o || typeof o !== 'object') return;
+      PERC = Object.assign({}, PERC_FALLBACK, o);
+      percLoaded = true;
+      // Refresh perception line in-place without re-painting the verse
+      const refEl = document.getElementById('wgVerseRef');
+      const perc = document.getElementById('wgVersePerc');
+      if (!refEl) return;
+      const ref = refEl.textContent.replace(/^—\s*/, '').split(' · ')[0].trim();
+      const p = PERC[ref];
+      if (perc){
+        perc.textContent = p ? ('💭 ' + p) : '';
+        perc.style.display = p ? 'block' : 'none';
+      }
+    })
+    .catch(()=>{});
   // Upgrade to full Bible ONLY after user signals interest (perf-friendly):
   // - opens Settings panel · - changes translation · - opens The Word page
   function loadPerc(){
