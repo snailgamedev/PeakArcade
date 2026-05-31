@@ -1464,7 +1464,9 @@ const WORD_WEIGHT={
   'Galatians 5:22':2,'Hebrews 11:1':2,'1 John 4:19':2,'Psalm 139:14':2,'Psalm 119:105':2,
   'Isaiah 26:3':2,'2 Corinthians 5:17':2,'1 John 1:9':2,'Psalm 103:12':2,'Matthew 5:16':2
 };
-const WORD_BAG=[]; WORD.forEach((o,i)=>{ const n=WORD_WEIGHT[o.r]||1; for(let k=0;k<n;k++) WORD_BAG.push(i); });
+// 📖 Gospels + core doctrine get a baseline lead (≥2×), on top of the per-verse weights
+const _GOSP=/^(Matthew|Mark|Luke|John) /, _DOCT=/^(Romans|Galatians|Ephesians|Colossians|Hebrews|1 Corinthians|2 Corinthians|Philippians|1 John|Acts|James|1 Peter|2 Peter|Titus|1 Timothy|2 Timothy|1 Thessalonians|2 Thessalonians) /;
+const WORD_BAG=[]; WORD.forEach((o,i)=>{ let n=WORD_WEIGHT[o.r]||1; if(n<2 && (_GOSP.test(o.r)||_DOCT.test(o.r))) n=2; for(let k=0;k<n;k++) WORD_BAG.push(i); });
 /* 💭 perception bank for the Featured verse — normalizes long book names to the
    short keys the bank uses ("Philippians 4:13" → "Phil 4:13"), tries both forms. */
 const HUB_PERC_NORM={'Genesis':'Gen','Exodus':'Exo','Leviticus':'Lev','Numbers':'Num','Deuteronomy':'Deut','Joshua':'Josh','Judges':'Judg','Nehemiah':'Neh','Psalms':'Psalm','Psalm':'Psalm','Proverbs':'Prov','Ecclesiastes':'Eccl','Jeremiah':'Jer','Lamentations':'Lam','Ezekiel':'Ezek','Daniel':'Dan','Matthew':'Matt','Romans':'Rom','1 Corinthians':'1 Cor','2 Corinthians':'2 Cor','Galatians':'Gal','Ephesians':'Eph','Philippians':'Phil','Colossians':'Col','1 Thessalonians':'1 Thess','2 Thessalonians':'2 Thess','1 Timothy':'1 Tim','2 Timothy':'2 Tim','Hebrews':'Heb','James':'Jas','1 Peter':'1 Pet','2 Peter':'2 Pet','Revelation':'Rev','Habakkuk':'Hab','Malachi':'Mal'};
