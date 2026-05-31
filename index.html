@@ -641,6 +641,22 @@
   </section>
 </main>
 
+<!-- 📱 SHARE THE ARCADE · scannable + printable QR (static, works offline once cached) -->
+<section class="wrap" id="shareArcade" style="margin:34px auto;text-align:center">
+  <div style="background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:18px;padding:26px 20px;max-width:430px;margin:0 auto">
+    <h3 style="font-size:.78rem;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:0 0 4px">📱 Share Peak Arcade</h3>
+    <p style="font-size:.82rem;color:var(--muted);margin:0 0 16px;line-height:1.5">Scan to play · or 🖨 print it &amp; post it up — every scan plants a seed 🌱</p>
+    <div style="background:#fff;border-radius:14px;padding:14px;display:inline-block;box-shadow:0 12px 32px -12px rgba(0,0,0,.65)">
+      <img id="qrImg" src="qr.svg" alt="Scan this QR code to open Peak Arcade" width="184" height="184" style="display:block" loading="lazy">
+    </div>
+    <div style="margin-top:10px;font-size:.72rem;color:#7d7da6;font-style:italic;line-height:1.5">💭 the best games are the ones you put your bro onto · pass it on 🤝</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap">
+      <button id="qrCopy" class="word-shuf">🔗 Copy link</button>
+      <button id="qrPrint" class="word-shuf">🖨 Print QR</button>
+    </div>
+  </div>
+</section>
+
 <footer class="wrap">
   <div class="links">
     <a href="#games">Games</a><a href="#about">About</a><a href="#faq">FAQ</a>
@@ -1513,6 +1529,20 @@ fetch('./perceptions.json',{cache:'force-cache'}).then(r=>r.ok?r.json():null).th
 $('#wordShuffle').onclick=()=>{let n;do{n=WORD_BAG[Math.floor(Math.random()*WORD_BAG.length)];}while(WORD.length>1&&n===widx);showWord(n);};
 async function shareText(text){try{if(navigator.share){await navigator.share({title:'Peak Arcade 🎮',text});}else{await navigator.clipboard.writeText(text);toast('🔗 Verse copied — go share it! 🙏');}}catch(e){}}
 $('#wordShare').onclick=()=>{const w=WORD[widx];shareText('“'+w.t+'” — '+w.r+'\n\nvia Peak Arcade 🎮 https://snailgamedev.github.io/PeakArcade/');};
+/* 📱 Share-the-arcade QR · copy link + printable card (inlines the SW-cached qr.svg → offline-safe) */
+(function(){
+  const URL_='https://snailgamedev.github.io/PeakArcade/';
+  const cp=document.getElementById('qrCopy'), pr=document.getElementById('qrPrint');
+  if(cp) cp.onclick=async()=>{try{await navigator.clipboard.writeText(URL_);toast('🔗 Link copied — go put somebody on! 🙏');}catch(e){toast("Couldn't copy — long-press the QR to save it 📱");}};
+  if(pr) pr.onclick=async()=>{
+    let svg='';
+    try{ svg=await (await fetch('qr.svg',{cache:'force-cache'})).text(); }catch(e){}
+    const w=window.open('','_blank','width=440,height=600');
+    if(!w){toast('Allow pop-ups to print the QR 🖨');return;}
+    w.document.write('<!doctype html><title>Peak Arcade — Scan to Play</title><body style="margin:0;font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:34px 20px;color:#111"><h2 style="margin:0 0 4px;letter-spacing:1px">🎮 PEAK ARCADE</h2><p style="color:#666;margin:0 0 20px">free browser games · scan to play 🙏</p><div style="display:inline-block;max-width:320px">'+(svg||'<img src="'+URL_+'qr.svg" width="300" height="300">')+'</div><p style="margin:18px 0 2px;font-size:14px;font-weight:700">snailgamedev.github.io/PeakArcade</p><p style="color:#999;font-size:12px;margin:6px 0 0">built on the Rock 🪨 · to God be the glory</p></body>');
+    w.document.close(); setTimeout(()=>{try{w.print();}catch(e){}},400);
+  };
+})();
 (function(){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});$$('.reveal').forEach(el=>io.observe(el));})();
 function animCounters(){const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   $$('.stat b[data-count]').forEach(el=>{const end=+el.dataset.count;
