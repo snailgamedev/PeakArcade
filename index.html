@@ -1169,9 +1169,21 @@ function buildVerseWidget(){
     if (!window.PA_BIBLE || !window.PA_BIBLE.ready) return;
     Promise.all([window.PA_BIBLE.ready(), loadPerc()]).then(([arr]) => {
       if (!arr || arr.length < 1000) return;
-      const p = arr[(localDay() * 1009) % arr.length];
       const code = window.PA_BIBLE.current().toUpperCase();
-      paint(p[3], `${p[0]} ${p[1]}:${p[2]}`, code);
+      // 📖 INTERPRETABLE-ONLY (Eli 2026-05-31): pick the daily verse from the curated
+      // perception bank — NOT raw KJV — so no genealogy/junk ever surfaces here.
+      const keys = Object.keys(PERC);
+      if (keys.length){
+        const ref = keys[(localDay() * 1009) % keys.length];
+        for (let i = 0; i < arr.length; i++){
+          const e = arr[i];
+          if (hubShorten(`${e[0]} ${e[1]}:${e[2]}`) === hubShorten(ref)){
+            paint(e[3], ref, code);   // bank ref → 💭 resolves
+            return;
+          }
+        }
+      }
+      // no bank match (e.g. a range ref) → keep the clean default verse, never paint junk
     }).catch(()=>{});
   }
   // Re-paint on translation change (user already interested at this point)
