@@ -1041,15 +1041,24 @@ function buildSpin(){
 function buildChallenge(){
   const live = GAMES.filter(g => g.live);
   if (!live.length) return;
-  // 7 challenge templates that cycle by day-of-year
+  // 16 challenge templates that cycle by day-of-year (all tied to real games)
   const TEMPLATES = [
     { txt: 'Play 🥊 Slam City — win 1 match', game:'sc' },
+    { txt: 'Play 🥊 Slam City — win 2 in a row', game:'sc' },
+    { txt: 'Play 🥊 Slam City — land a finisher', game:'sc' },
     { txt: 'Play 🏀 Would U Dunk — score 30+', game:'wud' },
+    { txt: 'Play 🏀 Would U Dunk — drop a 40-burger', game:'wud' },
     { txt: 'Open ✝️ The Word — read 1 verse', game:'word' },
+    { txt: 'Open ✝️ The Word — read 3 verses today', game:'word' },
+    { txt: 'Open ✝️ The Word — share a verse with somebody', game:'word' },
     { txt: 'Play 🧠 BrainBoard — clear 1 round', game:'bb' },
+    { txt: 'Play 🧠 BrainBoard — beat your best score', game:'bb' },
     { txt: 'Play 🪙 Coin Kingdom — earn 100 coins', game:'coin' },
+    { txt: 'Play 🪙 Coin Kingdom — stack 250 coins', game:'coin' },
     { txt: 'Play 📖 Word Up — get 7/10 on a quiz', game:'wordup' },
-    { txt: 'Play 🐌 Catch the Snail 2 — finish a run', game:'cts2' }
+    { txt: 'Play 📖 Word Up — ace a quiz 10/10', game:'wordup' },
+    { txt: 'Play 🐌 Catch the Snail 2 — finish a run', game:'cts2' },
+    { txt: 'Play 🐌 Catch the Snail 2 — take down a boss', game:'cts2' }
   ];
   const day = localDay();
   const ch = TEMPLATES[day % TEMPLATES.length];
@@ -1390,9 +1399,12 @@ function initCookieBar(){
     "Real talk — we run on cookies (the data kind, not chocolate-chip 😔). They serve the ads that keep Peak Arcade <b>100% free</b> and remember your favs, scores & settings.",
     "Cookies live here, fam. They keep the lights on (ads = free games for you) and hold onto your vibe — favorites, high scores, settings. All out in the open. 🙏",
     "No shady business — just cookies doin' honest work: serving the ads that keep the arcade free, and saving your progress so you pick up right where you left off.",
-    "Peak Arcade runs on cookies. They power the ads (so <b>you never pay a dime</b>) and keep your scores & settings. Built transparent — like everything 'round here."
+    "Peak Arcade runs on cookies. They power the ads (so <b>you never pay a dime</b>) and keep your scores & settings. Built transparent — like everything 'round here.",
+    "Cookies, plain and simple: they run the ads that keep this place <b>free forever</b> and remember your favs + scores. We don't hide the ball. 💯",
+    "We keep it 💯 — cookies serve the ads (your free pass to every game) and save your progress. No tricks, no fine-print games.",
+    "Heads up: cookies power the free games here (ads pay the bills) and hold your scores, favs & settings. Honest work, out in the light. 🙌"
   ];
-  const oks=["Bet, let's play 🎮","We good 👊","Aight, run it 🔥","Say less 🤝"];
+  const oks=["Bet, let's play 🎮","We good 👊","Aight, run it 🔥","Say less 🤝","Cool, I'm in 😎","Let's cook 🍳","Run it back 🔁","Word 🙏","We rollin' 🛞","Locked in 🔒"];
   const txt=lines[Math.floor(Math.random()*lines.length)];
   const ok=oks[Math.floor(Math.random()*oks.length)];
   const bar=document.createElement('div'); bar.id='cookieBar';
