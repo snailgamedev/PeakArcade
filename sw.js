@@ -1,6 +1,6 @@
 /* Peak Arcade service worker — network-first for pages (so updates ALWAYS show),
    cache-first for static assets. Versioned; old caches wiped on activate. */
-const CACHE = 'peak-arcade-v88';
+const CACHE = 'peak-arcade-v89';
 /* SHELL: PAGES ONLY (tiny · installs fast even on cellular).
    The 9.2MB KJV/BBE bundles were pulled OUT of SHELL — they were making SW
    install download nearly 10MB before the page felt ready. Now they cache
