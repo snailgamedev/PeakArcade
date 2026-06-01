@@ -409,6 +409,13 @@
   .word-cta{margin-top:22px;position:relative;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
   .word-cta button{padding:11px 24px;border-radius:12px;border:1px solid var(--gold);background:rgba(255,209,102,.1);color:var(--gold);font-weight:800;font-size:.9rem;transition:.15s}
   .word-cta button:hover{background:var(--gold);color:#1a1a2e}
+  /* 🌱 GROW card */
+  .grow-card{background:linear-gradient(160deg,rgba(52,211,153,.14),rgba(124,92,255,.06))}
+  .grow-card::before{background:radial-gradient(circle at 50% 0%,rgba(52,211,153,.16),transparent 62%)}
+  .grow-name{font-size:clamp(1.3rem,3vw,1.7rem);font-weight:900;margin-bottom:14px;position:relative}
+  .grow-take{font-size:clamp(1rem,2.3vw,1.16rem);line-height:1.6;position:relative;word-wrap:break-word;overflow-wrap:anywhere;max-width:600px;margin:0 auto}
+  .grow-motto{margin-top:16px;font-weight:900;letter-spacing:.5px;color:var(--gold);position:relative}
+  .grow-verse{margin-top:14px;font-style:italic;font-size:.92rem;color:var(--muted);line-height:1.5;position:relative;word-wrap:break-word;overflow-wrap:anywhere;max-width:560px;margin:0 auto}
   .word-shuf{border-color:var(--neon)!important;color:var(--neon)!important;background:rgba(124,92,255,.1)!important}
   .word-shuf:hover{background:var(--neon)!important;color:#fff!important}
   .sortsel{background:var(--bg2);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:11px 14px;font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer;outline:none;transition:border-color .15s}
@@ -593,6 +600,20 @@
       <p class="word-verse" id="wordVerse"></p>
       <span class="word-ref" id="wordRef"></span>
       <div class="word-cta"><button id="wordShuffle" class="word-shuf">🔀 Another verse</button><a id="wordOpen" class="word-shuf" href="word.html" style="text-decoration:none">📖 The Word</a><button id="wordShare">📤 Share verse</button><button id="gospelOpen2">✨ The Good News</button></div>
+    </div>
+  </section>
+
+  <!-- 🌱 GROW · a daily faith-practice — something to actually DO to walk closer with Christ -->
+  <section class="word reveal" id="growSection" style="margin-top:30px">
+    <div class="sec-head"><h2>🌱 Grow your walk</h2><span>one move a day</span></div>
+    <div class="word-card grow-card">
+      <div class="word-ic" id="growEmoji">🌱</div>
+      <h3 class="grow-name" id="growName">Grow Your Walk</h3>
+      <p class="grow-take" id="growTake"></p>
+      <div class="grow-motto" id="growMotto"></div>
+      <p class="grow-verse" id="growVerse"></p>
+      <span class="word-ref" id="growRef"></span>
+      <div class="word-cta"><button id="growShuffle" class="word-shuf">🔀 Another</button><a class="word-shuf" href="word.html" style="text-decoration:none">📖 The Word</a></div>
     </div>
   </section>
 
@@ -1527,6 +1548,27 @@ showWord(widx);
 // pull the bank (tiny · force-cache) → fills the 💭 line for every Featured verse
 fetch('./perceptions.json',{cache:'force-cache'}).then(r=>r.ok?r.json():null).then(o=>{if(o&&typeof o==='object'){HUB_PERC=o;showWord(widx);}}).catch(()=>{});
 $('#wordShuffle').onclick=()=>{let n;do{n=WORD_BAG[Math.floor(Math.random()*WORD_BAG.length)];}while(WORD.length>1&&n===widx);showWord(n);};
+/* 🌱 GROW · daily faith-practice card — plain-voice take + motto + KJV verse (from practices.json) */
+(function(){
+  const FB=[
+    {name:'Pray',emoji:'🙏',take:"Prayer isn't a wish list — it's keeping the line open with the One who runs everything. Talk to Him like He's in the room, because He is.",motto:'🔁 KEEP THE LINE OPEN',ref:'1 Thess 5:17',verse:'Pray without ceasing.'},
+    {name:'Abide in Christ',emoji:'🌿',take:"A branch doesn't strain to make fruit — it just stays connected to the vine. Stay close to Jesus and the fruit takes care of itself.",motto:'🌿 STAY CONNECTED',ref:'John 15:5',verse:'I am the vine, ye are the branches: he that abideth in me... bringeth forth much fruit.'}
+  ];
+  let LIST=FB, gi=0;
+  const el=id=>document.getElementById(id);
+  function gpaint(i){
+    gi=((i%LIST.length)+LIST.length)%LIST.length; const p=LIST[gi]; if(!p) return;
+    if(el('growEmoji')) el('growEmoji').textContent=p.emoji||'🌱';
+    if(el('growName'))  el('growName').textContent=p.name||'';
+    if(el('growTake'))  el('growTake').textContent='💭 '+(p.take||'');
+    if(el('growMotto')) el('growMotto').textContent=p.motto||'';
+    if(el('growVerse')) el('growVerse').textContent=p.verse?('“'+p.verse+'”'):'';
+    if(el('growRef'))   el('growRef').textContent=p.ref?('— '+p.ref):'';
+  }
+  gpaint(localDay());
+  fetch('practices.json',{cache:'force-cache'}).then(r=>r.ok?r.json():null).then(o=>{if(Array.isArray(o)&&o.length){LIST=o;gpaint(localDay());}}).catch(()=>{});
+  const gs=el('growShuffle'); if(gs) gs.onclick=()=>{let n;do{n=Math.floor(Math.random()*LIST.length);}while(LIST.length>1&&n===gi);gpaint(n);};
+})();
 async function shareText(text){try{if(navigator.share){await navigator.share({title:'Peak Arcade 🎮',text});}else{await navigator.clipboard.writeText(text);toast('🔗 Verse copied — go share it! 🙏');}}catch(e){}}
 $('#wordShare').onclick=()=>{const w=WORD[widx];shareText('“'+w.t+'” — '+w.r+'\n\nvia Peak Arcade 🎮 https://snailgamedev.github.io/PeakArcade/');};
 /* 📱 Share-the-arcade QR · copy link + printable card (inlines the SW-cached qr.svg → offline-safe) */
