@@ -1,178 +1,308 @@
 [
-{
-"name": "Pray",
-"emoji": "🙏",
-"take": "Prayer isn't reciting a wish list — it's keeping the line open with the One who runs everything. You don't pray to update God, you pray to stay connected. Talk to Him like He's in the room, because He is.",
-"motto": "🔁 KEEP THE LINE OPEN",
-"ref": "1 Thess 5:17",
-"verse": "Pray without ceasing."
-},
-{
-"name": "Read the Word",
-"emoji": "📖",
-"take": "You can't follow a voice you never listen to. The Bible isn't a textbook to finish — it's how God still talks. Even a few verses a day rewires how you see everything. Don't just read it, let it read you.",
-"motto": "📖 THE WORD LEADS",
-"ref": "Psalm 119:105",
-"verse": "Thy word is a lamp unto my feet, and a light unto my path."
-},
-{
-"name": "Worship",
-"emoji": "🎶",
-"take": "Worship isn't the warm-up before the real thing — it IS the thing. It's where you stop staring at your problems long enough to remember how big He is. Sing even when you don't feel it; the feeling usually follows.",
-"motto": "🙌 GIVE HIM THE GLORY",
-"ref": "Psalm 95:6",
-"verse": "O come, let us worship and bow down: let us kneel before the LORD our maker."
-},
-{
-"name": "Fellowship",
-"emoji": "🤝",
-"take": "You were never built to follow Jesus solo. Faith grows in a room with other believers — they catch you when you slip and call out what you can't see. Skipping church isn't independence, it's isolation. Show up.",
-"motto": "🤝 IRON SHARPENS IRON",
-"ref": "Heb 10:25",
-"verse": "Not forsaking the assembling of ourselves together, as the manner of some is; but exhorting one another."
-},
-{
-"name": "Serve",
-"emoji": "🧤",
-"take": "Jesus measured greatness by a towel, not a title. Serving someone who can't pay you back is where faith stops being talk. You don't grow by being served — you grow by getting low for somebody else.",
-"motto": "👑 GREATNESS WEARS AN APRON",
-"ref": "Mark 10:45",
-"verse": "For even the Son of man came not to be ministered unto, but to minister, and to give his life a ransom for many."
-},
-{
-"name": "Give",
-"emoji": "🤲",
-"take": "Open hands grow a free heart; closed fists grow fear. Giving isn't losing money, it's loosening money's grip on you. You can't out-give God, so stop trying — just give glad, not guilty.",
-"motto": "🤲 FREELY RECEIVED, FREELY GIVE",
-"ref": "2 Cor 9:7",
-"verse": "Every man according as he purposeth in his heart, so let him give; not grudgingly, or of necessity: for God loveth a cheerful giver."
-},
-{
-"name": "Fast",
-"emoji": "🕊️",
-"take": "Fasting is telling your stomach that your soul is hungrier. When you push the plate away to seek God, you find out He really is enough. It's not earning His attention — it's clearing the noise so you can hear Him.",
-"motto": "🕊️ SOUL OVER STOMACH",
-"ref": "Matt 4:4",
-"verse": "Man shall not live by bread alone, but by every word that proceedeth out of the mouth of God."
-},
-{
-"name": "Rest (Sabbath)",
-"emoji": "😮‍💨",
-"take": "Rest is a command, not a reward you earn by burning out. God built stopping into the week to remind you the world keeps spinning without you white-knuckling it. Trusting Him enough to rest IS faith.",
-"motto": "😮‍💨 STOPPING IS HOLY",
-"ref": "Exo 20:8",
-"verse": "Remember the sabbath day, to keep it holy."
-},
-{
-"name": "Confess & Repent",
-"emoji": "🔄",
-"take": "Hiding sin keeps you sick; bringing it into the light is where it loses its grip. Confession isn't God shaming you — it's the moment you stop carrying what He already paid to take. Come clean, find mercy.",
-"motto": "🔄 TURN AND LIVE",
-"ref": "1 John 1:9",
-"verse": "If we confess our sins, he is faithful and just to forgive us our sins, and to cleanse us from all unrighteousness."
-},
-{
-"name": "Memorize Scripture",
-"emoji": "🧠",
-"take": "You can't pull a sword you never packed. Hiding God's word in your heart means it's there at 2am when fear shows up, ready before you need it. Memorize it now so it can fight for you later.",
-"motto": "🧠 PACK THE SWORD",
-"ref": "Psalm 119:11",
-"verse": "Thy word have I hid in mine heart, that I might not sin against thee."
-},
-{
-"name": "Witness",
-"emoji": "📣",
-"take": "The best news you ever got wasn't meant to die with you. You don't need a degree to point someone to Jesus — just tell them what He did for you. A changed life is the loudest sermon there is.",
-"motto": "📣 ONE BEGGAR TELLING ANOTHER WHERE THE BREAD IS",
-"ref": "Mark 16:15",
-"verse": "Go ye into all the world, and preach the gospel to every creature."
-},
-{
-"name": "Give Thanks",
-"emoji": "🙌",
-"take": "Gratitude is just remembering on purpose. The fastest way out of a sour mood is counting what He's already done. Thank Him IN everything — not because it's all good, but because He's good in the middle of it.",
-"motto": "🙌 COUNT THE MERCIES",
-"ref": "1 Thess 5:18",
-"verse": "In every thing give thanks: for this is the will of God in Christ Jesus concerning you."
-},
-{
-"name": "Obey",
-"emoji": "✅",
-"take": "Love that won't obey isn't love yet, it's a feeling. Obedience is where you prove you actually trust His way over yours. The hard 'yes' to God now is the thing you'll thank Him for later.",
-"motto": "✅ LOVE THAT OBEYS",
-"ref": "John 14:15",
-"verse": "If ye love me, keep my commandments."
-},
-{
-"name": "Forgive",
-"emoji": "🕊️",
-"take": "Holding a grudge is drinking poison and waiting for the other person to hurt. Forgiveness isn't saying it didn't matter — it's handing the debt to God so it stops eating you. He forgave you the unpayable; pass it on.",
-"motto": "🕊️ DROP THE GRUDGE",
-"ref": "Col 3:13",
-"verse": "Forbearing one another, and forgiving one another... even as Christ forgave you, so also do ye."
-},
-{
-"name": "Get Baptized",
-"emoji": "🌊",
-"take": "Baptism is a public 'I'm with Him.' It doesn't save you — Jesus already did that — but it's the wedding ring on the new life. Going under and coming up says out loud: the old me's buried, the new me walks with Christ.",
-"motto": "🌊 BURIED AND RAISED",
-"ref": "Rom 6:4",
-"verse": "Therefore we are buried with him by baptism into death: that... even so we also should walk in newness of life."
-},
-{
-"name": "Take Communion",
-"emoji": "🍞",
-"take": "The table never lets you forget what it cost. Bread and cup, again and again, drag your eyes back to the cross when life tries to pull them anywhere else. Don't rush it — remember Him on purpose.",
-"motto": "🍞 REMEMBER HIM",
-"ref": "Luke 22:19",
-"verse": "This is my body which is given for you: this do in remembrance of me."
-},
-{
-"name": "Be Still (Solitude)",
-"emoji": "🤫",
-"take": "God isn't usually in the noise — He's in the quiet you keep avoiding. Jesus, busier than you'll ever be, kept slipping away to be alone with the Father. Put the phone down. The stillness is where you actually hear Him.",
-"motto": "🤫 BE STILL AND KNOW",
-"ref": "Psalm 46:10",
-"verse": "Be still, and know that I am God."
-},
-{
-"name": "Encourage Others",
-"emoji": "💬",
-"take": "A good word at the right time can hold somebody together who was about to fall apart. You probably have no idea how heavy the person next to you is carrying. Be the one who builds up, not the one who picks at.",
-"motto": "💬 BUILD, DON'T BURY",
-"ref": "1 Thess 5:11",
-"verse": "Wherefore comfort yourselves together, and edify one another, even as also ye do."
-},
-{
-"name": "Endure Trials",
-"emoji": "💪",
-"take": "The fire isn't proof God left — it's where faith gets forged. Don't waste the hard season asking only 'why'; ask 'who are You making me.' What's testing you now is building something that comfort never could.",
-"motto": "💪 THE FIRE FORGES",
-"ref": "James 1:3",
-"verse": "Knowing this, that the trying of your faith worketh patience."
-},
-{
-"name": "Examine Yourself",
-"emoji": "🔍",
-"take": "It's easy to audit everyone else and never look in the mirror. Every so often, let God search you — not to shame you, but to clear out what's quietly drifting. The honest heart-check keeps small cracks from becoming collapses.",
-"motto": "🔍 SEARCH ME, GOD",
-"ref": "Psalm 139:23",
-"verse": "Search me, O God, and know my heart: try me, and know my thoughts."
-},
-{
-"name": "Walk Humbly",
-"emoji": "🙇",
-"take": "Pride is the one weight that makes you fall by lifting you up. Walking humble with God means you stop pretending you've got it handled and let Him lead. The low road in the kingdom is the only way up.",
-"motto": "🙇 GO LOW TO GO UP",
-"ref": "Mic 6:8",
-"verse": "What doth the LORD require of thee, but to do justly, and to love mercy, and to walk humbly with thy God?"
-},
-{
-"name": "Abide in Christ",
-"emoji": "🌿",
-"take": "A branch doesn't strain to make fruit — it just stays connected to the vine. Most burnout is from trying to live the Christian life cut off from the source. Stay close to Jesus and the fruit takes care of itself.",
-"motto": "🌿 STAY CONNECTED",
-"ref": "John 15:5",
-"verse": "I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing."
-}
+ {
+  "name": "Pray",
+  "emoji": "🙏",
+  "take": "Prayer isn't a wish list · it's keeping the LINE open with the One who runs everything · talk to Him like He's in the room, because He is",
+  "do": "Set a 2-minute timer and just talk to Him out loud — no script, no fancy words",
+  "motto": "🔁 KEEP THE LINE OPEN",
+  "ref": "1 Thess 5:17",
+  "verse": "Pray without ceasing."
+ },
+ {
+  "name": "Read the Word",
+  "emoji": "📖",
+  "take": "His Word feeds a hunger food can't touch · skip a day and you feel it · it's not homework, it's a MEAL",
+  "do": "Read one chapter — start with John 1 — and ask 'what does this show me about God?'",
+  "motto": "📖 THE WORD LEADS",
+  "ref": "Deut 8:3",
+  "verse": "Man doth not live by bread only, but by every word that proceedeth out of the mouth of the LORD."
+ },
+ {
+  "name": "Worship",
+  "emoji": "🎶",
+  "take": "Worship isn't a Sunday slot · it's an internal SOUNDTRACK you keep running · give Him the glory wherever you are",
+  "do": "Put on one worship song and actually sing it — out loud, alone, like nobody's listening",
+  "motto": "🙌 GIVE HIM THE GLORY",
+  "ref": "Ps 95:2",
+  "verse": "Let us come before his presence with thanksgiving, and make a joyful noise unto him."
+ },
+ {
+  "name": "Fellowship",
+  "emoji": "🤝",
+  "take": "You weren't built to walk this solo · iron sharpens iron, but only when it's CLOSE enough to strike · find your people",
+  "do": "Text one believer right now: 'how's your walk this week?' — and actually mean it",
+  "motto": "🤝 IRON SHARPENS IRON",
+  "ref": "Prov 27:17",
+  "verse": "Iron sharpeneth iron; so a man sharpeneth the countenance of his friend."
+ },
+ {
+  "name": "Serve",
+  "emoji": "🧤",
+  "take": "Greatness in the kingdom wears an APRON · the King washed feet · you look most like Him doing the thing nobody claps for",
+  "do": "Do one quiet thing for someone today that they can't pay back",
+  "motto": "👑 GREATNESS WEARS AN APRON",
+  "ref": "Mark 10:45",
+  "verse": "Even the Son of man came not to be ministered unto, but to minister."
+ },
+ {
+  "name": "Give",
+  "emoji": "🤲",
+  "take": "Open hands don't EMPTY you · you got grace for nothing, so don't go hoarding it · generosity multiplies, hoarding shrinks",
+  "do": "Give something away today — money, time, or a thing you've been gripping",
+  "motto": "🤲 FREELY RECEIVED, FREELY GIVE",
+  "ref": "Matt 10:8",
+  "verse": "Freely ye have received, freely give."
+ },
+ {
+  "name": "Fast",
+  "emoji": "🕊️",
+  "take": "Fasting tells your body who's BOSS · soul over stomach · you trade a craving you can see for a God you can't",
+  "do": "Skip one thing today — a meal, a scroll, a snack — and pray each time you'd reach for it",
+  "motto": "🕊️ SOUL OVER STOMACH",
+  "ref": "Joel 2:12",
+  "verse": "Turn ye even to me with all your heart, and with fasting, and with weeping."
+ },
+ {
+  "name": "Rest (Sabbath)",
+  "emoji": "😮‍💨",
+  "take": "Stopping is HOLY · the Sabbath was made for YOU, not you for it · rest is a gift God hands you, not laziness you steal",
+  "do": "Block one hour today to do nothing 'productive' — and don't feel guilty about it",
+  "motto": "😮‍💨 STOPPING IS HOLY",
+  "ref": "Mark 2:27",
+  "verse": "The sabbath was made for man, and not man for the sabbath."
+ },
+ {
+  "name": "Confess & Repent",
+  "emoji": "🔄",
+  "take": "The SECOND you stop hiding it, He forgives it · confession and pardon happen almost in the same breath · turn and live",
+  "do": "Name one thing to God plainly — no excuses — then thank Him it's already covered",
+  "motto": "🔄 TURN AND LIVE",
+  "ref": "1 John 1:9",
+  "verse": "If we confess our sins, he is faithful and just to forgive us our sins."
+ },
+ {
+  "name": "Memorize Scripture",
+  "emoji": "🧠",
+  "take": "Jesus fought the devil with the WORD, not cleverness · pack the sword now so it's there when you need it",
+  "do": "Pick one short verse and say it 5 times out loud until it sticks",
+  "motto": "🧠 PACK THE SWORD",
+  "ref": "Ps 119:11",
+  "verse": "Thy word have I hid in mine heart, that I might not sin against thee."
+ },
+ {
+  "name": "Witness",
+  "emoji": "📣",
+  "take": "You're just one beggar telling another where the BREAD is · sharing it isn't bragging, it's directions to the starving",
+  "do": "Mention God naturally in one conversation today — your story, not a sermon",
+  "motto": "📣 POINT TO THE BREAD",
+  "ref": "Acts 8:35",
+  "verse": "Philip opened his mouth... and preached unto him Jesus."
+ },
+ {
+  "name": "Give Thanks",
+  "emoji": "🙌",
+  "take": "Gratitude is the natural END of seeing clearly · once you know where it all came from, you can't help but praise · count the mercies",
+  "do": "Write down 3 specific things God did this week — get specific, not generic",
+  "motto": "🙌 COUNT THE MERCIES",
+  "ref": "1 Thess 5:18",
+  "verse": "In every thing give thanks: for this is the will of God in Christ Jesus concerning you."
+ },
+ {
+  "name": "Obey",
+  "emoji": "✅",
+  "take": "Love that OBEYS is the love that gets revealed · 'if you love Me, keep My commands' · the test of love is what you actually go DO",
+  "do": "Think of one thing He's already told you to do — and do it today, no more stalling",
+  "motto": "✅ LOVE THAT OBEYS",
+  "ref": "John 14:15",
+  "verse": "If ye love me, keep my commandments."
+ },
+ {
+  "name": "Forgive",
+  "emoji": "🕊️",
+  "take": "Forgive the way He forgave YOU · that's the measuring stick · when you can't release someone, remember the size of the debt He dropped for you",
+  "do": "Pick one person you're holding something against — and choose to release it today",
+  "motto": "🕊️ DROP THE GRUDGE",
+  "ref": "Col 3:13",
+  "verse": "Forbearing one another, and forgiving one another... even as Christ forgave you."
+ },
+ {
+  "name": "Get Baptized",
+  "emoji": "🌊",
+  "take": "Baptism BURIED the old you so you could come up walking new · it's a public 'I'm His' · don't live like the corpse you left in the water",
+  "do": "If you've never been baptized, message a pastor today and ask about it",
+  "motto": "🌊 BURIED AND RAISED",
+  "ref": "Rom 6:4",
+  "verse": "We are buried with him by baptism into death: that... even so we also should walk in newness of life."
+ },
+ {
+  "name": "Take Communion",
+  "emoji": "🍞",
+  "take": "Communion is a REMEMBER button · the bread and cup drag your eyes back to the cross when life blurs it · He said 'do this in remembrance'",
+  "do": "Next time it's offered, don't autopilot — actually pause and remember what it cost",
+  "motto": "🍞 REMEMBER HIM",
+  "ref": "1 Cor 11:24",
+  "verse": "This is my body, which is broken for you: this do in remembrance of me."
+ },
+ {
+  "name": "Be Still (Solitude)",
+  "emoji": "🤫",
+  "take": "Be STILL and know He's God · the stillness isn't doing nothing · it's finally letting Him be God instead of you white-knuckling it",
+  "do": "Sit in silence for 3 minutes with no phone — just be with Him",
+  "motto": "🤫 BE STILL AND KNOW",
+  "ref": "Ps 46:10",
+  "verse": "Be still, and know that I am God."
+ },
+ {
+  "name": "Encourage Others",
+  "emoji": "💬",
+  "take": "Your words are construction EQUIPMENT · comfort and encouragement literally build people up · speak to add a floor, not knock one out",
+  "do": "Send one specific, genuine encouragement to someone today — name what you see in them",
+  "motto": "💬 BUILD, DON'T BURY",
+  "ref": "1 Thess 5:11",
+  "verse": "Wherefore comfort yourselves together, and edify one another."
+ },
+ {
+  "name": "Endure Trials",
+  "emoji": "💪",
+  "take": "The fire FORGES, it doesn't just burn · the test is building endurance in you · count it joy, because what you push through earns a crown",
+  "do": "Name the hard thing you're in — then tell God 'I trust You in this' out loud",
+  "motto": "💪 THE FIRE FORGES",
+  "ref": "Jas 1:12",
+  "verse": "Blessed is the man that endureth temptation: for... he shall receive the crown of life."
+ },
+ {
+  "name": "Examine Yourself",
+  "emoji": "🔍",
+  "take": "Check your OWN faith before inspecting everyone else's · 'search me, God' is braver than judging the room · self-examination keeps you honest",
+  "do": "Ask God one question tonight: 'is there anything in me You want to deal with?' — then listen",
+  "motto": "🔍 SEARCH ME, GOD",
+  "ref": "Ps 139:23",
+  "verse": "Search me, O God, and know my heart: try me, and know my thoughts."
+ },
+ {
+  "name": "Walk Humbly",
+  "emoji": "🙇",
+  "take": "Go LOW to go up · whoever humbles himself gets exalted · let God hand out the promotion instead of grabbing it yourself",
+  "do": "Today, let someone else be right — or take the lower seat on purpose",
+  "motto": "🙇 GO LOW TO GO UP",
+  "ref": "Mic 6:8",
+  "verse": "What doth the LORD require of thee, but to do justly, and to love mercy, and to walk humbly with thy God?"
+ },
+ {
+  "name": "Abide in Christ",
+  "emoji": "🌿",
+  "take": "A branch doesn't STRAIN to make fruit · it just stays connected to the vine · stay close to Jesus and the fruit takes care of itself",
+  "do": "Build one tiny 'with Him' moment into your day — coffee, commute, whatever — and keep it",
+  "motto": "🌿 STAY CONNECTED",
+  "ref": "John 15:5",
+  "verse": "I am the vine, ye are the branches: he that abideth in me... bringeth forth much fruit."
+ },
+ {
+  "name": "Pray for Your Enemies",
+  "emoji": "🫶",
+  "take": "Jesus raised the bar past tolerance to LOVE · bless the ones who curse you, pray for the ones who use you · it frees YOU before it changes them",
+  "do": "Pray one genuine blessing over someone who's wronged you — say their name to God",
+  "motto": "🫶 BLESS, DON'T CURSE",
+  "ref": "Matt 5:44",
+  "verse": "Love your enemies, bless them that curse you... and pray for them which despitefully use you."
+ },
+ {
+  "name": "Practice Hospitality",
+  "emoji": "🚪",
+  "take": "Open your DOOR, not just your wallet · the kingdom runs on tables, not just transactions · some angels showed up as strangers",
+  "do": "Invite someone in this week — a meal, a coffee, a 'come hang' — especially someone overlooked",
+  "motto": "🚪 OPEN THE DOOR",
+  "ref": "Rom 12:13",
+  "verse": "Distributing to the necessity of saints; given to hospitality."
+ },
+ {
+  "name": "Make Peace",
+  "emoji": "🤝",
+  "take": "Reconciliation comes BEFORE religion · if a brother's got something against you, fix THAT before you bring your gift · God wants you right with people",
+  "do": "Reach out to the one relationship that's been off — make the first move today",
+  "motto": "🕊️ FIRST MOVE WINS",
+  "ref": "Matt 5:24",
+  "verse": "First be reconciled to thy brother, and then come and offer thy gift."
+ },
+ {
+  "name": "Keep Your Word",
+  "emoji": "🤞",
+  "take": "Let your yes be YES and your no be no · be the kind of person whose plain word holds up · so you never need to swear to be believed",
+  "do": "Follow through on one thing you said you'd do but haven't — close the loop today",
+  "motto": "🤞 YES MEANS YES",
+  "ref": "Matt 5:37",
+  "verse": "Let your communication be, Yea, yea; Nay, nay."
+ },
+ {
+  "name": "Flee Temptation",
+  "emoji": "🏃",
+  "take": "Some battles you don't FIGHT, you flee · Joseph ran, he didn't negotiate · run FROM the trap and run TOWARD better company",
+  "do": "Name your usual trap — then set up one guardrail today that makes it harder to fall in",
+  "motto": "🏃 RUN, DON'T REASON",
+  "ref": "1 Cor 6:18",
+  "verse": "Flee fornication."
+ },
+ {
+  "name": "Be Content",
+  "emoji": "⚖️",
+  "take": "Godliness PLUS contentment is the real jackpot · chasing more never reaches 'enough' · the goalpost slides forever, so plant your flag now",
+  "do": "List 3 things you already have that you've been treating like they're not enough",
+  "motto": "⚖️ ENOUGH IS A GIFT",
+  "ref": "1 Tim 6:6",
+  "verse": "But godliness with contentment is great gain."
+ },
+ {
+  "name": "Guard Your Heart",
+  "emoji": "🛡️",
+  "take": "Guard your heart above EVERYTHING · every direction your life flows starts in there · watch what you let take up residence",
+  "do": "Cut one input today that's been feeding the wrong stuff — a feed, a show, a voice",
+  "motto": "🛡️ GUARD THE SOURCE",
+  "ref": "Prov 4:23",
+  "verse": "Keep thy heart with all diligence; for out of it are the issues of life."
+ },
+ {
+  "name": "Speak Life",
+  "emoji": "🗣️",
+  "take": "Death and life are in the TONGUE · your words either build a floor or knock one out · pick life, on purpose, today",
+  "do": "Catch one negative thing before it leaves your mouth — and say something true and kind instead",
+  "motto": "🗣️ WORDS BUILD WORLDS",
+  "ref": "Prov 18:21",
+  "verse": "Death and life are in the power of the tongue."
+ },
+ {
+  "name": "Wait on God",
+  "emoji": "⏳",
+  "take": "Waiting is an ASSIGNMENT, not an accident · those who wait on Him swap their gas tank for His · renewed strength, soaring not stalling",
+  "do": "Bring God the thing you're rushing — and tell Him 'I'll wait for Your timing on this one'",
+  "motto": "⏳ WAIT AND SOAR",
+  "ref": "Isa 40:31",
+  "verse": "They that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles."
+ },
+ {
+  "name": "Lament Honestly",
+  "emoji": "😮‍💨",
+  "take": "You can bring God the RAW version · pour your heart out like water · honest grief isn't a lack of faith, it's faith being real",
+  "do": "Tell God exactly how you feel about a hard thing — unfiltered — and don't tidy it up first",
+  "motto": "😮‍💨 POUR IT OUT",
+  "ref": "Ps 62:8",
+  "verse": "Pour out your heart before him: God is a refuge for us."
+ },
+ {
+  "name": "Disciple Someone",
+  "emoji": "🌾",
+  "take": "Faith is a RELAY, not a solo · what you've learned, hand to someone who'll hand it on · pour into the next person down the line",
+  "do": "Pick one person younger in the faith — and intentionally pour one thing into them this week",
+  "motto": "🌾 PASS THE BATON",
+  "ref": "2 Tim 2:2",
+  "verse": "The same commit thou to faithful men, who shall be able to teach others also."
+ },
+ {
+  "name": "Remember (Ebenezer)",
+  "emoji": "🪨",
+  "take": "Mark the places He CARRIED you · Samuel set up a stone meaning 'this far the Lord has helped us' · remember on purpose, or you'll forget on accident",
+  "do": "Write down one specific time God came through for you — and keep it where you'll see it",
+  "motto": "🪨 STACK THE STONES",
+  "ref": "1 Sam 7:12",
+  "verse": "Samuel... called the name of it Ebenezer, saying, Hitherto hath the LORD helped us."
+ }
 ]

@@ -416,6 +416,12 @@
   .grow-take{font-size:clamp(1rem,2.3vw,1.16rem);line-height:1.6;position:relative;word-wrap:break-word;overflow-wrap:anywhere;max-width:600px;margin:0 auto}
   .grow-motto{margin-top:16px;font-weight:900;letter-spacing:.5px;color:var(--gold);position:relative}
   .grow-verse{margin-top:14px;font-style:italic;font-size:.92rem;color:var(--muted);line-height:1.5;position:relative;word-wrap:break-word;overflow-wrap:anywhere;max-width:560px;margin:0 auto}
+  /* 🌱 GROW · today's concrete move + "I did it" streak button */
+  .grow-do{margin:14px auto 0;max-width:560px;position:relative;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.32);border-radius:14px;padding:11px 15px;font-size:clamp(.92rem,2.1vw,1.02rem);line-height:1.5;color:var(--text);word-wrap:break-word;overflow-wrap:anywhere}
+  .grow-do b{color:#34d399;letter-spacing:.5px;font-weight:900}
+  .grow-did{background:linear-gradient(135deg,#34d399,#22d3ee);color:#04221a;border:none;font-weight:900}
+  .grow-did.done{background:rgba(52,211,153,.18);color:#34d399;border:1px solid rgba(52,211,153,.4)}
+  #growStreakChip.lit{color:var(--gold);font-weight:900}
   .word-shuf{border-color:var(--neon)!important;color:var(--neon)!important;background:rgba(124,92,255,.1)!important}
   .word-shuf:hover{background:var(--neon)!important;color:#fff!important}
   .sortsel{background:var(--bg2);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:11px 14px;font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer;outline:none;transition:border-color .15s}
@@ -605,15 +611,16 @@
 
   <!-- 🌱 GROW · a daily faith-practice — something to actually DO to walk closer with Christ -->
   <section class="word reveal" id="growSection" style="margin-top:30px">
-    <div class="sec-head"><h2>🌱 Grow your walk</h2><span>one move a day</span></div>
+    <div class="sec-head"><h2>🌱 Grow your walk</h2><span id="growStreakChip">one move a day</span></div>
     <div class="word-card grow-card">
       <div class="word-ic" id="growEmoji">🌱</div>
       <h3 class="grow-name" id="growName">Grow Your Walk</h3>
       <p class="grow-take" id="growTake"></p>
+      <div class="grow-do" id="growDo"></div>
       <div class="grow-motto" id="growMotto"></div>
       <p class="grow-verse" id="growVerse"></p>
       <span class="word-ref" id="growRef"></span>
-      <div class="word-cta"><button id="growShuffle" class="word-shuf">🔀 Another</button><a class="word-shuf" href="word.html" style="text-decoration:none">📖 The Word</a></div>
+      <div class="word-cta"><button id="growDid" class="word-shuf grow-did">✅ I did it</button><button id="growShuffle" class="word-shuf">🔀 Another</button><a class="word-shuf" href="word.html" style="text-decoration:none">📖 The Word</a></div>
     </div>
   </section>
 
@@ -1548,26 +1555,47 @@ showWord(widx);
 // pull the bank (tiny · force-cache) → fills the 💭 line for every Featured verse
 fetch('./perceptions.json',{cache:'force-cache'}).then(r=>r.ok?r.json():null).then(o=>{if(o&&typeof o==='object'){HUB_PERC=o;showWord(widx);}}).catch(()=>{});
 $('#wordShuffle').onclick=()=>{let n;do{n=WORD_BAG[Math.floor(Math.random()*WORD_BAG.length)];}while(WORD.length>1&&n===widx);showWord(n);};
-/* 🌱 GROW · daily faith-practice card — plain-voice take + motto + KJV verse (from practices.json) */
+/* 🌱 GROW · daily faith-practice card — take + today's MOVE + motto + KJV verse + "I did it" streak */
 (function(){
   const FB=[
-    {name:'Pray',emoji:'🙏',take:"Prayer isn't a wish list — it's keeping the line open with the One who runs everything. Talk to Him like He's in the room, because He is.",motto:'🔁 KEEP THE LINE OPEN',ref:'1 Thess 5:17',verse:'Pray without ceasing.'},
-    {name:'Abide in Christ',emoji:'🌿',take:"A branch doesn't strain to make fruit — it just stays connected to the vine. Stay close to Jesus and the fruit takes care of itself.",motto:'🌿 STAY CONNECTED',ref:'John 15:5',verse:'I am the vine, ye are the branches: he that abideth in me... bringeth forth much fruit.'}
+    {name:'Pray',emoji:'🙏',take:"Prayer isn't a wish list · it's keeping the LINE open with the One who runs everything · talk to Him like He's in the room, because He is",do:"Set a 2-minute timer and just talk to Him out loud — no script",motto:'🔁 KEEP THE LINE OPEN',ref:'1 Thess 5:17',verse:'Pray without ceasing.'},
+    {name:'Abide in Christ',emoji:'🌿',take:"A branch doesn't STRAIN to make fruit · it just stays connected to the vine · stay close to Jesus and the fruit takes care of itself",do:"Build one tiny 'with Him' moment into your day and keep it",motto:'🌿 STAY CONNECTED',ref:'John 15:5',verse:'I am the vine, ye are the branches: he that abideth in me... bringeth forth much fruit.'}
   ];
   let LIST=FB, gi=0;
   const el=id=>document.getElementById(id);
+  /* ── GROW streak (separate from the visit streak · real LOCAL-day counter, never bumps twice in a day) ── */
+  const dkey=d=>{const x=new Date(d);return x.getFullYear()*10000+(x.getMonth()+1)*100+x.getDate();};
+  const today=dkey(Date.now());
+  const yd=new Date(); yd.setDate(yd.getDate()-1); const yday=dkey(yd);
+  const MILE={1:"first move — that's how every walk starts 🌱",3:"3 days straight · momentum 🔥",7:"a full WEEK · that's a habit forming 💪",14:"two weeks strong 🙌",21:"21 days · they say that's a habit 👀",30:"30 days · this is just who you are now 👑",50:"50 days walking · come ON 🔥",100:"100 days · generational 🎬"};
+  function gstate(){return {last:LS.get('growLast',null), st:LS.get('growStreak',0)};}
+  function paintChip(){const c=el('growStreakChip'); if(!c)return; const {last,st}=gstate();
+    if(st>=1){c.textContent='🌱 '+st+'-day walk'+(last===today?' ✓':''); c.classList.add('lit');}
+    else{c.textContent='one move a day'; c.classList.remove('lit');}}
+  function paintDid(){const b=el('growDid'); if(!b)return; const done=gstate().last===today;
+    b.textContent=done?'✅ Done today':'✅ I did it'; b.classList.toggle('done',done);}
   function gpaint(i){
     gi=((i%LIST.length)+LIST.length)%LIST.length; const p=LIST[gi]; if(!p) return;
     if(el('growEmoji')) el('growEmoji').textContent=p.emoji||'🌱';
     if(el('growName'))  el('growName').textContent=p.name||'';
     if(el('growTake'))  el('growTake').textContent='💭 '+(p.take||'');
+    if(el('growDo'))    el('growDo').innerHTML=p.do?('<b>🎯 TODAY’S MOVE</b> · '+p.do.replace(/[<>]/g,'')):'';
     if(el('growMotto')) el('growMotto').textContent=p.motto||'';
     if(el('growVerse')) el('growVerse').textContent=p.verse?('“'+p.verse+'”'):'';
     if(el('growRef'))   el('growRef').textContent=p.ref?('— '+p.ref):'';
   }
-  gpaint(localDay());
+  gpaint(localDay()); paintChip(); paintDid();
   fetch('practices.json',{cache:'force-cache'}).then(r=>r.ok?r.json():null).then(o=>{if(Array.isArray(o)&&o.length){LIST=o;gpaint(localDay());}}).catch(()=>{});
   const gs=el('growShuffle'); if(gs) gs.onclick=()=>{let n;do{n=Math.floor(Math.random()*LIST.length);}while(LIST.length>1&&n===gi);gpaint(n);};
+  const gd=el('growDid'); if(gd) gd.onclick=()=>{
+    const {last,st}=gstate();
+    if(last===today){toast('🌱 Already counted today — come back tomorrow 🙌');return;}
+    const n=(last===yday)?st+1:1;                       // consecutive day grows; gap resets to 1
+    LS.set('growStreak',n); LS.set('growLast',today);
+    paintChip(); paintDid();
+    if(typeof confetti==='function')confetti();
+    toast('🌱 '+(MILE[n]||(n+'-day walk · keep comin\' 🙌')));
+  };
 })();
 async function shareText(text){try{if(navigator.share){await navigator.share({title:'Peak Arcade 🎮',text});}else{await navigator.clipboard.writeText(text);toast('🔗 Verse copied — go share it! 🙏');}}catch(e){}}
 $('#wordShare').onclick=()=>{const w=WORD[widx];shareText('“'+w.t+'” — '+w.r+'\n\nvia Peak Arcade 🎮 https://snailgamedev.github.io/PeakArcade/');};
