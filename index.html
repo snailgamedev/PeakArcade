@@ -1453,8 +1453,12 @@ function initCookieBar(){
   const ok=oks[Math.floor(Math.random()*oks.length)];
   const bar=document.createElement('div'); bar.id='cookieBar';
   bar.innerHTML='<span class="ck-cookie">🍪</span><span class="ck-txt">'+txt+' <a href="privacy.html">Full Privacy Policy →</a></span><button id="ckOk">'+ok+'</button>';
-  document.body.appendChild(bar); requestAnimationFrame(()=>bar.classList.add('show'));
-  bar.querySelector('#ckOk').onclick=()=>{ LS.set('consent',true); bar.classList.remove('show'); setTimeout(()=>bar.remove(),300); toast('🙌 Appreciate you — now go ball.'); };
+  document.body.appendChild(bar);
+  // reserve exactly the bar's height as page-bottom padding so it never floats over the footer/last card (released on dismiss)
+  const padForBar=()=>{document.body.style.paddingBottom=(bar.offsetHeight+24)+'px';};
+  requestAnimationFrame(()=>{bar.classList.add('show'); requestAnimationFrame(padForBar);});
+  addEventListener('resize',()=>{ if(document.body.contains(bar)&&bar.classList.contains('show')) padForBar(); });
+  bar.querySelector('#ckOk').onclick=()=>{ LS.set('consent',true); bar.classList.remove('show'); document.body.style.paddingBottom=''; setTimeout(()=>bar.remove(),300); toast('🙌 Appreciate you — now go ball.'); };
 }
 initCookieBar();
 $('#liveCount').textContent=GAMES.filter(g=>g.live).length;
