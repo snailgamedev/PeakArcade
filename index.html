@@ -1085,46 +1085,88 @@ function buildSpin(){
   buildSpin._again = el.onclick;
 }
 
-/* 🔥 DAILY CHALLENGE — rotates daily, completion stored in LS */
+/* 🔥 DAILY CHALLENGE — rotates daily · honest play-then-CLAIM flow (no fake auto-done),
+   rewards a ⭐ Faith Star + builds a challenge STREAK with milestones (mirrors 🌱 GROW). */
 function buildChallenge(){
   const live = GAMES.filter(g => g.live);
   if (!live.length) return;
-  // 16 challenge templates that cycle by day-of-year (all tied to real games)
+  // 24 challenge templates that cycle by local day (all tied to real, live games)
   const TEMPLATES = [
-    { txt: 'Play 🥊 Slam City — win 1 match', game:'sc' },
-    { txt: 'Play 🥊 Slam City — win 2 in a row', game:'sc' },
-    { txt: 'Play 🥊 Slam City — land a finisher', game:'sc' },
-    { txt: 'Play 🏀 Would U Dunk — score 30+', game:'wud' },
-    { txt: 'Play 🏀 Would U Dunk — drop a 40-burger', game:'wud' },
-    { txt: 'Open ✝️ The Word — read 1 verse', game:'word' },
-    { txt: 'Open ✝️ The Word — read 3 verses today', game:'word' },
-    { txt: 'Open ✝️ The Word — share a verse with somebody', game:'word' },
-    { txt: 'Play 🧠 BrainBoard — clear 1 round', game:'bb' },
-    { txt: 'Play 🧠 BrainBoard — beat your best score', game:'bb' },
-    { txt: 'Play 🪙 Coin Kingdom — earn 100 coins', game:'coin' },
-    { txt: 'Play 🪙 Coin Kingdom — stack 250 coins', game:'coin' },
-    { txt: 'Play 📖 Word Up — get 7/10 on a quiz', game:'wordup' },
-    { txt: 'Play 📖 Word Up — ace a quiz 10/10', game:'wordup' },
-    { txt: 'Play 🐌 Catch the Snail 2 — finish a run', game:'cts2' },
-    { txt: 'Play 🐌 Catch the Snail 2 — take down a boss', game:'cts2' }
+    { txt: '🥊 Slam City — win 1 match', game:'sc' },
+    { txt: '🥊 Slam City — win 2 in a row', game:'sc' },
+    { txt: '🥊 Slam City — land a finisher', game:'sc' },
+    { txt: '🥊 Slam City — win a round without getting hit', game:'sc' },
+    { txt: '🏀 Would U Dunk — score 30+', game:'wud' },
+    { txt: '🏀 Would U Dunk — drop a 40-burger', game:'wud' },
+    { txt: '🏀 Would U Dunk — hit a buzzer-beater', game:'wud' },
+    { txt: '✝️ The Word — read 1 verse', game:'word' },
+    { txt: '✝️ The Word — read 3 verses today', game:'word' },
+    { txt: '✝️ The Word — share a verse with somebody', game:'word' },
+    { txt: "✝️ The Word — sit with one verse a whole minute", game:'word' },
+    { txt: '🧠 BrainBoard — clear 1 round', game:'bb' },
+    { txt: '🧠 BrainBoard — beat your best score', game:'bb' },
+    { txt: '🧠 BrainBoard — clear 3 rounds back-to-back', game:'bb' },
+    { txt: '🪙 Coin Kingdom — earn 100 coins', game:'coin' },
+    { txt: '🪙 Coin Kingdom — stack 250 coins', game:'coin' },
+    { txt: "🪙 Coin Kingdom — try a mode you ain't played", game:'coin' },
+    { txt: '📖 Word Up — get 7/10 on a quiz', game:'wordup' },
+    { txt: '📖 Word Up — ace a quiz 10/10', game:'wordup' },
+    { txt: '📖 Word Up — finish a Word Search', game:'wordup' },
+    { txt: '🐌 Catch the Snail 2 — finish a run', game:'cts2' },
+    { txt: '🐌 Catch the Snail 2 — take down a boss', game:'cts2' },
+    { txt: "🎮 Play a game you've never opened before", game:'' },
+    { txt: '🔥 Play 2 different games today', game:'' }
   ];
   const day = localDay();
   const ch = TEMPLATES[day % TEMPLATES.length];
-  document.getElementById('wgChallengeTxt').textContent = ch.txt;
-  const completed = (LS.get('challenge_' + day) === true || LS.get('challenge_' + day) === 1);
+  const txtEl = document.getElementById('wgChallengeTxt');
   const statusEl = document.getElementById('wgChallengeStatus');
-  if (completed){
-    statusEl.innerHTML = '<span style="color:#22c55e;font-weight:900">✅ DONE today · come back tomorrow</span>';
-  } else {
-    statusEl.innerHTML = '<span style="color:var(--neon)">→ tap to start · marks done after playing</span>';
-  }
   const cardEl = document.getElementById('wgChallenge');
-  cardEl.onclick = () => {
-    // mark done + launch the game
-    LS.set('challenge_' + day, true);
-    statusEl.innerHTML = '<span style="color:#22c55e;font-weight:900">✅ MARKED DONE</span>';
-    playGame(ch.game);
-  };
+  if (!txtEl || !statusEl || !cardEl) return;
+  txtEl.textContent = ch.txt;
+
+  const dkey = 'challenge_' + day;
+  const MILE = {1:"first one done 🎯",3:"3 days straight 🔥",7:"a full WEEK of challenges 💪",14:"two weeks strong 🙌",21:"21 days · habit locked 👀",30:"30 days · you're a machine 👑",50:"50 · come ON 🔥",100:"100 days · generational 🎬"};
+  const chStreak = () => +(LS.get('chStreak') || 0);
+  const chLast   = () => (LS.get('chLast') == null ? null : +LS.get('chLast'));
+  const streakTag = () => { const s = chStreak(); return s >= 1 ? ' · 🔥 ' + s + '-day streak' : ''; };
+
+  function render(){
+    const raw = LS.get(dkey);
+    const done = (raw === true || raw === 1);
+    const started = (raw === 'started');
+    cardEl.onclick = null;
+    if (done){
+      statusEl.innerHTML = '<span style="color:#22c55e;font-weight:900">✅ DONE today' + streakTag() + ' · back tomorrow</span>';
+    } else if (started){
+      statusEl.innerHTML = '<span style="color:var(--gold);font-weight:900">✅ tap to claim · +1 ⭐ Faith Star</span>';
+      cardEl.onclick = claim;
+    } else {
+      statusEl.innerHTML = '<span style="color:var(--neon)">→ tap to play · claim your ⭐ after' + streakTag() + '</span>';
+      cardEl.onclick = start;
+    }
+  }
+  function start(){
+    LS.set(dkey, 'started');     // launched, but NOT done — you claim it after (honest)
+    render();
+    if (ch.game) playGame(ch.game);
+    else { const g = document.getElementById('games'); if (g) g.scrollIntoView({behavior:'smooth'}); }
+  }
+  function claim(){
+    if (LS.get(dkey) === true) { render(); return; }   // guard double-claim
+    LS.set(dkey, true);
+    const last = chLast();
+    const n = (last === day - 1) ? chStreak() + 1 : 1;  // consecutive day grows; a gap resets to 1
+    LS.set('chStreak', n); LS.set('chLast', day);
+    const stars = +(LS.get('faithStars') || 0) + 1;     // same currency as the daily blessing
+    LS.set('faithStars', stars);
+    render();
+    if (typeof confetti === 'function') confetti();
+    toast('🎯 ' + (MILE[n] || (n + '-day challenge streak')) + ' · +1 ⭐ (' + stars + ' total)');
+    if (typeof buildJourney === 'function') buildJourney();
+    if (typeof renderTrophies === 'function') renderTrophies();
+  }
+  render();
 }
 
 /* 📜 SCRIPTURE OF THE DAY — rotates daily from a curated pool */
