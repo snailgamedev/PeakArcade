@@ -426,6 +426,21 @@
   .grow-did{background:linear-gradient(135deg,#34d399,#22d3ee);color:#04221a;border:none;font-weight:900}
   .grow-did.done{background:rgba(52,211,153,.18);color:#34d399;border:1px solid rgba(52,211,153,.4)}
   #growStreakChip.lit{color:var(--gold);font-weight:900}
+  /* 🧭 GROW · "Where you at today?" pastoral router — meets you where you are */
+  .grow-need{margin:0 0 16px;display:flex;flex-direction:column;gap:9px}
+  .grow-need-q{font-size:.84rem;color:var(--muted);font-weight:700;line-height:1.4}
+  .grow-pills{display:flex;flex-wrap:wrap;gap:7px}
+  .grow-pill{background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.30);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:700;cursor:pointer;line-height:1.15;transition:transform .15s,background .15s,border-color .15s}
+  .grow-pill:hover{transform:translateY(-1px);background:rgba(52,211,153,.18)}
+  .grow-pill.on{background:linear-gradient(135deg,#34d399,#22d3ee);color:#04221a;border-color:transparent}
+  .grow-pill.allbtn{background:rgba(124,92,255,.12);border-color:rgba(124,92,255,.32)}
+  .grow-pill.allbtn:hover{background:rgba(124,92,255,.2)}
+  .grow-note{margin:0 auto 12px;max-width:560px;font-size:.88rem;color:#34d399;font-weight:800;text-align:center;line-height:1.45;word-wrap:break-word;overflow-wrap:anywhere;display:none}
+  .grow-note.show{display:block}
+  .grow-all{margin:2px 0 4px;flex-wrap:wrap;gap:7px;display:none}
+  .grow-all.show{display:flex}
+  .grow-all-item{background:rgba(0,0,0,.26);border:1px solid var(--line);border-radius:10px;padding:6px 11px;font-size:.78rem;font-weight:700;color:var(--ink);cursor:pointer;transition:border-color .15s,color .15s}
+  .grow-all-item:hover{border-color:var(--gold);color:var(--gold)}
   .word-shuf{border-color:var(--neon)!important;color:var(--neon)!important;background:rgba(124,92,255,.1)!important}
   .word-shuf:hover{background:var(--neon)!important;color:#fff!important}
   .sortsel{background:var(--bg2);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:11px 14px;font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer;outline:none;transition:border-color .15s}
@@ -614,6 +629,13 @@
   <!-- 🌱 GROW · a daily faith-practice — something to actually DO to walk closer with Christ -->
   <section class="word reveal" id="growSection" style="margin-top:30px">
     <div class="sec-head"><h2>🌱 Grow your walk</h2><span id="growStreakChip">one move a day</span></div>
+    <!-- 🧭 pastoral router · tap how you're feelin' → it meets you with the right practice + verse -->
+    <div class="grow-need" id="growNeed">
+      <span class="grow-need-q">🧭 Where you at today? Tap how you're feelin' — it'll meet you right there.</span>
+      <div class="grow-pills" id="growPills"></div>
+      <div class="grow-all" id="growAll"></div>
+    </div>
+    <div class="grow-note" id="growNote"></div>
     <div class="word-card grow-card">
       <div class="word-ic" id="growEmoji">🌱</div>
       <h3 class="grow-name" id="growName">Grow Your Walk</h3>
@@ -1624,19 +1646,62 @@ $('#wordShuffle').onclick=()=>{let n;do{n=WORD_BAG[Math.floor(Math.random()*WORD
     else{c.textContent='one move a day'; c.classList.remove('lit');}}
   function paintDid(){const b=el('growDid'); if(!b)return; const done=gstate().last===today;
     b.textContent=done?'✅ Done today':'✅ I did it'; b.classList.toggle('done',done);}
-  function gpaint(i){
-    gi=((i%LIST.length)+LIST.length)%LIST.length; const p=LIST[gi]; if(!p) return;
+  let pool=null, poolIdx=0;
+  // 🧭 pastoral router — each feeling routes to the practices that meet it (base names; parentheticals like "Rest (Sabbath)" matched)
+  const FEELINGS=[
+    {e:'😰',l:'Anxious',names:['Pray','Be Still','Be Content','Wait on God'],note:"💛 Cast it on Him — He’s already holdin’ what you’re carryin’"},
+    {e:'🔥',l:'Tempted',names:['Flee Temptation','Guard Your Heart','Memorize Scripture'],note:"🛡️ Name the trap, set one guardrail — you don’t fight this alone"},
+    {e:'😤',l:'Angry / hurt',names:['Forgive','Make Peace','Pray for Your Enemies'],note:"🕊️ Lettin’ go frees YOUR heart first"},
+    {e:'😔',l:'Grieving',names:['Lament Honestly','Be Still','Endure Trials'],note:"💧 He’s close to the brokenhearted — tell Him the real"},
+    {e:'🙏',l:'Grateful',names:['Give Thanks','Worship','Remember'],note:"🌾 Name what He did — gratitude grows roots"},
+    {e:'😣',l:'Guilty',names:['Confess & Repent','Examine Yourself'],note:"✝️ No condemnation in Christ — come clean, walk free"},
+    {e:'😮‍💨',l:'Tired',names:['Rest','Abide in Christ','Be Still'],note:"😮‍💨 Come to Him all who are weary — rest is obedience too"},
+    {e:'🧭',l:'Stuck / waiting',names:['Wait on God','Read the Word','Pray'],note:"⏳ His timing ain’t slow — hand Him the thing you’re rushin’"},
+    {e:'🤔',l:'Doubting',names:['Read the Word','Remember','Abide in Christ'],note:"📖 Faith comes by hearin’ — feed it the Word"},
+    {e:'🫥',l:'Lonely',names:['Fellowship','Abide in Christ','Encourage Others'],note:"🤝 You were made for the body — reach for one believer"},
+    {e:'💪',l:'On fire',names:['Witness','Disciple Someone','Serve','Give'],note:"🔥 Pour it out — a full cup is meant to spill"},
+    {e:'🙂',l:'Just steady',names:['Pray','Read the Word','Abide in Christ'],note:"🌱 Steady is sacred — keep the daily fire lit"}
+  ];
+  function matchPractice(t){const tl=t.toLowerCase();return LIST.find(p=>{const n=(p.name||'').toLowerCase();return n===tl||n.startsWith(tl+' (');});}
+  function findPool(names){const out=[];names.forEach(t=>{const m=matchPractice(t);if(m&&out.indexOf(m)<0)out.push(m);});return out;}
+  function paintObj(p,label){
+    if(!p)return;
     if(el('growEmoji')) el('growEmoji').textContent=p.emoji||'🌱';
     if(el('growName'))  el('growName').textContent=p.name||'';
     if(el('growTake'))  el('growTake').textContent='💭 '+(p.take||'');
-    if(el('growDo'))    el('growDo').innerHTML=p.do?('<b>🎯 TODAY’S MOVE</b> · '+p.do.replace(/[<>]/g,'')):'';
+    if(el('growDo'))    el('growDo').innerHTML=p.do?('<b>'+(label||'🎯 TODAY’S MOVE')+'</b> · '+p.do.replace(/[<>]/g,'')):'';
     if(el('growMotto')) el('growMotto').textContent=p.motto||'';
     if(el('growVerse')) el('growVerse').textContent=p.verse?('“'+p.verse+'”'):'';
     if(el('growRef'))   el('growRef').textContent=p.ref?('— '+p.ref):'';
   }
-  gpaint(localDay()); paintChip(); paintDid();
-  fetch('practices.json',{cache:'force-cache'}).then(r=>r.ok?r.json():null).then(o=>{if(Array.isArray(o)&&o.length){LIST=o;gpaint(localDay());}}).catch(()=>{});
-  const gs=el('growShuffle'); if(gs) gs.onclick=()=>{let n;do{n=Math.floor(Math.random()*LIST.length);}while(LIST.length>1&&n===gi);gpaint(n);};
+  function gpaint(i){ gi=((i%LIST.length)+LIST.length)%LIST.length; paintObj(LIST[gi]); }
+  function setNote(t){const n=el('growNote');if(!n)return;if(t){n.textContent=t;n.classList.add('show');}else{n.textContent='';n.classList.remove('show');}}
+  function clearRoute(){pool=null;poolIdx=0;setNote('');const ps=document.querySelectorAll('#growPills .grow-pill.on');ps.forEach&&ps.forEach(b=>b.classList.remove('on'));}
+  function route(f,btn){
+    const wasOn=btn.classList.contains('on'); clearRoute();
+    const a=el('growAll'); if(a) a.classList.remove('show');
+    if(wasOn){ gpaint(localDay()); return; }     // toggle the active feeling off → back to today's pick
+    pool=findPool(f.names); poolIdx=0; btn.classList.add('on');
+    if(pool.length){ paintObj(pool[0],'🎯 YOUR MOVE'); setNote(f.note+(pool.length>1?'   ·   🔀 “Another” for more like this':'')); }
+    else { gpaint(localDay()); }
+  }
+  function buildPills(){
+    const wrap=el('growPills'); if(!wrap) return; wrap.innerHTML='';
+    FEELINGS.forEach(f=>{const b=document.createElement('button');b.className='grow-pill';b.type='button';b.textContent=f.e+' '+f.l;b.onclick=()=>route(f,b);wrap.appendChild(b);});
+    const allB=document.createElement('button');allB.className='grow-pill allbtn';allB.type='button';allB.textContent='📚 See all 34';
+    allB.onclick=()=>{const a=el('growAll');if(a)a.classList.toggle('show');};wrap.appendChild(allB);
+  }
+  function buildAllList(){
+    const a=el('growAll'); if(!a) return; a.innerHTML='';
+    LIST.forEach(p=>{const it=document.createElement('button');it.className='grow-all-item';it.type='button';it.textContent=(p.emoji||'🌱')+' '+(p.name||'');
+      it.onclick=()=>{clearRoute();paintObj(p,'🎯 YOUR MOVE');a.classList.remove('show');setNote('💛 '+(p.name||'this one')+' — sit with it today');const sec=el('growSection');if(sec)sec.scrollIntoView({behavior:'smooth',block:'nearest'});};a.appendChild(it);});
+  }
+  gpaint(localDay()); paintChip(); paintDid(); buildPills(); buildAllList();
+  fetch('practices.json',{cache:'force-cache'}).then(r=>r.ok?r.json():null).then(o=>{if(Array.isArray(o)&&o.length){LIST=o;gpaint(localDay());buildAllList();}}).catch(()=>{});
+  const gs=el('growShuffle'); if(gs) gs.onclick=()=>{
+    if(pool&&pool.length){ poolIdx=(poolIdx+1)%pool.length; paintObj(pool[poolIdx],'🎯 YOUR MOVE'); return; }   // routed → cycle within the feeling
+    let n;do{n=Math.floor(Math.random()*LIST.length);}while(LIST.length>1&&n===gi);gpaint(n);
+  };
   const gd=el('growDid'); if(gd) gd.onclick=()=>{
     const {last,st}=gstate();
     if(last===today){toast('🌱 Already counted today — come back tomorrow 🙌');return;}
