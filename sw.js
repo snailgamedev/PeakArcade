@@ -1,7 +1,7 @@
 /* Peak Arcade service worker — pages: cache-served INSTANT with a network race
    (updates still show, but a dead/slow network never stalls the load),
    cache-first for static assets. Versioned; old caches wiped on activate. */
-const CACHE = 'peak-arcade-v157';
+const CACHE = 'peak-arcade-v158';
 const NET_TIMEOUT = 2200;  // ms a page-fetch may race before we serve the cached copy (offline = instant; slow net = max this)
 /* SHELL: PAGES ONLY (tiny · installs fast even on cellular).
    The 9.2MB KJV/BBE bundles were pulled OUT of SHELL — they were making SW

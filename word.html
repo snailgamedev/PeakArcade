@@ -236,7 +236,7 @@ function shareVerse(t, r){
   if (navigator.share){
     navigator.share({ title: 'The Word', text: text }).then(()=>toast('✓ Shared')).catch(()=>{});
   } else if (navigator.clipboard){
-    navigator.clipboard.writeText(text).then(()=>toast('📋 Copied — go bless someone'));
+    navigator.clipboard.writeText(text).then(()=>toast('📋 Copied — go bless someone')).catch(()=>toast('Hold to select + copy the verse above'));
   } else { toast('Hold to select + copy the verse above'); }
 }
 
